@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Netix Paie",
@@ -37,7 +38,10 @@ export default function RootLayout({
       <body className="min-h-full">
         <div className="app-shell">
           <Sidebar />
-          <div className="content">{children}</div>
+          <div className="content">
+            <div className="content-inner">{children}</div>
+            <Footer />
+          </div>
         </div>
       </body>
     </html>

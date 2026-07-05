@@ -280,7 +280,90 @@ input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
 .nav-link:hover { background: rgba(255,255,255,.08); color: #fff; }
 .nav-link.active { background: rgba(255,255,255,.14); color: #fff; }
 
-.content { flex: 1; min-width: 0; padding: var(--s6) var(--s8); }
+.content { flex: 1; min-width: 0; padding: var(--s6) var(--s8); display: flex; flex-direction: column; }
+.content-inner { flex: 1; }
+
+.app-footer {
+  text-align: center;
+  padding: var(--s4) var(--s6) 0;
+  font-size: var(--t2xs);
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-soft);
+  margin-top: var(--s8);
+  font-weight: 500;
+  letter-spacing: .03em;
+}
+
+/* ============================================================
+   RESPONSIVE — Tablette (≤1024px) : sidebar plus étroite
+   ============================================================ */
+@media (max-width: 1024px) {
+  :root { --sidebar-w: 200px; }
+  .content { padding: var(--s5) var(--s5); }
+}
+
+/* ============================================================
+   RESPONSIVE — Mobile (≤760px) : sidebar devient une barre
+   horizontale en haut de l'écran, contenu en pleine largeur
+   ============================================================ */
+@media (max-width: 760px) {
+  .app-shell { flex-direction: column; }
+
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    border-right: none;
+    border-bottom: 1px solid rgba(37,99,168,.4);
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  .brand { padding: var(--s3) var(--s4); border-bottom: none; flex-shrink: 0; }
+
+  .sidebar nav {
+    display: flex;
+    flex-direction: row !important;
+    flex: 1;
+    overflow-x: auto;
+    padding: 6px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav-link {
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin: 0 4px;
+  }
+
+  /* Bouton thème sombre : icône seule, collé à droite */
+  .sidebar > button {
+    margin: 0 var(--s3) !important;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .content { padding: var(--s4) var(--s4); }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: var(--s3);
+  }
+  .page-header > a, .page-header > button { align-self: stretch; text-align: center; }
+
+  /* Toute rangée en flex inline (formulaires côte à côte) passe en colonne */
+  .field-row, .selectors-bar { flex-direction: column !important; }
+
+  table { min-width: 560px; }
+}
+
+@media (max-width: 480px) {
+  .content { padding: var(--s3); }
+  .card { padding: var(--s4); }
+}
 
 /* ============================================================
    COMPOSANTS — Cartes, boutons, badges, tableaux

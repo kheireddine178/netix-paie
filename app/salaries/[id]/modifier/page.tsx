@@ -54,7 +54,7 @@ export default async function ModifierSalariePage({
             />
           </div>
 
-          <div style={{ display: "flex", gap: "var(--s3)" }}>
+          <div className="field-row" style={{ display: "flex", gap: "var(--s3)" }}>
             <button type="submit" className="btn btn-primary">
               Enregistrer les modifications
             </button>

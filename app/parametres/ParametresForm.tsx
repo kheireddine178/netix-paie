@@ -96,7 +96,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
               placeholder="Ex : Zone industrielle, Oran"
             />
           </div>
-          <div style={{ display: "flex", gap: "var(--s3)" }}>
+          <div className="field-row" style={{ display: "flex", gap: "var(--s3)" }}>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor="employeur_nif">NIF</label>
               <input id="employeur_nif" name="employeur_nif" defaultValue={parametres.employeur_nif} />
@@ -121,7 +121,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
           <p style={{ color: "var(--text-muted)", marginBottom: "var(--s4)" }}>
             Valeurs définies par la loi de finances.
           </p>
-          <div style={{ display: "flex", gap: "var(--s3)" }}>
+          <div className="field-row" style={{ display: "flex", gap: "var(--s3)" }}>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor="snmg">SNMG mensuel (DA)</label>
               <input id="snmg" name="snmg" type="number" step="0.01" defaultValue={parametres.snmg} />
@@ -137,7 +137,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
               />
             </div>
           </div>
-          <div style={{ display: "flex", gap: "var(--s3)" }}>
+          <div className="field-row" style={{ display: "flex", gap: "var(--s3)" }}>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor="taux_cnas_salarie">Taux CNAS salarié (%)</label>
               <input
@@ -166,7 +166,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
           <p style={{ color: "var(--text-muted)", marginBottom: "var(--s4)" }}>
             Coefficients multiplicateurs par palier.
           </p>
-          <div style={{ display: "flex", gap: "var(--s3)" }}>
+          <div className="field-row" style={{ display: "flex", gap: "var(--s3)" }}>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor="majoration_hs_1">Palier 1</label>
               <input
@@ -250,7 +250,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
         <div className="card" style={{ marginBottom: "var(--s5)" }}>
           <h3 style={{ marginBottom: "var(--s3)" }}>🧮 Exonération et abattement IRG</h3>
           <p style={{ color: "var(--text-muted)", marginBottom: "var(--s4)" }}>Plafonds légaux mensuels.</p>
-          <div style={{ display: "flex", gap: "var(--s3)" }}>
+          <div className="field-row" style={{ display: "flex", gap: "var(--s3)" }}>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor="seuil_exoneration_irg">Seuil d&apos;exonération totale (DA/mois)</label>
               <input
@@ -272,7 +272,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
               />
             </div>
           </div>
-          <div style={{ display: "flex", gap: "var(--s3)" }}>
+          <div className="field-row" style={{ display: "flex", gap: "var(--s3)" }}>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor="abattement_irg_min">Abattement minimum (DA/mois)</label>
               <input

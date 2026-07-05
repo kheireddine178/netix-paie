@@ -12,7 +12,6 @@ const NAV_ITEMS = [
   { href: "/rubriques", label: "Rubriques" },
   { href: "/historique", label: "Historique" },
   { href: "/parametres", label: "Paramètres" },
-  { href: "/test-connexion", label: "Test connexion" },
 ];
 
 export default function Sidebar() {
