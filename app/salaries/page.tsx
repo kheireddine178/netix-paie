@@ -65,6 +65,20 @@ export default async function SalariesPage() {
                       <Link href={`/salaries/${s.id}/rubriques`} className="btn btn-secondary btn-sm">
                         Rubriques
                       </Link>
+Dans app/salaries/page.tsx, remplacer :
+
+                      <Link href={`/salaries/${s.id}/rubriques`} className="btn btn-secondary btn-sm">
+                        Rubriques
+                      </Link>
+
+par :
+
+                      <Link href={`/salaries/${s.id}/rubriques`} className="btn btn-secondary btn-sm">
+                        Rubriques
+                      </Link>
+                      <Link href={`/salaries/${s.id}/historique`} className="btn btn-secondary btn-sm">
+                        Historique
+                      </Link>
                       <Link href={`/salaries/${s.id}/modifier`} className="btn btn-secondary btn-sm">
                         Modifier
                       </Link>

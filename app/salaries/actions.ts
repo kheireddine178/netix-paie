@@ -464,3 +464,127 @@ export async function getBulletinPourPdf(
 
   return { salarie, params, saisie, resultat };
 }
+// ------------------------------------------------------------------
+// Historique des bulletins
+// ------------------------------------------------------------------
+
+export interface BulletinResume {
+  id: number;
+  annee: number;
+  mois: number;
+  net_a_payer: number;
+  modifie_le: string | null;
+}
+
+/**
+ * Liste tous les bulletins déjà enregistrés pour un salarié (du plus récent au plus
+ * ancien), avec le net à payer recalculé pour affichage dans l'historique.
+ * Ne modifie rien en base — lecture seule.
+ */
+export async function listerBulletinsSalarie(salarieId: number): Promise<BulletinResume[]> {
+  const salarie = await getSalarie(salarieId);
+  if (!salarie) return [];
+
+  const params = await getParametres();
+
+  const { data: bulletins, error } = await supabase
+    .from("bulletins")
+    .select("*")
+    .eq("salarie_id", salarieId)
+    .order("annee", { ascending: false })
+    .order("mois", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  if (!bulletins || bulletins.length === 0) return [];
+
+  const bulletinIds = bulletins.map((b) => b.id);
+
+  const { data: toutesRubriques, error: rubError } = await supabase
+    .from("bulletin_rubriques")
+    .select(
+      "bulletin_id, rubrique_code, valeur_1, valeur_2, rubriques_catalogue(code, libelle, type_valeur, cotisable, imposable)",
+    )
+    .in("bulletin_id", bulletinIds);
+
+  if (rubError) throw new Error(rubError.message);
+
+  const rubriquesParBulletin = new Map<number, typeof toutesRubriques>();
+  for (const r of toutesRubriques ?? []) {
+    const liste = rubriquesParBulletin.get(r.bulletin_id) ?? [];
+    liste.push(r);
+    rubriquesParBulletin.set(r.bulletin_id, liste);
+  }
+
+  return bulletins.map((bulletin) => {
+    const champsAbsences = {
+      salaire_base_theorique: bulletin.salaire_base_theorique,
+      maladie_h: bulletin.maladie_h,
+      mise_a_pied_h: bulletin.mise_a_pied_h,
+      accident_travail_h: bulletin.accident_travail_h,
+      retard_h: bulletin.retard_h,
+      absence_irreguliere_h: bulletin.absence_irreguliere_h,
+    };
+    const { salaire_base_reel } = calculerBaseAvantRubriques(champsAbsences, params);
+
+    const rubriques_dynamiques: LigneRubriqueDynamique[] = [];
+    for (const br of rubriquesParBulletin.get(bulletin.id) ?? []) {
+      const cat = Array.isArray(br.rubriques_catalogue) ? br.rubriques_catalogue[0] : br.rubriques_catalogue;
+      if (!cat) continue;
+      const ligne = resoudreLigneRubrique(cat, br.valeur_1 ?? 0, br.valeur_2 ?? 0, salaire_base_reel);
+      if (ligne) rubriques_dynamiques.push(ligne);
+    }
+
+    const saisie: SaisieMensuelle = {
+      ...SAISIE_VIDE,
+      ...champsAbsences,
+      heures_sup_1: bulletin.heures_sup_1,
+      heures_sup_2: bulletin.heures_sup_2,
+      heures_sup_3: bulletin.heures_sup_3,
+      icr: bulletin.icr,
+      taux_iep: bulletin.taux_iep,
+      taux_nuisance: bulletin.taux_nuisance,
+      taux_responsabilite: bulletin.taux_responsabilite,
+      taux_disponibilite: bulletin.taux_disponibilite,
+      taux_pri: bulletin.taux_pri,
+      taux_prc: bulletin.taux_prc,
+      panier_jours: bulletin.panier_jours,
+      panier_forfait_jour: bulletin.panier_forfait_jour,
+      autre_prime_fixe: bulletin.autre_prime_fixe,
+      cotis_mutuelle: bulletin.cotis_mutuelle,
+      autres_retenues: bulletin.autres_retenues,
+      rubriques_dynamiques,
+    };
+
+    const resultat = calculerPaie(saisie, params);
+
+    return {
+      id: bulletin.id,
+      annee: bulletin.annee,
+      mois: bulletin.mois,
+      net_a_payer: resultat.net_a_payer,
+      modifie_le: bulletin.modifie_le ?? null,
+    };
+  });
+}
+
+/**
+ * Supprime définitivement un bulletin (et ses rubriques dynamiques associées).
+ * Action irréversible — la confirmation doit être faite côté client.
+ */
+export async function supprimerBulletin(salarieId: number, bulletinId: number) {
+  const { error: brError } = await supabase
+    .from("bulletin_rubriques")
+    .delete()
+    .eq("bulletin_id", bulletinId);
+  if (brError) throw new Error(brError.message);
+
+  const { error } = await supabase
+    .from("bulletins")
+    .delete()
+    .eq("id", bulletinId)
+    .eq("salarie_id", salarieId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/salaries/${salarieId}/historique`);
+  revalidatePath("/historique");
+}

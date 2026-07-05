@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/salaries", label: "Salariés" },
   { href: "/saisie", label: "Saisie mensuelle" },
   { href: "/rubriques", label: "Rubriques" },
+  { href: "/historique", label: "Historique" },
   { href: "/parametres", label: "Paramètres" },
   { href: "/test-connexion", label: "Test connexion" },
 ];
