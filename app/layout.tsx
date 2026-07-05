@@ -5,6 +5,10 @@ import Sidebar from "@/components/Sidebar";
 export const metadata: Metadata = {
   title: "Netix Paie",
   description: "Application de gestion de paie algérienne",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
