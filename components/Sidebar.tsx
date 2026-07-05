@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Accueil" },
@@ -12,6 +13,20 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  // Au montage, on lit le thème déjà appliqué par le script anti-flash (layout.tsx)
+  useEffect(() => {
+    const current = document.documentElement.getAttribute("data-theme");
+    setTheme(current === "dark" ? "dark" : "light");
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.setAttribute("data-theme", next);
+    window.localStorage.setItem("netix-theme", next);
+  }
 
   return (
     <aside className="sidebar">
@@ -35,6 +50,29 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label={theme === "dark" ? "Activer le thème clair" : "Activer le thème sombre"}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          margin: "0 12px 16px",
+          padding: "10px 12px",
+          borderRadius: "8px",
+          border: "1px solid rgba(255,255,255,.12)",
+          background: "rgba(255,255,255,.06)",
+          color: "#fff",
+          fontSize: "13px",
+          fontWeight: 600,
+          cursor: "pointer",
+        }}
+      >
+        <span style={{ fontSize: "16px" }}>{theme === "dark" ? "☀️" : "🌙"}</span>
+        {theme === "dark" ? "Thème clair" : "Thème sombre"}
+      </button>
     </aside>
   );
 }
