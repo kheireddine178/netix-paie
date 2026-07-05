@@ -56,6 +56,78 @@ export async function creerSalarie(formData: FormData) {
   redirect("/salaries");
 }
 
+/** Met à jour les informations de base d'un salarié existant. */
+export async function modifierSalarie(id: number, formData: FormData) {
+  const nom_prenom = formData.get("nom_prenom") as string;
+  const matricule = (formData.get("matricule") as string) || null;
+  const fonction = (formData.get("fonction") as string) || null;
+  const salaire_base_theorique = parseFloat(formData.get("salaire_base_theorique") as string) || 0;
+
+  const { error } = await supabase
+    .from("salaries")
+    .update({
+      nom_prenom,
+      matricule,
+      fonction,
+      salaire_base_theorique,
+    })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/salaries");
+  redirect("/salaries");
+}
+
+/** Désactive un salarié (soft delete) : son historique de bulletins est conservé. */
+export async function desactiverSalarie(id: number) {
+  const { error } = await supabase.from("salaries").update({ actif: false }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/salaries");
+}
+
+/** Réactive un salarié précédemment désactivé. */
+export async function reactiverSalarie(id: number) {
+  const { error } = await supabase.from("salaries").update({ actif: true }).eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/salaries");
+}
+
+/**
+ * Supprime définitivement un salarié et tout son historique
+ * (bulletins, rubriques de bulletins, rubriques assignées).
+ * Action irréversible — la confirmation doit être faite côté client.
+ */
+export async function supprimerSalarieDefinitif(id: number) {
+  const { data: bulletins, error: bulletinsError } = await supabase
+    .from("bulletins")
+    .select("id")
+    .eq("salarie_id", id);
+
+  if (bulletinsError) throw new Error(bulletinsError.message);
+
+  const bulletinIds = (bulletins ?? []).map((b) => b.id);
+
+  if (bulletinIds.length > 0) {
+    const { error: brError } = await supabase
+      .from("bulletin_rubriques")
+      .delete()
+      .in("bulletin_id", bulletinIds);
+    if (brError) throw new Error(brError.message);
+  }
+
+  const { error: bError } = await supabase.from("bulletins").delete().eq("salarie_id", id);
+  if (bError) throw new Error(bError.message);
+
+  const { error: srError } = await supabase.from("salarie_rubriques").delete().eq("salarie_id", id);
+  if (srError) throw new Error(srError.message);
+
+  const { error: sError } = await supabase.from("salaries").delete().eq("id", id);
+  if (sError) throw new Error(sError.message);
+
+  revalidatePath("/salaries");
+}
+
 export async function getSalarie(id: number): Promise<Salarie | null> {
   const { data, error } = await supabase
     .from("salaries")
