@@ -30,14 +30,26 @@ const GREY_BG = "#f3f4f6";
 const AMBER = "#8a5b12";
 const AMBER_BG = "#fbf1de";
 
+/**
+ * `toLocaleString("fr-FR")` insère un espace fine insécable (U+202F) comme séparateur
+ * de milliers. La police intégrée au PDF (Helvetica de base, @react-pdf/renderer) ne
+ * possède pas ce glyphe et affiche un caractère de repli ("/") à la place. On le
+ * remplace donc par un espace normal, purement pour l'affichage — aucun impact sur les
+ * valeurs numériques ni sur le calcul.
+ */
+function normaliserEspaces(s: string): string {
+  return s.replace(/[\u202F\u00A0]/g, " ");
+}
+
 function fmtDa(n: number | null | undefined): string {
   if (n === null || n === undefined) return "—";
   const s = n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return `${s} DA`;
+  return `${normaliserEspaces(s)} DA`;
 }
 
 function fmtNombre(n: number, decimales = 2): string {
-  return n.toLocaleString("fr-FR", { minimumFractionDigits: decimales, maximumFractionDigits: decimales });
+  const s = n.toLocaleString("fr-FR", { minimumFractionDigits: decimales, maximumFractionDigits: decimales });
+  return normaliserEspaces(s);
 }
 
 const styles = StyleSheet.create({
