@@ -24,18 +24,30 @@ const CHAMPS_HEURES_SUP = [
   { name: "heures_sup_3", label: "Heures sup. palier 3 (x2.0)" },
 ];
 
-const CHAMPS_PRIMES = [
+// Champs saisis en DA / nombre, envoyés tels quels au serveur.
+const CHAMPS_PRIMES_MONTANT = [
   { name: "icr", label: "I.C.R (montant DA)" },
-  { name: "taux_iep", label: "Taux I.E.P (ex: 0.05 = 5%)" },
-  { name: "taux_nuisance", label: "Taux nuisance" },
-  { name: "taux_responsabilite", label: "Taux responsabilité" },
-  { name: "taux_disponibilite", label: "Taux disponibilité" },
-  { name: "taux_pri", label: "Taux P.R.I" },
-  { name: "taux_prc", label: "Taux P.R.C" },
   { name: "panier_jours", label: "Panier — nombre de jours" },
   { name: "panier_forfait_jour", label: "Panier — forfait/jour (DA)" },
   { name: "autre_prime_fixe", label: "Autre prime fixe (DA)" },
 ];
+
+/**
+ * Champs de taux saisis EN POURCENTAGE COURANT (ex: taper "2.5" pour 2,5%), convertis
+ * en fraction (0.025) juste avant l'envoi au serveur — voir CHAMPS_TAUX_POURCENTAGE et
+ * la transformation dans onSubmit() ci-dessous. Le moteur de calcul (lib/paieCalcul.ts)
+ * continue, lui, de recevoir et d'utiliser des fractions, exactement comme avant.
+ */
+const CHAMPS_PRIMES_POURCENTAGE = [
+  { name: "taux_iep", label: "Taux I.E.P (%)" },
+  { name: "taux_nuisance", label: "Taux nuisance (%)" },
+  { name: "taux_responsabilite", label: "Taux responsabilité (%)" },
+  { name: "taux_disponibilite", label: "Taux disponibilité (%)" },
+  { name: "taux_pri", label: "Taux P.R.I (%)" },
+  { name: "taux_prc", label: "Taux P.R.C (%)" },
+];
+
+const CHAMPS_TAUX_POURCENTAGE = new Set(CHAMPS_PRIMES_POURCENTAGE.map((c) => c.name));
 
 const CHAMPS_RETENUES = [
   { name: "cotis_mutuelle", label: "Cotisation mutuelle (DA)" },
@@ -59,8 +71,33 @@ export default function BulletinForm({
 
   const now = new Date();
 
+  // Codes des rubriques dynamiques du catalogue dont le champ v1 est aussi un
+  // pourcentage courant (catégorie "pourcentage") et doit donc subir la même conversion.
+  const codesRubriquesPourcentage = new Set(
+    rubriquesAssignees.filter((r) => r.categorie === "pourcentage").map((r) => r.code),
+  );
+
   function onSubmit(formData: FormData) {
     setErreur(null);
+
+    // Convertit les taux saisis en pourcentage courant (ex: 2.5 pour 2,5%) en fraction
+    // (0.025) attendue par le moteur de calcul, sans toucher à celui-ci.
+    for (const nom of CHAMPS_TAUX_POURCENTAGE) {
+      const brut = formData.get(nom);
+      if (brut !== null) {
+        const valeur = parseFloat(brut.toString().replace(",", "."));
+        formData.set(nom, isNaN(valeur) ? "0" : String(valeur / 100));
+      }
+    }
+    for (const code of codesRubriquesPourcentage) {
+      const champ = `dyn_${code}_v1`;
+      const brut = formData.get(champ);
+      if (brut !== null) {
+        const valeur = parseFloat(brut.toString().replace(",", "."));
+        formData.set(champ, isNaN(valeur) ? "0" : String(valeur / 100));
+      }
+    }
+
     startTransition(async () => {
       try {
         const r = await creerBulletin(salarie.id, formData);
@@ -106,8 +143,11 @@ export default function BulletinForm({
         </Section>
 
         <Section titre="Primes et indemnités">
-          {CHAMPS_PRIMES.map((c) => (
+          {CHAMPS_PRIMES_MONTANT.map((c) => (
             <Champ key={c.name} {...c} />
+          ))}
+          {CHAMPS_PRIMES_POURCENTAGE.map((c) => (
+            <Champ key={c.name} {...c} placeholder="ex: 2.5 pour 2,5%" />
           ))}
         </Section>
 
@@ -230,11 +270,11 @@ function Section({ titre, children }: { titre: string; children: React.ReactNode
   );
 }
 
-function Champ({ name, label }: { name: string; label: string }) {
+function Champ({ name, label, placeholder }: { name: string; label: string; placeholder?: string }) {
   return (
     <div className="field" style={{ marginBottom: 0 }}>
       <label htmlFor={name}>{label}</label>
-      <input id={name} name={name} type="number" step="0.01" defaultValue={0} />
+      <input id={name} name={name} type="number" step="0.01" defaultValue={0} placeholder={placeholder} />
     </div>
   );
 }
@@ -242,7 +282,9 @@ function Champ({ name, label }: { name: string; label: string }) {
 /**
  * Champ(s) de saisie pour une rubrique dynamique du catalogue, adaptés à sa catégorie
  * (étape 7) :
- *   - pourcentage / montant_fixe / regularisation : 1 champ (dyn_<code>_v1)
+ *   - pourcentage : 1 champ, saisi EN POURCENTAGE COURANT (ex: 2.5 pour 2,5%) — converti
+ *     en fraction dans onSubmit() avant l'envoi au serveur (dyn_<code>_v1)
+ *   - montant_fixe / regularisation : 1 champ (dyn_<code>_v1), en DA, envoyé tel quel
  *   - nombre_x_taux : 2 champs (dyn_<code>_v1 = nombre, dyn_<code>_v2 = taux/forfait)
  */
 function ChampRubriqueDynamique({ rubrique }: { rubrique: RubriqueAssignee }) {
@@ -284,10 +326,18 @@ function ChampRubriqueDynamique({ rubrique }: { rubrique: RubriqueAssignee }) {
 
   const placeholder =
     rubrique.categorie === "pourcentage"
-      ? "Taux (ex: 0.05 = 5%)"
+      ? "ex: 2.5 pour 2,5%"
       : rubrique.categorie === "regularisation"
         ? "Montant signé (+/-)"
         : "Montant (DA)";
+
+  // Pour la catégorie "pourcentage", la valeur par défaut du catalogue est déjà une
+  // fraction (ex: 0.05) : on l'affiche multipliée par 100 pour rester cohérent avec la
+  // saisie en pourcentage courant de ce champ.
+  const valeurDefaut =
+    rubrique.categorie === "pourcentage"
+      ? (rubrique.valeur_defaut || 0) * 100
+      : rubrique.valeur_defaut || 0;
 
   return (
     <div className="field" style={{ marginBottom: 0 }}>
@@ -297,7 +347,7 @@ function ChampRubriqueDynamique({ rubrique }: { rubrique: RubriqueAssignee }) {
         name={`dyn_${rubrique.code}_v1`}
         type="number"
         step="0.01"
-        defaultValue={rubrique.valeur_defaut || 0}
+        defaultValue={valeurDefaut}
         placeholder={placeholder}
       />
     </div>
