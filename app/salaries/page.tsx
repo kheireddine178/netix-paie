@@ -9,48 +9,62 @@ export default async function SalariesPage() {
   const salaries = await listerSalaries();
 
   return (
-    <main className="p-8 max-w-3xl mx-auto font-sans">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Salariés</h1>
-        <Link
-          href="/salaries/nouveau"
-          className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
-        >
+    <>
+      <div className="page-header" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+        <div>
+          <h1>Salariés</h1>
+          <p>{salaries.length} salarié{salaries.length > 1 ? "s" : ""} enregistré{salaries.length > 1 ? "s" : ""}</p>
+        </div>
+        <Link href="/salaries/nouveau" className="btn btn-primary">
           + Ajouter un salarié
         </Link>
       </div>
 
       {salaries.length === 0 ? (
-        <p className="text-gray-500">Aucun salarié pour l'instant.</p>
+        <div className="card">
+          <p style={{ color: "var(--text-muted)" }}>Aucun salarié pour l&apos;instant.</p>
+        </div>
       ) : (
-        <ul className="divide-y divide-gray-200 border rounded">
-          {salaries.map((s) => (
-            <li key={s.id} className="p-4 flex items-center justify-between">
-              <div>
-                <p className="font-semibold">{s.nom_prenom}</p>
-                <p className="text-sm text-gray-500">
-                  {s.fonction ?? "—"} · {s.salaire_base_theorique.toLocaleString("fr-FR")} DA
-                  {s.matricule ? ` · Matricule ${s.matricule}` : ""}
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <Link
-                  href={`/salaries/${s.id}/bulletin`}
-                  className="text-blue-600 hover:underline text-sm"
-                >
-                  Saisir un bulletin →
-                </Link>
-                <Link
-                  href={`/salaries/${s.id}/rubriques`}
-                  className="text-gray-500 hover:underline text-xs"
-                >
-                  Configurer les rubriques
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nom &amp; prénom</th>
+                <th>Matricule</th>
+                <th>Fonction</th>
+                <th>Salaire de base</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {salaries.map((s) => (
+                <tr key={s.id}>
+                  <td style={{ fontWeight: 650, color: "var(--text)" }}>{s.nom_prenom}</td>
+                  <td>
+                    {s.matricule ? (
+                      <span className="badge badge-accent">{s.matricule}</span>
+                    ) : (
+                      <span style={{ color: "var(--text-muted)" }}>—</span>
+                    )}
+                  </td>
+                  <td>{s.fonction ?? "—"}</td>
+                  <td>{s.salaire_base_theorique.toLocaleString("fr-FR")} DA</td>
+                  <td>
+                    <div style={{ display: "flex", gap: "var(--s3)", justifyContent: "flex-end" }}>
+                      <Link href={`/salaries/${s.id}/bulletin`} className="btn btn-secondary btn-sm">
+                        Bulletin
+                      </Link>
+                      <Link href={`/salaries/${s.id}/rubriques`} className="btn btn-secondary btn-sm">
+                        Rubriques
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-    </main>
+    </>
   );
 }
