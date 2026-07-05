@@ -20,21 +20,26 @@ export default async function RubriquesPage({
   ]);
 
   return (
-    <main className="p-8 max-w-4xl mx-auto font-sans">
-      <div className="flex items-start justify-between mb-1">
-        <h1 className="text-2xl font-bold">Rubriques du catalogue — {salarie.nom_prenom}</h1>
-        <Link href={`/salaries/${salarie.id}/bulletin`} className="text-sm text-blue-600 hover:underline">
+    <>
+      <div
+        className="page-header"
+        style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}
+      >
+        <div>
+          <h1>Rubriques du catalogue — {salarie.nom_prenom}</h1>
+          <p>
+            Cochez les rubriques du catalogue ({catalogue.length} codes) applicables à ce salarié.
+            Elles apparaîtront ensuite comme champs de saisie sur la page de bulletin mensuel. La
+            « valeur par défaut » est facultative : elle pré-remplit le champ chaque mois (vous
+            pouvez toujours la modifier au moment de la saisie du bulletin).
+          </p>
+        </div>
+        <Link href={`/salaries/${salarie.id}/bulletin`} className="btn btn-secondary btn-sm">
           ← Retour au bulletin
         </Link>
       </div>
-      <p className="text-gray-500 mb-6 text-sm">
-        Cochez les rubriques du catalogue (402 codes) applicables à ce salarié. Elles apparaîtront
-        ensuite comme champs de saisie sur la page de bulletin mensuel. La &quot;valeur par défaut&quot;
-        est facultative : elle pré-remplit le champ chaque mois (vous pouvez toujours la modifier au
-        moment de la saisie du bulletin).
-      </p>
 
       <RubriquesForm salarieId={salarie.id} catalogue={catalogue} assignees={assignees} />
-    </main>
+    </>
   );
 }
