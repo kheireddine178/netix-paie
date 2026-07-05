@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Sidebar from "@/components/Sidebar";
 
 export const metadata: Metadata = {
   title: "Netix Paie",
@@ -13,7 +14,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="h-full antialiased">
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full">
+        <div className="app-shell">
+          <Sidebar />
+          <div className="content">{children}</div>
+        </div>
+      </body>
     </html>
   );
 }
