@@ -73,32 +73,23 @@ export default function BulletinForm({
 
   return (
     <div className="grid md:grid-cols-2 gap-8">
-      <form action={onSubmit} className="space-y-6">
-        <div className="flex gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Année</label>
-            <input
-              name="annee"
-              type="number"
-              defaultValue={now.getFullYear()}
-              className="border rounded px-3 py-2 w-28"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Mois</label>
-            <select
-              name="mois"
-              defaultValue={now.getMonth() + 1}
-              className="border rounded px-3 py-2"
-              required
-            >
-              {MOIS.map((m, i) => (
-                <option key={i} value={i + 1}>
-                  {m}
-                </option>
-              ))}
-            </select>
+      <form action={onSubmit} className="space-y-5">
+        <div className="card">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label htmlFor="annee">Année</label>
+              <input id="annee" name="annee" type="number" defaultValue={now.getFullYear()} required />
+            </div>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label htmlFor="mois">Mois</label>
+              <select id="mois" name="mois" defaultValue={now.getMonth() + 1} required>
+                {MOIS.map((m, i) => (
+                  <option key={i} value={i + 1}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -127,41 +118,50 @@ export default function BulletinForm({
         </Section>
 
         {rubriquesAssignees.length > 0 ? (
-          <fieldset className="border rounded p-4">
-            <legend className="text-sm font-semibold px-2">
+          <div className="card">
+            <h3 style={{ marginBottom: "var(--s3)" }}>
               Rubriques du catalogue ({rubriquesAssignees.length})
-            </legend>
+            </h3>
             <div className="grid grid-cols-2 gap-3">
               {rubriquesAssignees.map((r) => (
                 <ChampRubriqueDynamique key={r.code} rubrique={r} />
               ))}
             </div>
-          </fieldset>
+          </div>
         ) : (
-          <p className="text-xs text-gray-400">
+          <p style={{ fontSize: "var(--txs)", color: "var(--text-muted)" }}>
             Aucune rubrique du catalogue n&apos;est cochée pour ce salarié.{" "}
-            <Link href={`/salaries/${salarie.id}/rubriques`} className="text-blue-600 hover:underline">
+            <Link href={`/salaries/${salarie.id}/rubriques`}>
               Configurer les rubriques →
             </Link>
           </p>
         )}
 
-        {erreur && <p className="text-red-600 text-sm">{erreur}</p>}
+        {erreur && (
+          <p className="badge badge-red" style={{ display: "block", width: "fit-content" }}>
+            {erreur}
+          </p>
+        )}
 
-        <button
-          type="submit"
-          disabled={isPending}
-          className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 disabled:opacity-50"
-        >
+        <button type="submit" disabled={isPending} className="btn btn-primary">
           {isPending ? "Calcul en cours..." : "Calculer et enregistrer le bulletin"}
         </button>
       </form>
 
       <div>
         {resultat ? (
-          <div className="border rounded p-6 sticky top-6 space-y-4">
-            <h2 className="font-bold text-lg mb-2">Résultat du bulletin</h2>
-            <dl className="space-y-2 text-sm">
+          <div className="bulletin" style={{ position: "sticky", top: "var(--s6)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--s5)" }}>
+              <div>
+                <h2>Bulletin de paie</h2>
+                <p style={{ color: "var(--text-muted)", marginTop: 4 }}>{salarie.nom_prenom}</p>
+              </div>
+              <span className="badge badge-accent">
+                {MOIS[resultat.mois - 1]} {resultat.annee}
+              </span>
+            </div>
+
+            <LigneSection titre="Gains">
               <Ligne label="Salaire de base théorique" valeur={salarie.salaire_base_theorique} />
               <Ligne label="Heures travaillées" valeur={resultat.heures_travaillees} unite="" />
               <Ligne label="Salaire de base réel" valeur={resultat.salaire_base_reel} />
@@ -169,7 +169,9 @@ export default function BulletinForm({
               <Ligne label="Rubriques dynamiques — gains" valeur={resultat.total_rubriques_gains_da} />
               <Ligne label="Rubriques dynamiques — retenues" valeur={-resultat.total_rubriques_retenues_da} />
               <Ligne label="Total des gains" valeur={resultat.total_gains} gras />
-              <hr className="my-2" />
+            </LigneSection>
+
+            <LigneSection titre="Cotisations et impôt">
               <Ligne label="Base CNAS" valeur={resultat.base_cnas} />
               <Ligne label="Retenue CNAS (9%)" valeur={-resultat.retenue_cnas} />
               <Ligne label="Base imposable IRG" valeur={resultat.base_imposable_irg} />
@@ -177,30 +179,40 @@ export default function BulletinForm({
               <Ligne label="Abattement IRG" valeur={resultat.abattement_irg} />
               <Ligne label="Retenue IRG nette" valeur={-resultat.retenue_irg_nette} />
               <Ligne label="Total des retenues" valeur={-resultat.total_retenues} gras />
-              <hr className="my-2" />
-              <Ligne label="NET À PAYER" valeur={resultat.net_a_payer} gras large />
-              <Ligne label="Coût total employeur" valeur={resultat.cout_total_employeur} />
-            </dl>
+            </LigneSection>
 
-            <a
-              href={`/salaries/${salarie.id}/bulletin/pdf?annee=${resultat.annee}&mois=${resultat.mois}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-center bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
-            >
-              📄 Télécharger le PDF (bulletin salarié)
-            </a>
-            <a
-              href={`/salaries/${salarie.id}/bulletin/pdf?annee=${resultat.annee}&mois=${resultat.mois}&variante=employeur`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-center text-sm text-gray-600 hover:underline"
-            >
-              Voir la variante employeur (avec charges patronales)
-            </a>
+            <div className="bulletin-total">
+              <span>NET À PAYER</span>
+              <strong>{formatDA(resultat.net_a_payer)}</strong>
+            </div>
+            <div style={{ marginTop: "var(--s2)" }}>
+              <Ligne label="Coût total employeur" valeur={resultat.cout_total_employeur} />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--s2)", marginTop: "var(--s5)" }}>
+              <a
+                href={`/salaries/${salarie.id}/bulletin/pdf?annee=${resultat.annee}&mois=${resultat.mois}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+              >
+                📄 Télécharger le PDF (bulletin salarié)
+              </a>
+              <a
+                href={`/salaries/${salarie.id}/bulletin/pdf?annee=${resultat.annee}&mois=${resultat.mois}&variante=employeur`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-secondary"
+              >
+                Voir la variante employeur (avec charges patronales)
+              </a>
+            </div>
           </div>
         ) : (
-          <div className="border border-dashed rounded p-6 text-gray-400 text-sm">
+          <div
+            className="card"
+            style={{ borderStyle: "dashed", color: "var(--text-muted)", fontSize: "var(--tsm)" }}
+          >
             Le détail du bulletin (net à payer, IRG, CNAS...) apparaîtra ici après le calcul.
           </div>
         )}
@@ -211,24 +223,18 @@ export default function BulletinForm({
 
 function Section({ titre, children }: { titre: string; children: React.ReactNode }) {
   return (
-    <fieldset className="border rounded p-4">
-      <legend className="text-sm font-semibold px-2">{titre}</legend>
+    <div className="card">
+      <h3 style={{ marginBottom: "var(--s3)" }}>{titre}</h3>
       <div className="grid grid-cols-2 gap-3">{children}</div>
-    </fieldset>
+    </div>
   );
 }
 
 function Champ({ name, label }: { name: string; label: string }) {
   return (
-    <div>
-      <label className="block text-xs text-gray-600 mb-1">{label}</label>
-      <input
-        name={name}
-        type="number"
-        step="0.01"
-        defaultValue={0}
-        className="w-full border rounded px-2 py-1 text-sm"
-      />
+    <div className="field" style={{ marginBottom: 0 }}>
+      <label htmlFor={name}>{label}</label>
+      <input id={name} name={name} type="number" step="0.01" defaultValue={0} />
     </div>
   );
 }
@@ -244,24 +250,34 @@ function ChampRubriqueDynamique({ rubrique }: { rubrique: RubriqueAssignee }) {
 
   if (rubrique.categorie === "nombre_x_taux") {
     return (
-      <div className="col-span-2 grid grid-cols-2 gap-2 border-t pt-2 first:border-t-0 first:pt-0">
-        <label className="col-span-2 block text-xs text-gray-600">{libelle}</label>
-        <input
-          name={`dyn_${rubrique.code}_v1`}
-          type="number"
-          step="0.01"
-          defaultValue={rubrique.valeur_defaut || 0}
-          placeholder="Nombre"
-          className="w-full border rounded px-2 py-1 text-sm"
-        />
-        <input
-          name={`dyn_${rubrique.code}_v2`}
-          type="number"
-          step="0.01"
-          defaultValue={0}
-          placeholder="Taux / forfait unitaire"
-          className="w-full border rounded px-2 py-1 text-sm"
-        />
+      <div
+        className="col-span-2 grid grid-cols-2 gap-2"
+        style={{ borderTop: "var(--hairline)", paddingTop: "var(--s2)" }}
+      >
+        <label
+          className="col-span-2"
+          style={{ fontSize: "var(--t2xs)", fontWeight: 700, color: "var(--text-2)", textTransform: "uppercase", letterSpacing: ".04em" }}
+        >
+          {libelle}
+        </label>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <input
+            name={`dyn_${rubrique.code}_v1`}
+            type="number"
+            step="0.01"
+            defaultValue={rubrique.valeur_defaut || 0}
+            placeholder="Nombre"
+          />
+        </div>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <input
+            name={`dyn_${rubrique.code}_v2`}
+            type="number"
+            step="0.01"
+            defaultValue={0}
+            placeholder="Taux / forfait unitaire"
+          />
+        </div>
       </div>
     );
   }
@@ -274,16 +290,25 @@ function ChampRubriqueDynamique({ rubrique }: { rubrique: RubriqueAssignee }) {
         : "Montant (DA)";
 
   return (
-    <div>
-      <label className="block text-xs text-gray-600 mb-1">{libelle}</label>
+    <div className="field" style={{ marginBottom: 0 }}>
+      <label htmlFor={`dyn_${rubrique.code}_v1`}>{libelle}</label>
       <input
+        id={`dyn_${rubrique.code}_v1`}
         name={`dyn_${rubrique.code}_v1`}
         type="number"
         step="0.01"
         defaultValue={rubrique.valeur_defaut || 0}
         placeholder={placeholder}
-        className="w-full border rounded px-2 py-1 text-sm"
       />
+    </div>
+  );
+}
+
+function LigneSection({ titre, children }: { titre: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: "var(--s4)" }}>
+      <h3 style={{ marginBottom: "var(--s2)" }}>{titre}</h3>
+      <dl style={{ display: "flex", flexDirection: "column", gap: "6px" }}>{children}</dl>
     </div>
   );
 }
@@ -302,8 +327,16 @@ function Ligne({
   large?: boolean;
 }) {
   return (
-    <div className={`flex justify-between ${gras ? "font-semibold" : ""} ${large ? "text-lg" : ""}`}>
-      <dt>{label}</dt>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        fontSize: large ? "var(--tmd)" : "var(--tsm)",
+        fontWeight: gras ? 700 : 400,
+        color: "var(--text)",
+      }}
+    >
+      <dt style={{ color: gras ? "var(--text)" : "var(--text-2)" }}>{label}</dt>
       <dd>{unite === " DA" ? formatDA(valeur) : valeur.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}</dd>
     </div>
   );
