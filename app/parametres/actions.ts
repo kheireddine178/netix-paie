@@ -35,8 +35,10 @@ export async function updateParametres(formData: FormData) {
 
     snmg: parseFloat(formData.get("snmg") as string) || 0,
     duree_legale_mensuelle: parseFloat(formData.get("duree_legale_mensuelle") as string) || 0,
-    taux_cnas_salarie: parseFloat(formData.get("taux_cnas_salarie") as string) || 0,
-    taux_cnas_employeur: parseFloat(formData.get("taux_cnas_employeur") as string) || 0,
+    // Champs saisis en % dans le formulaire (ex: "9" pour 9%), convertis en fraction (0.09)
+    // avant stockage — le moteur de calcul (lib/paieCalcul.ts) continue de recevoir des fractions.
+    taux_cnas_salarie: (parseFloat(formData.get("taux_cnas_salarie_pct") as string) || 0) / 100,
+    taux_cnas_employeur: (parseFloat(formData.get("taux_cnas_employeur_pct") as string) || 0) / 100,
 
     majoration_hs_1: parseFloat(formData.get("majoration_hs_1") as string) || 0,
     majoration_hs_2: parseFloat(formData.get("majoration_hs_2") as string) || 0,
@@ -45,7 +47,7 @@ export async function updateParametres(formData: FormData) {
     bareme_irg: parseBareme(formData.get("bareme_irg_json") as string),
 
     seuil_exoneration_irg: parseFloat(formData.get("seuil_exoneration_irg") as string) || 0,
-    taux_abattement_irg: parseFloat(formData.get("taux_abattement_irg") as string) || 0,
+    taux_abattement_irg: (parseFloat(formData.get("taux_abattement_irg_pct") as string) || 0) / 100,
     abattement_irg_min: parseFloat(formData.get("abattement_irg_min") as string) || 0,
     abattement_irg_max: parseFloat(formData.get("abattement_irg_max") as string) || 0,
   };

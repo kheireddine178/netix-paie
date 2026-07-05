@@ -139,23 +139,23 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
           </div>
           <div style={{ display: "flex", gap: "var(--s3)" }}>
             <div className="field" style={{ flex: 1 }}>
-              <label htmlFor="taux_cnas_salarie">Taux CNAS salarié</label>
+              <label htmlFor="taux_cnas_salarie">Taux CNAS salarié (%)</label>
               <input
                 id="taux_cnas_salarie"
-                name="taux_cnas_salarie"
+                name="taux_cnas_salarie_pct"
                 type="number"
-                step="0.0001"
-                defaultValue={parametres.taux_cnas_salarie}
+                step="0.01"
+                defaultValue={parametres.taux_cnas_salarie * 100}
               />
             </div>
             <div className="field" style={{ flex: 1 }}>
-              <label htmlFor="taux_cnas_employeur">Taux CNAS employeur</label>
+              <label htmlFor="taux_cnas_employeur">Taux CNAS employeur (%)</label>
               <input
                 id="taux_cnas_employeur"
-                name="taux_cnas_employeur"
+                name="taux_cnas_employeur_pct"
                 type="number"
-                step="0.0001"
-                defaultValue={parametres.taux_cnas_employeur}
+                step="0.01"
+                defaultValue={parametres.taux_cnas_employeur * 100}
               />
             </div>
           </div>
@@ -209,7 +209,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
                 <tr>
                   <th>De (DA)</th>
                   <th>À (DA)</th>
-                  <th>Taux</th>
+                  <th>Taux (%)</th>
                 </tr>
               </thead>
               <tbody>
@@ -235,9 +235,9 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
                     <td>
                       <input
                         type="number"
-                        step="0.0001"
-                        value={t[2]}
-                        onChange={(e) => updateBareme(i, "taux", e.target.value)}
+                        step="0.01"
+                        value={t[2] * 100}
+                        onChange={(e) => updateBareme(i, "taux", String((parseFloat(e.target.value) || 0) / 100))}
                       />
                     </td>
                   </tr>
@@ -262,13 +262,13 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
               />
             </div>
             <div className="field" style={{ flex: 1 }}>
-              <label htmlFor="taux_abattement_irg">Taux d&apos;abattement sur l&apos;IRG brut</label>
+              <label htmlFor="taux_abattement_irg">Taux d&apos;abattement sur l&apos;IRG brut (%)</label>
               <input
                 id="taux_abattement_irg"
-                name="taux_abattement_irg"
+                name="taux_abattement_irg_pct"
                 type="number"
-                step="0.0001"
-                defaultValue={parametres.taux_abattement_irg}
+                step="0.01"
+                defaultValue={parametres.taux_abattement_irg * 100}
               />
             </div>
           </div>
