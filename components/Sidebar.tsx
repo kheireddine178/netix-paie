@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 const NAV_ITEMS = [
   { href: "/", label: "Accueil" },
   { href: "/salaries", label: "Salariés" },
+  { href: "/rubriques", label: "Rubriques" },
   { href: "/parametres", label: "Paramètres" },
   { href: "/test-connexion", label: "Test connexion" },
 ];
@@ -42,7 +43,10 @@ export default function Sidebar() {
 
       <nav style={{ padding: "12px 0", flex: 1 }}>
         {NAV_ITEMS.map((item) => {
-          const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          const isActive =
+            item.href === "/"
+              ? pathname === "/"
+              : pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link key={item.href} href={item.href} className={`nav-link${isActive ? " active" : ""}`}>
               {item.label}
