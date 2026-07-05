@@ -18,19 +18,24 @@ export default async function BulletinPage({
   const rubriquesAssignees = await listerRubriquesSalarie(salarie.id);
 
   return (
-    <main className="p-8 max-w-5xl mx-auto font-sans">
-      <div className="flex items-start justify-between mb-1">
-        <h1 className="text-2xl font-bold">Bulletin de paie — {salarie.nom_prenom}</h1>
-        <Link href={`/salaries/${salarie.id}/rubriques`} className="text-sm text-blue-600 hover:underline">
-          Configurer les rubriques du catalogue →
+    <>
+      <div
+        className="page-header"
+        style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}
+      >
+        <div>
+          <h1>Bulletin de paie — {salarie.nom_prenom}</h1>
+          <p>
+            {salarie.fonction ?? "—"} · Salaire de base théorique :{" "}
+            {salarie.salaire_base_theorique.toLocaleString("fr-FR")} DA
+          </p>
+        </div>
+        <Link href={`/salaries/${salarie.id}/rubriques`} className="btn btn-secondary btn-sm">
+          Configurer les rubriques →
         </Link>
       </div>
-      <p className="text-gray-500 mb-6">
-        {salarie.fonction ?? "—"} · Salaire de base théorique :{" "}
-        {salarie.salaire_base_theorique.toLocaleString("fr-FR")} DA
-      </p>
 
       <BulletinForm salarie={salarie} rubriquesAssignees={rubriquesAssignees} />
-    </main>
+    </>
   );
 }
