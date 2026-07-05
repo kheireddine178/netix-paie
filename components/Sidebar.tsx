@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 const NAV_ITEMS = [
   { href: "/", label: "Accueil" },
   { href: "/salaries", label: "Salariés" },
+  { href: "/saisie", label: "Saisie mensuelle" },
   { href: "/rubriques", label: "Rubriques" },
   { href: "/parametres", label: "Paramètres" },
   { href: "/test-connexion", label: "Test connexion" },
