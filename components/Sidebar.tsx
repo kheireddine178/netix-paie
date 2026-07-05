@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 const NAV_ITEMS = [
   { href: "/", label: "Accueil" },
   { href: "/salaries", label: "Salariés" },
+  { href: "/parametres", label: "Paramètres" },
   { href: "/test-connexion", label: "Test connexion" },
 ];
 
@@ -15,7 +16,6 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
-  // Au montage, on lit le thème déjà appliqué par le script anti-flash (layout.tsx)
   useEffect(() => {
     const current = document.documentElement.getAttribute("data-theme");
     setTheme(current === "dark" ? "dark" : "light");
