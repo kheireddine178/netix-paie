@@ -11,6 +11,19 @@ export const metadata: Metadata = {
   },
 };
 
+// Appliqué avant l'hydration React pour éviter un flash clair -> sombre
+// au chargement quand l'utilisateur a déjà choisi le mode sombre.
+const themeInitScript = `
+(function () {
+  try {
+    var saved = window.localStorage.getItem("netix-theme");
+    if (saved === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -18,6 +31,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="h-full antialiased">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-full">
         <div className="app-shell">
           <Sidebar />
