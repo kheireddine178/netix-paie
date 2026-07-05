@@ -11,6 +11,13 @@ const LABELS_CATEGORIE: Record<string, string> = {
   regularisation: "Régularisation (+/-)",
 };
 
+const BADGE_CATEGORIE: Record<string, string> = {
+  pourcentage: "badge-teal",
+  nombre_x_taux: "badge-accent",
+  montant_fixe: "badge-amber",
+  regularisation: "badge-red",
+};
+
 export default function RubriquesForm({
   salarieId,
   catalogue,
@@ -64,66 +71,103 @@ export default function RubriquesForm({
 
   return (
     <form action={onSubmit} className="space-y-4">
-      <div className="flex items-center justify-between gap-4 sticky top-0 bg-white py-2 z-10 border-b">
-        <input
-          type="text"
-          placeholder="Rechercher un code ou un libellé..."
-          value={recherche}
-          onChange={(e) => setRecherche(e.target.value)}
-          className="border rounded px-3 py-2 flex-1"
-        />
-        <span className="text-sm text-gray-500 whitespace-nowrap">
+      <div
+        className="card"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "var(--s4)",
+          position: "sticky",
+          top: "var(--s4)",
+          zIndex: 10,
+        }}
+      >
+        <div className="field" style={{ marginBottom: 0, flex: 1 }}>
+          <label htmlFor="recherche">Rechercher</label>
+          <input
+            id="recherche"
+            type="text"
+            placeholder="Code ou libellé..."
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+          />
+        </div>
+        <span className="badge badge-accent" style={{ whiteSpace: "nowrap" }}>
           {coches.size} sélectionnée{coches.size > 1 ? "s" : ""} / {catalogue.length}
         </span>
       </div>
 
-      <div className="border rounded divide-y max-h-[60vh] overflow-y-auto">
+      <div className="table-wrap" style={{ maxHeight: "60vh", overflowY: "auto" }}>
         {filtre.length === 0 ? (
-          <p className="p-4 text-sm text-gray-400">Aucune rubrique ne correspond à cette recherche.</p>
+          <p style={{ padding: "var(--s4)", fontSize: "var(--tsm)", color: "var(--text-muted)" }}>
+            Aucune rubrique ne correspond à cette recherche.
+          </p>
         ) : (
-          filtre.map((r) => {
-            const estCoche = coches.has(r.code);
-            return (
-              <div key={r.code} className="p-3 flex items-center gap-3 text-sm">
-                <input
-                  type="checkbox"
-                  name={`rub_${r.code}`}
-                  checked={estCoche}
-                  onChange={() => toggle(r.code)}
-                  className="w-4 h-4"
-                />
-                <div className="flex-1">
-                  <span className="font-mono text-xs text-gray-500 mr-2">{r.code}</span>
-                  <span>{r.libelle ?? "—"}</span>
-                  <span className="ml-2 text-xs text-gray-400">
-                    ({LABELS_CATEGORIE[r.categorie] ?? r.categorie}
-                    {r.type_valeur ? ` · ${r.type_valeur}` : ""})
-                  </span>
-                </div>
-                {estCoche && (
-                  <input
-                    type="number"
-                    step="0.01"
-                    name={`defaut_${r.code}`}
-                    defaultValue={valeursDefautInitiales.get(r.code) ?? 0}
-                    placeholder="Valeur par défaut"
-                    className="w-36 border rounded px-2 py-1 text-xs"
-                  />
-                )}
-              </div>
-            );
-          })
+          <table>
+            <tbody>
+              {filtre.map((r) => {
+                const estCoche = coches.has(r.code);
+                return (
+                  <tr key={r.code}>
+                    <td style={{ width: 32 }}>
+                      <input
+                        type="checkbox"
+                        name={`rub_${r.code}`}
+                        checked={estCoche}
+                        onChange={() => toggle(r.code)}
+                        style={{ width: 16, height: 16 }}
+                      />
+                    </td>
+                    <td>
+                      <span
+                        style={{
+                          fontFamily: "var(--mono)",
+                          fontSize: "var(--t2xs)",
+                          color: "var(--text-muted)",
+                          marginRight: "var(--s2)",
+                        }}
+                      >
+                        {r.code}
+                      </span>
+                      <span style={{ color: "var(--text)" }}>{r.libelle ?? "—"}</span>
+                    </td>
+                    <td>
+                      <span className={`badge ${BADGE_CATEGORIE[r.categorie] ?? "badge-accent"}`}>
+                        {LABELS_CATEGORIE[r.categorie] ?? r.categorie}
+                        {r.type_valeur ? ` · ${r.type_valeur}` : ""}
+                      </span>
+                    </td>
+                    <td style={{ width: 160 }}>
+                      {estCoche && (
+                        <input
+                          type="number"
+                          step="0.01"
+                          name={`defaut_${r.code}`}
+                          defaultValue={valeursDefautInitiales.get(r.code) ?? 0}
+                          placeholder="Valeur par défaut"
+                          style={{
+                            width: "100%",
+                            padding: "6px 10px",
+                            borderRadius: "var(--r)",
+                            border: "1px solid var(--border)",
+                            fontSize: "var(--txs)",
+                          }}
+                        />
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         )}
       </div>
 
-      {message && <p className="text-green-700 text-sm">{message}</p>}
-      {erreur && <p className="text-red-600 text-sm">{erreur}</p>}
+      {message && <p className="badge badge-green" style={{ width: "fit-content" }}>{message}</p>}
+      {erreur && <p className="badge badge-red" style={{ width: "fit-content" }}>{erreur}</p>}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 disabled:opacity-50"
-      >
+      <button type="submit" disabled={isPending} className="btn btn-primary">
         {isPending ? "Enregistrement..." : "Enregistrer les rubriques"}
       </button>
     </form>
