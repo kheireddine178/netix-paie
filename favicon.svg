@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <style>
+    .bg { fill: #1B5EAB; }
+    .letter { fill: white; }
+    .accent { stroke: #34D399; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #2563EB; }
+    }
+  </style>
+  <rect width="32" height="32" rx="7" class="bg"/>
+  <path d="M7 8h3l7.5 10V8H20.5v16h-3L10 14v10H7V8Z" class="letter"/>
+  <line x1="19.5" y1="22.5" x2="25.5" y2="10" class="accent" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
