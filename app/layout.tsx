@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Netix Paie",
-  description: "Application de gestion de paie algérienne",
+  description: "Logiciel de gestion de paie algérienne — conforme CIDTA / LF 2024 / Loi n°90-11.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
@@ -35,15 +33,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="min-h-full">
-        <div className="app-shell">
-          <Sidebar />
-          <div className="content">
-            <div className="content-inner">{children}</div>
-            <Footer />
-          </div>
-        </div>
-      </body>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }

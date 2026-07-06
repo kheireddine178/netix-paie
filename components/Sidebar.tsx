@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Accueil" },
+  { href: "/dashboard", label: "Accueil" },
   { href: "/salaries", label: "Salariés" },
   { href: "/saisie", label: "Saisie mensuelle" },
   { href: "/rubriques", label: "Rubriques" },
@@ -32,7 +32,7 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="brand">
+      <Link href="/" className="brand">
         <div className="brand-mark">
           <Image src="/logo-icon.svg" alt="Netix" width={32} height={32} priority />
         </div>
@@ -40,7 +40,7 @@ export default function Sidebar() {
           <strong>Netix Paie</strong>
           <span>Algérie</span>
         </div>
-      </div>
+      </Link>
 
       <nav style={{ padding: "12px 0", flex: 1 }}>
         {NAV_ITEMS.map((item) => {
