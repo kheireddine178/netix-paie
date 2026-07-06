@@ -246,6 +246,13 @@ export default function BulletinForm({
               >
                 Voir la variante employeur (avec charges patronales)
               </a>
+              <Link
+                href={`/salaries/${salarie.id}/bulletin/explication?annee=${resultat.annee}&mois=${resultat.mois}`}
+                className="btn btn-secondary"
+                style={{ textAlign: "center" }}
+              >
+                🔍 Voir l'explication détaillée du calcul
+              </Link>
             </div>
           </div>
         ) : (
