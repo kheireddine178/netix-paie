@@ -25,16 +25,6 @@ export default function Home() {
             Gérer les salariés
           </Link>
         </div>
-
-        <div className="card">
-          <h2 style={{ marginBottom: "var(--s2)" }}>Connexion base de données</h2>
-          <p style={{ color: "var(--text-muted)", marginBottom: "var(--s4)" }}>
-            Vérifier que l&apos;application communique correctement avec Supabase.
-          </p>
-          <Link href="/test-connexion" className="btn btn-secondary">
-            Tester la connexion
-          </Link>
-        </div>
       </div>
 
       <div className="card" style={{ maxWidth: 640 }}>
