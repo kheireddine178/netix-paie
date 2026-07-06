@@ -60,6 +60,7 @@ export default function Sidebar() {
         type="button"
         onClick={toggleTheme}
         aria-label={theme === "dark" ? "Activer le thème clair" : "Activer le thème sombre"}
+        className="theme-toggle"
         style={{
           display: "flex",
           alignItems: "center",
@@ -76,7 +77,7 @@ export default function Sidebar() {
         }}
       >
         <span style={{ fontSize: "16px" }}>{theme === "dark" ? "☀️" : "🌙"}</span>
-        {theme === "dark" ? "Thème clair" : "Thème sombre"}
+        <span className="theme-label">{theme === "dark" ? "Thème clair" : "Thème sombre"}</span>
       </button>
     </aside>
   );
