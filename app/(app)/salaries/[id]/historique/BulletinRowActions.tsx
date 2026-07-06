@@ -35,6 +35,12 @@ export default function BulletinRowActions({
   return (
     <div style={{ display: "flex", gap: "var(--s3)", justifyContent: "flex-end" }}>
       <Link
+        href={`/salaries/${salarieId}/bulletin/explication?annee=${annee}&mois=${mois}`}
+        className="btn btn-secondary btn-sm"
+      >
+        Explication
+      </Link>
+      <Link
         href={`/salaries/${salarieId}/bulletin/pdf?annee=${annee}&mois=${mois}&variante=salarie`}
         target="_blank"
         className="btn btn-secondary btn-sm"
