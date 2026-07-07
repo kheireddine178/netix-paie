@@ -356,7 +356,12 @@ export function calculerPaie(saisie: SaisieMensuelle, params: Parametres): Resul
   const base_imposable_irg = Math.max(base_brute_irg - retenue_cnas, 0.0);
 
   // 9, 10, 11. IRG
-  const irg_brut = calculerIrgBrut(base_imposable_irg, params);
+  // Règle officielle : la base imposable IRG est arrondie à la dizaine de DA
+  // INFÉRIEURE avant application du barème (ex: 51 325,70 -> 51 320). Vérifié
+  // sur un bulletin réel où l'écart avec le calcul en continu était de 1,54 DA
+  // exactement égal à la fraction de dizaine tronquée x le taux marginal.
+  const base_irg_arrondie = Math.floor(base_imposable_irg / 10) * 10;
+  const irg_brut = calculerIrgBrut(base_irg_arrondie, params);
 
   // Zone de lissage officielle (loi de finances 2022) : entre le seuil
   // d'exonération (normalement 30000) et 35000 DA de base imposable, l'IRG
@@ -368,10 +373,10 @@ export function calculerPaie(saisie: SaisieMensuelle, params: Parametres): Resul
 
   if (
     irg_brut > 0 &&
-    base_imposable_irg > params.seuil_exoneration_irg &&
-    base_imposable_irg < 35000
+    base_irg_arrondie > params.seuil_exoneration_irg &&
+    base_irg_arrondie < 35000
   ) {
-    retenue_irg_nette = irgNetZoneTransition(base_imposable_irg);
+    retenue_irg_nette = irgNetZoneTransition(base_irg_arrondie);
     abattement_irg = Math.max(irg_brut - retenue_irg_nette, 0.0);
   } else {
     abattement_irg =
@@ -383,6 +388,13 @@ export function calculerPaie(saisie: SaisieMensuelle, params: Parametres): Resul
           );
     retenue_irg_nette = Math.max(irg_brut - abattement_irg, 0.0);
   }
+
+  // Art. 126 CIDTA : "le montant de la retenue à la source est arrondi à la
+  // dizaine de Dinars la plus voisine, les fractions inférieures à 5 [centimes]
+  // étant négligées et les fractions égales ou supérieures à 5 [centimes]
+  // entraînant une perception [au dizaine supérieure]". Exemples officiels :
+  // 325,21 -> 325,20 ; 325,55 -> 325,60 ; 325,77 -> 325,80.
+  retenue_irg_nette = Math.round(retenue_irg_nette * 10) / 10;
 
   // 12, 13, 14.
   const total_retenues =
