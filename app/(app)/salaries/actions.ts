@@ -269,7 +269,6 @@ export async function creerBulletin(salarieId: number, formData: FormData): Prom
   if (!salarie) throw new Error("Salarié introuvable");
 
   const params = await getParametres();
-  const rubriquesAssignees = await listerRubriquesSalarie(salarieId);
 
   const champsAbsences = {
     salaire_base_theorique: salarie.salaire_base_theorique,
@@ -281,15 +280,36 @@ export async function creerBulletin(salarieId: number, formData: FormData): Prom
   };
   const { salaire_base_reel } = calculerBaseAvantRubriques(champsAbsences, params);
 
-  // Résolution des rubriques dynamiques cochées pour ce salarié à partir des champs
-  // dyn_<code>_v1 (et _v2 pour la catégorie "nombre_x_taux") du formulaire.
+  // Résolution des rubriques dynamiques présentes dans le formulaire, à partir des
+  // champs dyn_<code>_v1 (et _v2 pour la catégorie "nombre_x_taux"). On ne se limite
+  // plus aux rubriques préassignées au salarié : n'importe quel code du catalogue peut
+  // avoir été ajouté à la volée depuis la recherche dans le formulaire de saisie.
+  const codesPostes = new Set<string>();
+  for (const key of formData.keys()) {
+    const m = key.match(/^dyn_(.+)_v1$/);
+    if (m) codesPostes.add(m[1]);
+  }
+
+  let catalogueMap = new Map<string, RubriqueCatalogueRow>();
+  if (codesPostes.size > 0) {
+    const { data: catalogueRows, error: catError } = await supabase
+      .from("rubriques_catalogue")
+      .select("code, libelle, type_valeur, cotisable, imposable")
+      .in("code", Array.from(codesPostes));
+    if (catError) throw new Error(catError.message);
+    catalogueMap = new Map((catalogueRows ?? []).map((r) => [r.code, r]));
+  }
+
   const valeursRubriques: { code: string; valeur_1: number; valeur_2: number }[] = [];
   const rubriques_dynamiques: LigneRubriqueDynamique[] = [];
-  for (const r of rubriquesAssignees) {
-    const v1 = num(`dyn_${r.code}_v1`);
-    const v2 = r.categorie === "nombre_x_taux" ? num(`dyn_${r.code}_v2`) : 0;
-    valeursRubriques.push({ code: r.code, valeur_1: v1, valeur_2: v2 });
-    const ligne = resoudreLigneRubrique(r, v1, v2, salaire_base_reel);
+  for (const code of codesPostes) {
+    const cat = catalogueMap.get(code);
+    if (!cat) continue; // code inconnu du catalogue : ignoré par sécurité
+    const categorie = categorieRubrique(code);
+    const v1 = num(`dyn_${code}_v1`);
+    const v2 = categorie === "nombre_x_taux" ? num(`dyn_${code}_v2`) : 0;
+    valeursRubriques.push({ code, valeur_1: v1, valeur_2: v2 });
+    const ligne = resoudreLigneRubrique(cat, v1, v2, salaire_base_reel);
     if (ligne) rubriques_dynamiques.push(ligne);
   }
 
@@ -464,6 +484,92 @@ export async function getBulletinPourPdf(
 
   return { salarie, params, saisie, resultat };
 }
+
+// ------------------------------------------------------------------
+// Rechargement d'un bulletin existant pour édition (bouton "Charger")
+// ------------------------------------------------------------------
+
+export interface LigneRubriqueSaisie {
+  code: string;
+  libelle: string | null;
+  categorie: CategorieRubrique;
+  valeur_1: number;
+  valeur_2: number;
+}
+
+export interface BulletinPourSaisie {
+  bulletin_id: number;
+  champs: Record<string, number>;
+  rubriques: LigneRubriqueSaisie[];
+}
+
+/**
+ * Relit un bulletin déjà enregistré (table `bulletins` + `bulletin_rubriques`) pour
+ * repréremplir le formulaire de saisie mensuelle (bouton "Charger"), y compris les
+ * rubriques dynamiques ajoutées à la volée qui ne font pas partie des rubriques
+ * préassignées au salarié. Retourne `null` si aucun bulletin n'existe pour cette
+ * période : le formulaire de saisie repart alors vierge pour un nouveau bulletin.
+ */
+export async function chargerBulletinPourSaisie(
+  salarieId: number,
+  annee: number,
+  mois: number,
+): Promise<BulletinPourSaisie | null> {
+  const { data: bulletin, error } = await supabase
+    .from("bulletins")
+    .select("*")
+    .eq("salarie_id", salarieId)
+    .eq("annee", annee)
+    .eq("mois", mois)
+    .single();
+
+  if (error || !bulletin) return null;
+
+  const { data: bulletinRubriques } = await supabase
+    .from("bulletin_rubriques")
+    .select("rubrique_code, valeur_1, valeur_2, rubriques_catalogue(code, libelle)")
+    .eq("bulletin_id", bulletin.id);
+
+  const rubriques: LigneRubriqueSaisie[] = (bulletinRubriques ?? []).map((br) => {
+    const cat = Array.isArray(br.rubriques_catalogue) ? br.rubriques_catalogue[0] : br.rubriques_catalogue;
+    const code = cat?.code ?? br.rubrique_code;
+    return {
+      code,
+      libelle: cat?.libelle ?? code,
+      categorie: categorieRubrique(code),
+      valeur_1: br.valeur_1 ?? 0,
+      valeur_2: br.valeur_2 ?? 0,
+    };
+  });
+
+  return {
+    bulletin_id: bulletin.id,
+    champs: {
+      maladie_h: bulletin.maladie_h,
+      mise_a_pied_h: bulletin.mise_a_pied_h,
+      accident_travail_h: bulletin.accident_travail_h,
+      retard_h: bulletin.retard_h,
+      absence_irreguliere_h: bulletin.absence_irreguliere_h,
+      heures_sup_1: bulletin.heures_sup_1,
+      heures_sup_2: bulletin.heures_sup_2,
+      heures_sup_3: bulletin.heures_sup_3,
+      icr: bulletin.icr,
+      taux_iep: bulletin.taux_iep,
+      taux_nuisance: bulletin.taux_nuisance,
+      taux_responsabilite: bulletin.taux_responsabilite,
+      taux_disponibilite: bulletin.taux_disponibilite,
+      taux_pri: bulletin.taux_pri,
+      taux_prc: bulletin.taux_prc,
+      panier_jours: bulletin.panier_jours,
+      panier_forfait_jour: bulletin.panier_forfait_jour,
+      autre_prime_fixe: bulletin.autre_prime_fixe,
+      cotis_mutuelle: bulletin.cotis_mutuelle,
+      autres_retenues: bulletin.autres_retenues,
+    },
+    rubriques,
+  };
+}
+
 // ------------------------------------------------------------------
 // Historique des bulletins
 // ------------------------------------------------------------------
