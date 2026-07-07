@@ -211,42 +211,42 @@ function construireLignes(saisie: SaisieMensuelle, resultat: ResultatPaie): Lign
     lignes.push({
       libelle: "I.E.P",
       base: `${fmtNombre(saisie.taux_iep * 100)} %`,
-      gain: resultat.salaire_base_reel * saisie.taux_iep,
+      gain: resultat.prime_iep,
     });
   }
   if (saisie.taux_nuisance) {
     lignes.push({
       libelle: "Indemnité de nuisance",
       base: `${fmtNombre(saisie.taux_nuisance * 100)} %`,
-      gain: resultat.salaire_base_reel * saisie.taux_nuisance,
+      gain: resultat.prime_nuisance,
     });
   }
   if (saisie.taux_responsabilite) {
     lignes.push({
       libelle: "Prime de responsabilité",
       base: `${fmtNombre(saisie.taux_responsabilite * 100)} %`,
-      gain: resultat.salaire_base_reel * saisie.taux_responsabilite,
+      gain: resultat.prime_responsabilite,
     });
   }
   if (saisie.taux_disponibilite) {
     lignes.push({
       libelle: "Prime de disponibilité",
       base: `${fmtNombre(saisie.taux_disponibilite * 100)} %`,
-      gain: resultat.salaire_base_reel * saisie.taux_disponibilite,
+      gain: resultat.prime_disponibilite,
     });
   }
   if (saisie.taux_pri) {
     lignes.push({
       libelle: "P.R.I",
       base: `${fmtNombre(saisie.taux_pri * 100)} %`,
-      gain: resultat.salaire_base_reel * saisie.taux_pri,
+      gain: resultat.prime_pri,
     });
   }
   if (saisie.taux_prc) {
     lignes.push({
       libelle: "P.R.C",
       base: `${fmtNombre(saisie.taux_prc * 100)} %`,
-      gain: resultat.salaire_base_reel * saisie.taux_prc,
+      gain: resultat.prime_prc,
     });
   }
   if (saisie.panier_jours) {

@@ -207,6 +207,12 @@ export interface ResultatPaie {
   taux_horaire: number;
   salaire_base_reel: number;
   total_heures_sup_da: number;
+  prime_iep: number;
+  prime_nuisance: number;
+  prime_responsabilite: number;
+  prime_disponibilite: number;
+  prime_pri: number;
+  prime_prc: number;
   total_rubriques_gains_da: number;
   total_rubriques_retenues_da: number;
   total_gains: number;
@@ -293,14 +299,32 @@ export function calculerPaie(saisie: SaisieMensuelle, params: Parametres): Resul
 
   // 3. Primes historiques V1 (% du salaire de base réel) + panier + fixes
   const panier = saisie.panier_jours * saisie.panier_forfait_jour;
+  // Arrondi à 2 décimales de chaque prime en %, AVANT sommation, pour que le
+  // total corresponde exactement à la somme des lignes affichées sur le
+  // bulletin (comme sur un bulletin réel/papier). En cas d'égalité exacte à
+  // 0,005 (ex: 25253 x 2,5% = 631,325), on arrondit vers le BAS (631,32),
+  // conformément à un bulletin réel constaté (I.E.P = 631,32, pas 631,33).
+  // Le epsilon (1e-9) compense le bruit de virgule flottante : un calcul
+  // mathématiquement exact comme 25253 x 0,025 peut être stocké en mémoire
+  // sous la forme 631,3250000000002 (au lieu de 631,325 pile), ce qui
+  // fausserait la détection de l'égalité exacte sans cette tolérance.
+  const arrondi2 = (v: number) => Math.ceil(v * 100 - 0.5 - 1e-9) / 100;
+
+  const prime_iep = arrondi2(salaire_base_reel * saisie.taux_iep);
+  const prime_nuisance = arrondi2(salaire_base_reel * saisie.taux_nuisance);
+  const prime_responsabilite = arrondi2(salaire_base_reel * saisie.taux_responsabilite);
+  const prime_disponibilite = arrondi2(salaire_base_reel * saisie.taux_disponibilite);
+  const prime_pri = arrondi2(salaire_base_reel * saisie.taux_pri);
+  const prime_prc = arrondi2(salaire_base_reel * saisie.taux_prc);
+
   const total_primes_v1 =
     saisie.icr
-    + salaire_base_reel * saisie.taux_iep
-    + salaire_base_reel * saisie.taux_nuisance
-    + salaire_base_reel * saisie.taux_responsabilite
-    + salaire_base_reel * saisie.taux_disponibilite
-    + salaire_base_reel * saisie.taux_pri
-    + salaire_base_reel * saisie.taux_prc
+    + prime_iep
+    + prime_nuisance
+    + prime_responsabilite
+    + prime_disponibilite
+    + prime_pri
+    + prime_prc
     + panier
     + saisie.autre_prime_fixe;
 
@@ -409,6 +433,12 @@ export function calculerPaie(saisie: SaisieMensuelle, params: Parametres): Resul
     taux_horaire,
     salaire_base_reel,
     total_heures_sup_da,
+    prime_iep,
+    prime_nuisance,
+    prime_responsabilite,
+    prime_disponibilite,
+    prime_pri,
+    prime_prc,
     total_rubriques_gains_da: total_rub_gains,
     total_rubriques_retenues_da: total_rub_retenues,
     total_gains,
