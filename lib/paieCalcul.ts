@@ -17,6 +17,8 @@
  *   13. Coût total employeur = total gains + (base CNAS x taux CNAS patronal 26%)
  */
 
+import { irgNetZoneTransition } from "./baremeIrgTransition";
+
 // ------------------------------------------------------------------
 // Classification des rubriques dynamiques (catalogue Hydrocanal, 402 lignes)
 // ------------------------------------------------------------------
@@ -355,14 +357,32 @@ export function calculerPaie(saisie: SaisieMensuelle, params: Parametres): Resul
 
   // 9, 10, 11. IRG
   const irg_brut = calculerIrgBrut(base_imposable_irg, params);
-  const abattement_irg =
-    irg_brut === 0
-      ? 0.0
-      : Math.min(
-          Math.max(irg_brut * params.taux_abattement_irg, params.abattement_irg_min),
-          params.abattement_irg_max,
-        );
-  const retenue_irg_nette = Math.max(irg_brut - abattement_irg, 0.0);
+
+  // Zone de lissage officielle (loi de finances 2022) : entre le seuil
+  // d'exonération (normalement 30000) et 35000 DA de base imposable, l'IRG
+  // net ne suit pas la formule standard (barème - abattement 40%) mais un
+  // barème de transition publié par la DGI (voir lib/baremeIrgTransition.ts).
+  // Au-delà de 35000, la formule standard est exacte.
+  let abattement_irg: number;
+  let retenue_irg_nette: number;
+
+  if (
+    irg_brut > 0 &&
+    base_imposable_irg > params.seuil_exoneration_irg &&
+    base_imposable_irg < 35000
+  ) {
+    retenue_irg_nette = irgNetZoneTransition(base_imposable_irg);
+    abattement_irg = Math.max(irg_brut - retenue_irg_nette, 0.0);
+  } else {
+    abattement_irg =
+      irg_brut === 0
+        ? 0.0
+        : Math.min(
+            Math.max(irg_brut * params.taux_abattement_irg, params.abattement_irg_min),
+            params.abattement_irg_max,
+          );
+    retenue_irg_nette = Math.max(irg_brut - abattement_irg, 0.0);
+  }
 
   // 12, 13, 14.
   const total_retenues =
