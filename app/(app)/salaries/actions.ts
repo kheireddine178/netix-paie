@@ -241,6 +241,49 @@ export async function assignerRubriquesSalarie(salarieId: number, formData: Form
   revalidatePath(`/salaries/${salarieId}/bulletin`);
 }
 
+/**
+ * Rattache une rubrique du catalogue à un salarié de façon incrémentale (sans toucher
+ * aux autres rubriques déjà assignées), appelée quand l'utilisateur ajoute une rubrique
+ * à la volée depuis la recherche du formulaire de saisie mensuelle. Une fois rattachée,
+ * la rubrique suit le salarié d'un mois à l'autre, comme dans la version Python.
+ * Idempotent : n'insère rien si la rubrique est déjà assignée à ce salarié.
+ */
+export async function ajouterRubriqueSalarie(salarieId: number, code: string) {
+  const { data: existant, error: selError } = await supabase
+    .from("salarie_rubriques")
+    .select("id")
+    .eq("salarie_id", salarieId)
+    .eq("rubrique_code", code)
+    .maybeSingle();
+  if (selError) throw new Error(selError.message);
+
+  if (!existant) {
+    const { error } = await supabase
+      .from("salarie_rubriques")
+      .insert({ salarie_id: salarieId, rubrique_code: code, valeur_defaut: 0 });
+    if (error) throw new Error(error.message);
+  }
+
+  revalidatePath(`/salaries/${salarieId}/rubriques`);
+  revalidatePath(`/salaries/${salarieId}/bulletin`);
+}
+
+/**
+ * Détache une rubrique du catalogue d'un salarié (symétrique de ajouterRubriqueSalarie),
+ * appelée quand l'utilisateur retire une rubrique depuis le formulaire de saisie mensuelle.
+ */
+export async function retirerRubriqueSalarie(salarieId: number, code: string) {
+  const { error } = await supabase
+    .from("salarie_rubriques")
+    .delete()
+    .eq("salarie_id", salarieId)
+    .eq("rubrique_code", code);
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/salaries/${salarieId}/rubriques`);
+  revalidatePath(`/salaries/${salarieId}/bulletin`);
+}
+
 // ------------------------------------------------------------------
 // Bulletin mensuel (V1 + rubriques dynamiques)
 // ------------------------------------------------------------------

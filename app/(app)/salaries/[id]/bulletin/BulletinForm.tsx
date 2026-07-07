@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { creerBulletin, chargerBulletinPourSaisie } from "../../actions";
+import { creerBulletin, chargerBulletinPourSaisie, ajouterRubriqueSalarie, retirerRubriqueSalarie } from "../../actions";
 import type {
   ResultatBulletin,
   RubriqueAssignee,
@@ -130,10 +130,18 @@ export default function BulletinForm({
   function ajouterRubrique(r: RubriqueCatalogue) {
     setLignes((prev) => [...prev, ligneVide(r)]);
     setRecherche("");
+    // Rattache la rubrique au salarié en base : elle le suivra d'un mois à l'autre,
+    // exactement comme dans la version Python — pas seulement le temps de cette page.
+    ajouterRubriqueSalarie(salarie.id, r.code).catch((e) => {
+      setErreur(e instanceof Error ? e.message : "Erreur lors de l'ajout de la rubrique");
+    });
   }
 
   function retirerRubrique(code: string) {
     setLignes((prev) => prev.filter((l) => l.code !== code));
+    retirerRubriqueSalarie(salarie.id, code).catch((e) => {
+      setErreur(e instanceof Error ? e.message : "Erreur lors du retrait de la rubrique");
+    });
   }
 
   function onCharger() {
@@ -143,11 +151,16 @@ export default function BulletinForm({
       try {
         const donnees = await chargerBulletinPourSaisie(salarie.id, annee, mois);
         if (!donnees) {
+          // Aucun bulletin pour ce mois : on garde les rubriques déjà rattachées au
+          // salarié (y compris celles ajoutées à la volée dans cette session), mais on
+          // remet leurs valeurs à zéro puisque c'est un nouveau mois à saisir.
           setInitialValues({});
-          setLignes(rubriquesAssignees.map(ligneDepuisAssignee));
+          setLignes((prev) => prev.map((l) => ({ ...l, valeur_1: 0, valeur_2: 0 })));
           setResultat(null);
           setFormKey((k) => k + 1);
-          setMessageCharge("Aucun bulletin enregistré pour cette période — formulaire vierge pour un nouveau bulletin.");
+          setMessageCharge(
+            "Aucun bulletin enregistré pour cette période — les rubriques de ce salarié sont conservées, valeurs remises à zéro.",
+          );
           return;
         }
 
@@ -156,16 +169,24 @@ export default function BulletinForm({
           champs[nom] = (champs[nom] ?? 0) * 100;
         }
 
+        const lignesChargees: LigneEtat[] = donnees.rubriques.map((r) => ({
+          code: r.code,
+          libelle: r.libelle,
+          categorie: r.categorie,
+          valeur_1: r.categorie === "pourcentage" ? r.valeur_1 * 100 : r.valeur_1,
+          valeur_2: r.valeur_2,
+        }));
+
+        // Une rubrique rattachée au salarié mais non saisie ce mois-là (valeur nulle,
+        // donc absente de bulletin_rubriques) doit quand même apparaître, à zéro, plutôt
+        // que de disparaître du formulaire.
+        const codesCharges = new Set(lignesChargees.map((l) => l.code));
+        const lignesConservees = lignes
+          .filter((l) => !codesCharges.has(l.code))
+          .map((l) => ({ ...l, valeur_1: 0, valeur_2: 0 }));
+
         setInitialValues(champs);
-        setLignes(
-          donnees.rubriques.map((r) => ({
-            code: r.code,
-            libelle: r.libelle,
-            categorie: r.categorie,
-            valeur_1: r.categorie === "pourcentage" ? r.valeur_1 * 100 : r.valeur_1,
-            valeur_2: r.valeur_2,
-          })),
-        );
+        setLignes([...lignesChargees, ...lignesConservees]);
         setResultat(null);
         setFormKey((k) => k + 1);
         setMessageCharge("Bulletin chargé — modifiez les valeurs puis cliquez sur Calculer pour mettre à jour.");
