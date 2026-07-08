@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getSalarie, listerRubriquesSalarie, listerCatalogueRubriques } from "../../actions";
+import { getSalarie, listerRubriquesSalarie, listerCatalogueRubriques, getParametres } from "../../actions";
 import BulletinForm from "./BulletinForm";
 
 export const dynamic = "force-dynamic";
@@ -15,9 +15,10 @@ export default async function BulletinPage({
 
   if (!salarie) notFound();
 
-  const [rubriquesAssignees, catalogueRubriques] = await Promise.all([
+  const [rubriquesAssignees, catalogueRubriques, parametres] = await Promise.all([
     listerRubriquesSalarie(salarie.id),
     listerCatalogueRubriques(),
+    getParametres(),
   ]);
 
   return (
@@ -42,6 +43,7 @@ export default async function BulletinPage({
         salarie={salarie}
         rubriquesAssignees={rubriquesAssignees}
         catalogueRubriques={catalogueRubriques}
+        parametres={parametres}
       />
     </>
   );

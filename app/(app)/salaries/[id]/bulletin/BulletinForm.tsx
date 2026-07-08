@@ -1,19 +1,34 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import React, { useMemo, useState, useTransition, useRef, useEffect } from "react";
 import Link from "next/link";
-import { creerBulletin, chargerBulletinPourSaisie, ajouterRubriqueSalarie, retirerRubriqueSalarie } from "../../actions";
+import {
+  creerBulletin,
+  chargerBulletinPourSaisie,
+  ajouterRubriqueSalarie,
+  retirerRubriqueSalarie,
+} from "../../actions";
 import type {
   ResultatBulletin,
   RubriqueAssignee,
   RubriqueCatalogue,
   Salarie,
 } from "../../actions";
+import type { Parametres } from "@/lib/paieCalcul";
+import { calculerPaie, calculerBaseAvantRubriques, SAISIE_VIDE } from "@/lib/paieCalcul";
+import { resoudreLigneRubrique } from "@/lib/rubriquesDynamiques";
 
 const MOIS = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
   "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
 ];
+
+const LABELS_CATEGORIE: Record<string, string> = {
+  pourcentage: "% d'une base",
+  nombre_x_taux: "Nombre × taux",
+  montant_fixe: "Montant fixe",
+  regularisation: "Régularisation",
+};
 
 const CHAMPS_ABSENCES = [
   { name: "maladie_h", label: "Maladie (heures)" },
@@ -29,7 +44,6 @@ const CHAMPS_HEURES_SUP = [
   { name: "heures_sup_3", label: "Heures sup. palier 3 (x2.0)" },
 ];
 
-// Champs saisis en DA / nombre, envoyés tels quels au serveur.
 const CHAMPS_PRIMES_MONTANT = [
   { name: "icr", label: "I.C.R (montant DA)" },
   { name: "panier_jours", label: "Panier — nombre de jours" },
@@ -37,12 +51,6 @@ const CHAMPS_PRIMES_MONTANT = [
   { name: "autre_prime_fixe", label: "Autre prime fixe (DA)" },
 ];
 
-/**
- * Champs de taux saisis EN POURCENTAGE COURANT (ex: taper "2.5" pour 2,5%), convertis
- * en fraction (0.025) juste avant l'envoi au serveur — voir CHAMPS_TAUX_POURCENTAGE et
- * la transformation dans onSubmit() ci-dessous. Le moteur de calcul (lib/paieCalcul.ts)
- * continue, lui, de recevoir et d'utiliser des fractions, exactement comme avant.
- */
 const CHAMPS_PRIMES_POURCENTAGE = [
   { name: "taux_iep", label: "Taux I.E.P (%)" },
   { name: "taux_nuisance", label: "Taux nuisance (%)" },
@@ -53,6 +61,7 @@ const CHAMPS_PRIMES_POURCENTAGE = [
 ];
 
 const CHAMPS_TAUX_POURCENTAGE = new Set(CHAMPS_PRIMES_POURCENTAGE.map((c) => c.name));
+const CHAMPS_TAUX_NOMS = CHAMPS_PRIMES_POURCENTAGE.map((c) => c.name);
 
 const CHAMPS_RETENUES = [
   { name: "cotis_mutuelle", label: "Cotisation mutuelle (DA)" },
@@ -63,9 +72,6 @@ function formatDA(n: number) {
   return n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }) + " DA";
 }
 
-/** Une ligne de rubrique dynamique affichée dans le formulaire (préassignée ou ajoutée
- * à la volée depuis la recherche). Les valeurs sont celles à afficher par défaut dans
- * les champs (déjà converties en pourcentage courant pour la catégorie "pourcentage"). */
 interface LigneEtat {
   code: string;
   libelle: string | null;
@@ -88,17 +94,18 @@ function ligneVide(r: RubriqueCatalogue): LigneEtat {
   return { code: r.code, libelle: r.libelle, categorie: r.categorie, valeur_1: 0, valeur_2: 0 };
 }
 
-const CHAMPS_TAUX_NOMS = CHAMPS_PRIMES_POURCENTAGE.map((c) => c.name);
-
 export default function BulletinForm({
   salarie,
   rubriquesAssignees,
   catalogueRubriques,
+  parametres,
 }: {
   salarie: Salarie;
   rubriquesAssignees: RubriqueAssignee[];
   catalogueRubriques: RubriqueCatalogue[];
+  parametres: Parametres;
 }) {
+  const formRef = useRef<HTMLFormElement>(null);
   const [resultat, setResultat] = useState<ResultatBulletin | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [messageCharge, setMessageCharge] = useState<string | null>(null);
@@ -108,14 +115,17 @@ export default function BulletinForm({
   const [annee, setAnnee] = useState(now.getFullYear());
   const [mois, setMois] = useState(now.getMonth() + 1);
 
-  // "formKey" force un remontage complet du formulaire (donc de tous les champs
-  // defaultValue) uniquement quand on charge un bulletin existant. Ajouter/retirer une
-  // rubrique via la recherche, en revanche, ne remonte pas les autres champs.
   const [formKey, setFormKey] = useState(0);
   const [initialValues, setInitialValues] = useState<Record<string, number>>({});
-  const [lignes, setLignes] = useState<LigneEtat[]>(() => rubriquesAssignees.map(ligneDepuisAssignee));
+  
+  // Sort rubriques by code on initial load
+  const [lignes, setLignes] = useState<LigneEtat[]>(() =>
+    rubriquesAssignees.map(ligneDepuisAssignee).sort((a, b) => a.code.localeCompare(b.code))
+  );
 
   const [recherche, setRecherche] = useState("");
+  const [estEnregistre, setEstEnregistre] = useState(false);
+  const [flashActive, setFlashActive] = useState(false);
 
   const codesDejaAjoutes = useMemo(() => new Set(lignes.map((l) => l.code)), [lignes]);
   const resultatsRecherche = useMemo(() => {
@@ -127,11 +137,96 @@ export default function BulletinForm({
       .slice(0, 8);
   }, [recherche, catalogueRubriques, codesDejaAjoutes]);
 
+  // Execute live calculation from DOM form values
+  const executerCalculLive = () => {
+    if (!formRef.current) return;
+    const formData = new FormData(formRef.current);
+    const num = (name: string) => {
+      const val = formData.get(name);
+      return val ? parseFloat(val.toString()) || 0 : 0;
+    };
+
+    const champsAbsences = {
+      salaire_base_theorique: salarie.salaire_base_theorique,
+      maladie_h: num("maladie_h"),
+      mise_a_pied_h: num("mise_a_pied_h"),
+      accident_travail_h: num("accident_travail_h"),
+      retard_h: num("retard_h"),
+      absence_irreguliere_h: num("absence_irreguliere_h"),
+    };
+    
+    const { salaire_base_reel } = calculerBaseAvantRubriques(champsAbsences, parametres);
+
+    const rubriques_dynamiques: any[] = [];
+    for (const ligne of lignes) {
+      const catRow = catalogueRubriques.find((cr) => cr.code === ligne.code);
+      if (!catRow) continue;
+      const rawV1 = num(`dyn_${ligne.code}_v1`);
+      const v1 = ligne.categorie === "pourcentage" ? rawV1 / 100 : rawV1;
+      const v2 = ligne.categorie === "nombre_x_taux" ? num(`dyn_${ligne.code}_v2`) : 0;
+      
+      const res = resoudreLigneRubrique(catRow, v1, v2, salaire_base_reel);
+      if (res) {
+        rubriques_dynamiques.push(res);
+      }
+    }
+
+    const saisie = {
+      ...SAISIE_VIDE,
+      ...champsAbsences,
+      heures_sup_1: num("heures_sup_1"),
+      heures_sup_2: num("heures_sup_2"),
+      heures_sup_3: num("heures_sup_3"),
+      icr: num("icr"),
+      taux_iep: num("taux_iep") / 100,
+      taux_nuisance: num("taux_nuisance") / 100,
+      taux_responsabilite: num("taux_responsabilite") / 100,
+      taux_disponibilite: num("taux_disponibilite") / 100,
+      taux_pri: num("taux_pri") / 100,
+      taux_prc: num("taux_prc") / 100,
+      panier_jours: num("panier_jours"),
+      panier_forfait_jour: num("panier_forfait_jour"),
+      autre_prime_fixe: num("autre_prime_fixe"),
+      cotis_mutuelle: num("cotis_mutuelle"),
+      autres_retenues: num("autres_retenues"),
+      rubriques_dynamiques,
+    };
+
+    const res = calculerPaie(saisie, parametres);
+    setResultat({
+      ...res,
+      bulletin_id: resultat?.bulletin_id ?? 0,
+      annee,
+      mois,
+    });
+    setEstEnregistre(false); // Any manual input change marks it as unsaved
+    setFlashActive(true);
+    setTimeout(() => setFlashActive(false), 300);
+  };
+
+  // Debounced auto-calcul callback
+  const debouncedCalcul = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+    return () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        executerCalculLive();
+      }, 350);
+    };
+  }, [lignes, parametres, annee, mois]);
+
+  // Run initial calculation when form mounts or lines change
+  useEffect(() => {
+    executerCalculLive();
+  }, [formKey, lignes.length]);
+
   function ajouterRubrique(r: RubriqueCatalogue) {
-    setLignes((prev) => [...prev, ligneVide(r)]);
+    setLignes((prev) => {
+      const next = [...prev, ligneVide(r)];
+      // Auto-sort rubriques by code in ascending order
+      return next.sort((a, b) => a.code.localeCompare(b.code));
+    });
     setRecherche("");
-    // Rattache la rubrique au salarié en base : elle le suivra d'un mois à l'autre,
-    // exactement comme dans la version Python — pas seulement le temps de cette page.
     ajouterRubriqueSalarie(salarie.id, r.code).catch((e) => {
       setErreur(e instanceof Error ? e.message : "Erreur lors de l'ajout de la rubrique");
     });
@@ -151,13 +246,11 @@ export default function BulletinForm({
       try {
         const donnees = await chargerBulletinPourSaisie(salarie.id, annee, mois);
         if (!donnees) {
-          // Aucun bulletin pour ce mois : on garde les rubriques déjà rattachées au
-          // salarié (y compris celles ajoutées à la volée dans cette session), mais on
-          // remet leurs valeurs à zéro puisque c'est un nouveau mois à saisir.
           setInitialValues({});
           setLignes((prev) => prev.map((l) => ({ ...l, valeur_1: 0, valeur_2: 0 })));
           setResultat(null);
           setFormKey((k) => k + 1);
+          setEstEnregistre(false);
           setMessageCharge(
             "Aucun bulletin enregistré pour cette période — les rubriques de ce salarié sont conservées, valeurs remises à zéro.",
           );
@@ -175,11 +268,8 @@ export default function BulletinForm({
           categorie: r.categorie,
           valeur_1: r.categorie === "pourcentage" ? r.valeur_1 * 100 : r.valeur_1,
           valeur_2: r.valeur_2,
-        }));
+        })).sort((a, b) => a.code.localeCompare(b.code));
 
-        // Une rubrique rattachée au salarié mais non saisie ce mois-là (valeur nulle,
-        // donc absente de bulletin_rubriques) doit quand même apparaître, à zéro, plutôt
-        // que de disparaître du formulaire.
         const codesCharges = new Set(lignesChargees.map((l) => l.code));
         const lignesConservees = lignes
           .filter((l) => !codesCharges.has(l.code))
@@ -187,11 +277,51 @@ export default function BulletinForm({
 
         setInitialValues(champs);
         setLignes([...lignesChargees, ...lignesConservees]);
-        setResultat(null);
         setFormKey((k) => k + 1);
-        setMessageCharge("Bulletin chargé — modifiez les valeurs puis cliquez sur Calculer pour mettre à jour.");
+        setEstEnregistre(true);
+        setMessageCharge("Bulletin chargé avec succès.");
       } catch (e) {
         setErreur(e instanceof Error ? e.message : "Erreur au chargement du bulletin");
+      }
+    });
+  }
+
+  function handleCopierMoisPrecedent() {
+    setErreur(null);
+    setMessageCharge(null);
+    const prevMois = mois === 1 ? 12 : mois - 1;
+    const prevAnnee = mois === 1 ? annee - 1 : annee;
+
+    startTransition(async () => {
+      try {
+        const donnees = await chargerBulletinPourSaisie(salarie.id, prevAnnee, prevMois);
+        if (!donnees) {
+          setErreur(`Aucun bulletin trouvé pour le mois précédent (${MOIS[prevMois - 1]} ${prevAnnee}).`);
+          return;
+        }
+
+        const champs = { ...donnees.champs };
+        for (const nom of CHAMPS_TAUX_NOMS) {
+          champs[nom] = (champs[nom] ?? 0) * 100;
+        }
+
+        const lignesChargees: LigneEtat[] = donnees.rubriques.map((r) => ({
+          code: r.code,
+          libelle: r.libelle,
+          categorie: r.categorie,
+          valeur_1: r.categorie === "pourcentage" ? r.valeur_1 * 100 : r.valeur_1,
+          valeur_2: r.valeur_2,
+        })).sort((a, b) => a.code.localeCompare(b.code));
+
+        setInitialValues(champs);
+        setLignes(lignesChargees);
+        setFormKey((k) => k + 1);
+        setEstEnregistre(false); // Copied data is not saved yet for the target month
+        setMessageCharge(
+          `Données copiées depuis ${MOIS[prevMois - 1]} ${prevAnnee}. Modifiez-les puis enregistrez le bulletin.`
+        );
+      } catch (e) {
+        setErreur(e instanceof Error ? e.message : "Erreur lors de la copie");
       }
     });
   }
@@ -201,14 +331,8 @@ export default function BulletinForm({
     setErreur(null);
     setMessageCharge(null);
 
-    // On construit la FormData nous-mêmes et on empêche la soumission native : React
-    // réinitialise automatiquement les champs d'un <form action={...}> après succès,
-    // ce qui effaçait toute la saisie après chaque calcul. Avec onSubmit + preventDefault,
-    // les valeurs tapées restent affichées et modifiables pour un nouveau calcul.
     const formData = new FormData(e.currentTarget);
 
-    // Convertit les taux saisis en pourcentage courant (ex: 2.5 pour 2,5%) en fraction
-    // (0.025) attendue par le moteur de calcul, sans toucher à celui-ci.
     for (const nom of CHAMPS_TAUX_POURCENTAGE) {
       const brut = formData.get(nom);
       if (brut !== null) {
@@ -230,6 +354,8 @@ export default function BulletinForm({
       try {
         const r = await creerBulletin(salarie.id, formData);
         setResultat(r);
+        setEstEnregistre(true);
+        setMessageCharge("Le bulletin a été enregistré avec succès en base de données.");
       } catch (e) {
         setErreur(e instanceof Error ? e.message : "Erreur inconnue");
       }
@@ -238,7 +364,8 @@ export default function BulletinForm({
 
   return (
     <div className="grid md:grid-cols-2 gap-8">
-      <form key={formKey} onSubmit={onSubmit} className="space-y-5">
+      <form key={formKey} onSubmit={onSubmit} onChange={debouncedCalcul} ref={formRef} className="space-y-5">
+        {/* Loading / Action panel */}
         <div className="card">
           <div className="grid grid-cols-2 gap-3">
             <div className="field" style={{ marginBottom: 0 }}>
@@ -269,15 +396,27 @@ export default function BulletinForm({
               </select>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onCharger}
-            disabled={isPending}
-            className="btn btn-secondary btn-sm"
-            style={{ marginTop: "var(--s3)" }}
-          >
-            {isPending ? "Chargement..." : "📂 Charger le bulletin de cette période"}
-          </button>
+          <div style={{ display: "flex", gap: "var(--s2)", flexWrap: "wrap", marginTop: "var(--s3)" }}>
+            <button
+              type="button"
+              onClick={onCharger}
+              disabled={isPending}
+              className="btn btn-secondary btn-sm"
+              style={{ flex: 1 }}
+            >
+              📂 Charger ce mois
+            </button>
+            <button
+              type="button"
+              onClick={handleCopierMoisPrecedent}
+              disabled={isPending}
+              className="btn btn-secondary btn-sm"
+              style={{ flex: 1 }}
+              title="Copier les données saisies le mois précédent"
+            >
+              📋 Copier mois précédent
+            </button>
+          </div>
           {messageCharge && (
             <p style={{ fontSize: "var(--txs)", color: "var(--text-muted)", marginTop: "var(--s2)" }}>
               {messageCharge}
@@ -285,7 +424,7 @@ export default function BulletinForm({
           )}
         </div>
 
-        <Section titre="Absences">
+        <Section titre="Absences (heures) — réduisent le salaire">
           {CHAMPS_ABSENCES.map((c) => (
             <Champ key={c.name} {...c} defaultValue={initialValues[c.name] ?? 0} />
           ))}
@@ -317,6 +456,7 @@ export default function BulletinForm({
           ))}
         </Section>
 
+        {/* Custom Rubrics Section */}
         <div className="card">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "var(--s3)" }}>
             <h3>Primes, indemnités et retenues — catalogue</h3>
@@ -342,30 +482,47 @@ export default function BulletinForm({
                   left: 0,
                   right: 0,
                   marginTop: 4,
-                  padding: "var(--s2)",
+                  padding: "var(--s1)",
                   maxHeight: 260,
                   overflowY: "auto",
+                  boxShadow: "var(--shmd)",
                 }}
               >
-                {resultatsRecherche.map((r) => (
-                  <button
-                    key={r.code}
-                    type="button"
-                    onClick={() => ajouterRubrique(r)}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "6px 8px",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: "var(--tsm)",
-                    }}
-                  >
-                    <strong>{r.code}</strong> — {r.libelle}
-                  </button>
-                ))}
+                {resultatsRecherche.map((r) => {
+                  const isGain = r.type_valeur === "Gain (+)";
+                  const badgeClass = isGain ? "badge-teal" : "badge-red";
+                  const badgeText = isGain ? "Gain" : "Retenue";
+                  const catLabel = LABELS_CATEGORIE[r.categorie] || r.categorie;
+                  return (
+                    <button
+                      key={r.code}
+                      type="button"
+                      onClick={() => ajouterRubrique(r)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        padding: "8px 12px",
+                        background: "none",
+                        border: "none",
+                        borderBottom: "1px solid var(--border-soft)",
+                        cursor: "pointer",
+                        fontSize: "var(--tsm)",
+                        textAlign: "left",
+                      }}
+                    >
+                      <div>
+                        <strong style={{ fontFamily: "var(--mono)", color: "var(--accent)" }}>{r.code}</strong>{" "}
+                        <span style={{ color: "var(--text)" }}>— {r.libelle}</span>
+                      </div>
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        <span className={`badge ${badgeClass}`} style={{ fontSize: "10px", padding: "2px 6px" }}>{badgeText}</span>
+                        <span className="badge" style={{ fontSize: "10px", padding: "2px 6px", border: "1px solid var(--border)" }}>{catLabel}</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -378,7 +535,7 @@ export default function BulletinForm({
             </div>
           ) : (
             <p style={{ fontSize: "var(--txs)", color: "var(--text-muted)" }}>
-              Aucune rubrique pour ce bulletin. Utilisez la recherche ci-dessus pour en ajouter — sans limite.
+              Aucune rubrique pour ce bulletin. Utilisez la recherche ci-dessus pour en ajouter.
             </p>
           )}
         </div>
@@ -390,16 +547,26 @@ export default function BulletinForm({
         )}
 
         <button type="submit" disabled={isPending} className="btn btn-primary">
-          {isPending ? "Calcul en cours..." : "Calculer et enregistrer le bulletin"}
+          {isPending ? "Enregistrement..." : "💾 Enregistrer le bulletin"}
         </button>
       </form>
 
+      {/* Right side: Live Calculation Results Panel */}
       <div>
         {resultat ? (
-          <div className="bulletin" style={{ position: "sticky", top: "var(--s6)" }}>
+          <div
+            className="bulletin"
+            style={{
+              position: "sticky",
+              top: "var(--s6)",
+              transition: "box-shadow 0.3s ease, border-color 0.3s ease",
+              borderColor: flashActive ? "var(--green-600)" : "var(--border)",
+              boxShadow: flashActive ? "0 0 15px rgba(22, 163, 74, 0.2)" : "var(--shmd)",
+            }}
+          >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--s5)" }}>
               <div>
-                <h2>Bulletin de paie</h2>
+                <h2>Calcul en direct</h2>
                 <p style={{ color: "var(--text-muted)", marginTop: 4 }}>{salarie.nom_prenom}</p>
               </div>
               <span className="badge badge-accent">
@@ -429,36 +596,58 @@ export default function BulletinForm({
 
             <div className="bulletin-total">
               <span>NET À PAYER</span>
-              <strong>{formatDA(resultat.net_a_payer)}</strong>
+              <strong style={{ transition: "color 0.2s", color: flashActive ? "var(--green-600)" : "var(--marine-900)" }}>
+                {formatDA(resultat.net_a_payer)}
+              </strong>
             </div>
-            <div style={{ marginTop: "var(--s2)" }}>
+            <div style={{ marginTop: "var(--s2)", marginBottom: "var(--s4)" }}>
               <Ligne label="Coût total employeur" valeur={resultat.cout_total_employeur} />
             </div>
 
+            {/* Save notice & Action PDF buttons */}
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--s2)", marginTop: "var(--s5)" }}>
-              <a
-                href={`/salaries/${salarie.id}/bulletin/pdf?annee=${resultat.annee}&mois=${resultat.mois}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary"
-              >
-                📄 Télécharger le PDF (bulletin salarié)
-              </a>
-              <a
-                href={`/salaries/${salarie.id}/bulletin/pdf?annee=${resultat.annee}&mois=${resultat.mois}&variante=employeur`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-secondary"
-              >
-                Voir la variante employeur (avec charges patronales)
-              </a>
-              <Link
-                href={`/salaries/${salarie.id}/bulletin/explication?annee=${resultat.annee}&mois=${resultat.mois}`}
-                className="btn btn-secondary"
-                style={{ textAlign: "center" }}
-              >
-                🔍 Voir l&apos;explication détaillée du calcul
-              </Link>
+              {estEnregistre ? (
+                <>
+                  <a
+                    href={`/salaries/${salarie.id}/bulletin/pdf?annee=${resultat.annee}&mois=${resultat.mois}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary"
+                  >
+                    📄 Télécharger le PDF (bulletin salarié)
+                  </a>
+                  <a
+                    href={`/salaries/${salarie.id}/bulletin/pdf?annee=${resultat.annee}&mois=${resultat.mois}&variante=employeur`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-secondary"
+                  >
+                    Voir la variante employeur (avec charges patronales)
+                  </a>
+                  <Link
+                    href={`/salaries/${salarie.id}/bulletin/explication?annee=${resultat.annee}&mois=${resultat.mois}`}
+                    className="btn btn-secondary"
+                    style={{ textAlign: "center" }}
+                  >
+                    🔍 Voir l&apos;explication détaillée du calcul
+                  </Link>
+                </>
+              ) : (
+                <div
+                  className="card"
+                  style={{
+                    border: "1px dashed var(--amber)",
+                    background: "var(--amber-bg)",
+                    color: "var(--amber)",
+                    fontSize: "var(--txs)",
+                    fontWeight: 600,
+                    textAlign: "center",
+                    padding: "var(--s3)",
+                  }}
+                >
+                  ⚠️ Modifié. Cliquez sur le bouton "Enregistrer le bulletin" pour activer l'export PDF et les explications.
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -509,16 +698,6 @@ function Champ({
   );
 }
 
-/**
- * Champ(s) de saisie pour une rubrique dynamique (préassignée au salarié ou ajoutée à
- * la volée), adaptés à sa catégorie :
- *   - pourcentage : 1 champ, saisi EN POURCENTAGE COURANT (ex: 2.5 pour 2,5%) — converti
- *     en fraction dans onSubmit() avant l'envoi au serveur (dyn_<code>_v1)
- *   - montant_fixe / regularisation : 1 champ (dyn_<code>_v1), en DA, envoyé tel quel
- *   - nombre_x_taux : 2 champs (dyn_<code>_v1 = nombre, dyn_<code>_v2 = taux/forfait)
- * Un bouton "×" permet de retirer la ligne du bulletin (sans limite de rubriques
- * ajoutables au préalable via la recherche du catalogue).
- */
 function ChampRubriqueDynamique({ ligne, onRetirer }: { ligne: LigneEtat; onRetirer: () => void }) {
   const libelle = `${ligne.code} — ${ligne.libelle ?? ""}`;
 
