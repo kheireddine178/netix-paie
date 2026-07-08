@@ -2,11 +2,9 @@
 
 import React, { useMemo, useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import type { Salarie } from "../salaries/actions";
+import type { Salarie, BulletinPourSaisie } from "../salaries/actions";
 import {
   creerBulletin,
-  chargerBulletinPourSaisie,
   ajouterRubriqueSalarie,
   retirerRubriqueSalarie,
   supprimerBulletin,
@@ -16,7 +14,7 @@ import type {
   RubriqueAssignee,
   RubriqueCatalogue,
 } from "../salaries/actions";
-import type { Parametres } from "@/lib/paieCalcul";
+import type { Parametres, LigneRubriqueDynamique } from "@/lib/paieCalcul";
 import { calculerPaie, calculerBaseAvantRubriques, SAISIE_VIDE } from "@/lib/paieCalcul";
 import { resoudreLigneRubrique } from "@/lib/rubriquesDynamiques";
 
@@ -114,16 +112,17 @@ export default function SaisieFormulaireConsolide({
   rubriquesAssignees: RubriqueAssignee[];
   catalogueRubriques: RubriqueCatalogue[];
   parametres: Parametres;
-  initialBulletin: any;
+  initialBulletin: BulletinPourSaisie | null;
 }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const calculTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [resultat, setResultat] = useState<ResultatBulletin | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [messageCharge, setMessageCharge] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const [salarieId, setSalarieId] = useState(salarieActive?.id || "");
+  const [salarieId, setSalarieId] = useState<number | string>(salarieActive?.id || "");
   const [annee, setAnnee] = useState(anneeActive);
   const [mois, setMois] = useState(moisActive);
 
@@ -133,10 +132,13 @@ export default function SaisieFormulaireConsolide({
 
   const [recherche, setRecherche] = useState("");
   const [estEnregistre, setEstEnregistre] = useState(false);
-  const [flashActive, setFlashActive] = useState(false);
 
-  // Initialize form values and dynamic rubrics list
-  useEffect(() => {
+  // Sync state during render when salarieActive or initialBulletin changes
+  const [prevKey, setPrevKey] = useState("");
+  const currentKey = `${salarieActive?.id || ""}_${anneeActive}_${moisActive}`;
+
+  if (prevKey !== currentKey) {
+    setPrevKey(currentKey);
     if (salarieActive) {
       if (initialBulletin) {
         const champs = { ...initialBulletin.champs };
@@ -148,11 +150,11 @@ export default function SaisieFormulaireConsolide({
         champs.taux_pri = (champs.taux_pri ?? 0) * 100;
         champs.taux_prc = (champs.taux_prc ?? 0) * 100;
 
-        const lignesChargees: LigneEtat[] = initialBulletin.rubriques.map((r: any) => ({
+        const lignesChargees: LigneEtat[] = initialBulletin.rubriques.map((r) => ({
           code: r.code,
           libelle: r.libelle,
           categorie: r.categorie,
-          type_valeur: r.type_valeur ?? (catalogueRubriques.find((cr) => cr.code === r.code)?.type_valeur || null),
+          type_valeur: catalogueRubriques.find((cr) => cr.code === r.code)?.type_valeur || null,
           valeur_1: r.categorie === "pourcentage" ? r.valeur_1 * 100 : r.valeur_1,
           valeur_2: r.valeur_2,
         })).sort((a: LigneEtat, b: LigneEtat) => a.code.localeCompare(b.code));
@@ -173,7 +175,7 @@ export default function SaisieFormulaireConsolide({
       setResultat(null);
       setEstEnregistre(false);
     }
-  }, [salarieActive, initialBulletin, rubriquesAssignees, catalogueRubriques]);
+  }
 
   const codesDejaAjoutes = useMemo(() => new Set(lignes.map((l) => l.code)), [lignes]);
   
@@ -206,7 +208,7 @@ export default function SaisieFormulaireConsolide({
     
     const { salaire_base_reel } = calculerBaseAvantRubriques(champsAbsences, parametres);
 
-    const rubriques_dynamiques: any[] = [];
+    const rubriques_dynamiques: LigneRubriqueDynamique[] = [];
     for (const ligne of lignes) {
       const catRow = catalogueRubriques.find((cr) => cr.code === ligne.code);
       if (!catRow) continue;
@@ -249,22 +251,20 @@ export default function SaisieFormulaireConsolide({
       mois,
     });
     setEstEnregistre(false); // mark as dirty
-    setFlashActive(true);
-    setTimeout(() => setFlashActive(false), 300);
   };
 
-  const debouncedCalcul = useMemo(() => {
-    let timeoutId: NodeJS.Timeout;
-    return () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        executerCalculLive();
-      }, 350);
-    };
-  }, [lignes, parametres, annee, mois, salarieActive]);
+  const debouncedCalcul = () => {
+    if (calculTimeoutRef.current) {
+      clearTimeout(calculTimeoutRef.current);
+    }
+    calculTimeoutRef.current = setTimeout(() => {
+      executerCalculLive();
+    }, 350);
+  };
 
   useEffect(() => {
     executerCalculLive();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formKey, lignes.length]);
 
   function handleCharger() {
