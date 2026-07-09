@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useTransition, useRef, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Salarie, BulletinPourSaisie } from "../salaries/actions";
 import {
@@ -8,6 +9,7 @@ import {
   ajouterRubriqueSalarie,
   retirerRubriqueSalarie,
   supprimerBulletin,
+  chargerBulletinPourSaisie,
 } from "../salaries/actions";
 import type {
   ResultatBulletin,
@@ -44,21 +46,31 @@ const CHAMPS_HEURES_SUP = [
   { name: "heures_sup_3", label: "PALIER 3 (H)" },
 ];
 
-// List of hidden fields to preserve database state
-const CHAMPS_CACHES = [
-  "icr",
-  "taux_iep",
-  "taux_nuisance",
-  "taux_responsabilite",
-  "taux_disponibilite",
-  "taux_pri",
-  "taux_prc",
-  "panier_jours",
-  "panier_forfait_jour",
-  "autre_prime_fixe",
-  "cotis_mutuelle",
-  "autres_retenues",
+// Primes / indemnités à montant fixe (DA)
+const CHAMPS_PRIMES_MONTANT = [
+  { name: "icr", label: "I.C.R (DA)" },
+  { name: "panier_jours", label: "Panier — jours" },
+  { name: "panier_forfait_jour", label: "Panier — forfait/jour (DA)" },
+  { name: "autre_prime_fixe", label: "Autre prime fixe (DA)" },
 ];
+
+// Primes exprimées en % d'une base
+const CHAMPS_PRIMES_POURCENTAGE = [
+  { name: "taux_iep", label: "Taux I.E.P (%)" },
+  { name: "taux_nuisance", label: "Taux nuisance (%)" },
+  { name: "taux_responsabilite", label: "Taux responsabilité (%)" },
+  { name: "taux_disponibilite", label: "Taux disponibilité (%)" },
+  { name: "taux_pri", label: "Taux P.R.I (%)" },
+  { name: "taux_prc", label: "Taux P.R.C (%)" },
+];
+
+const CHAMPS_RETENUES = [
+  { name: "cotis_mutuelle", label: "Cotisation mutuelle (DA)" },
+  { name: "autres_retenues", label: "Autres retenues (DA)" },
+];
+
+const CHAMPS_TAUX_POURCENTAGE = new Set(CHAMPS_PRIMES_POURCENTAGE.map((c) => c.name));
+const CHAMPS_TAUX_NOMS = CHAMPS_PRIMES_POURCENTAGE.map((c) => c.name);
 
 function formatDA(n: number) {
   return n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }) + " DA";
@@ -143,12 +155,9 @@ export default function SaisieFormulaireConsolide({
       if (initialBulletin) {
         const champs = { ...initialBulletin.champs };
         // Scale percentages to 0-100 scale for user input
-        champs.taux_iep = (champs.taux_iep ?? 0) * 100;
-        champs.taux_nuisance = (champs.taux_nuisance ?? 0) * 100;
-        champs.taux_responsabilite = (champs.taux_responsabilite ?? 0) * 100;
-        champs.taux_disponibilite = (champs.taux_disponibilite ?? 0) * 100;
-        champs.taux_pri = (champs.taux_pri ?? 0) * 100;
-        champs.taux_prc = (champs.taux_prc ?? 0) * 100;
+        for (const nom of CHAMPS_TAUX_NOMS) {
+          champs[nom] = (champs[nom] ?? 0) * 100;
+        }
 
         const lignesChargees: LigneEtat[] = initialBulletin.rubriques.map((r) => ({
           code: r.code,
@@ -178,7 +187,7 @@ export default function SaisieFormulaireConsolide({
   }
 
   const codesDejaAjoutes = useMemo(() => new Set(lignes.map((l) => l.code)), [lignes]);
-  
+
   const resultatsRecherche = useMemo(() => {
     const q = recherche.trim().toLowerCase();
     if (!q) return [];
@@ -205,7 +214,7 @@ export default function SaisieFormulaireConsolide({
       retard_h: num("retard_h"),
       absence_irreguliere_h: num("absence_irreguliere_h"),
     };
-    
+
     const { salaire_base_reel } = calculerBaseAvantRubriques(champsAbsences, parametres);
 
     const rubriques_dynamiques: LigneRubriqueDynamique[] = [];
@@ -215,7 +224,7 @@ export default function SaisieFormulaireConsolide({
       const rawV1 = num(`dyn_${ligne.code}_v1`);
       const v1 = ligne.categorie === "pourcentage" ? rawV1 / 100 : rawV1;
       const v2 = ligne.categorie === "nombre_x_taux" ? num(`dyn_${ligne.code}_v2`) : 0;
-      
+
       const res = resoudreLigneRubrique(catRow, v1, v2, salaire_base_reel);
       if (res) {
         rubriques_dynamiques.push(res);
@@ -277,6 +286,49 @@ export default function SaisieFormulaireConsolide({
     router.push(`/saisie?salarieId=${salarieId}&annee=${annee}&mois=${mois}`);
   }
 
+  // Copier les données saisies le mois précédent (rétabli — supprimé par erreur)
+  function handleCopierMoisPrecedent() {
+    if (!salarieActive) return;
+    setErreur(null);
+    setMessageCharge(null);
+    const prevMois = mois === 1 ? 12 : mois - 1;
+    const prevAnnee = mois === 1 ? annee - 1 : annee;
+
+    startTransition(async () => {
+      try {
+        const donnees = await chargerBulletinPourSaisie(salarieActive.id, prevAnnee, prevMois);
+        if (!donnees) {
+          setErreur(`Aucun bulletin trouvé pour le mois précédent (${MOIS[prevMois - 1]} ${prevAnnee}).`);
+          return;
+        }
+
+        const champs = { ...donnees.champs };
+        for (const nom of CHAMPS_TAUX_NOMS) {
+          champs[nom] = (champs[nom] ?? 0) * 100;
+        }
+
+        const lignesChargees: LigneEtat[] = donnees.rubriques.map((r) => ({
+          code: r.code,
+          libelle: r.libelle,
+          categorie: r.categorie,
+          type_valeur: catalogueRubriques.find((cr) => cr.code === r.code)?.type_valeur || null,
+          valeur_1: r.categorie === "pourcentage" ? r.valeur_1 * 100 : r.valeur_1,
+          valeur_2: r.valeur_2,
+        })).sort((a, b) => a.code.localeCompare(b.code));
+
+        setInitialValues(champs);
+        setLignes(lignesChargees);
+        setFormKey((k) => k + 1);
+        setEstEnregistre(false); // copié mais pas encore enregistré pour le mois cible
+        setMessageCharge(
+          `Données copiées depuis ${MOIS[prevMois - 1]} ${prevAnnee}. Modifiez-les puis enregistrez le bulletin.`
+        );
+      } catch (e) {
+        setErreur(e instanceof Error ? e.message : "Erreur lors de la copie");
+      }
+    });
+  }
+
   function ajouterRubrique(r: RubriqueCatalogue) {
     if (!salarieActive) return;
     setLignes((prev) => {
@@ -306,7 +358,7 @@ export default function SaisieFormulaireConsolide({
     const formData = new FormData(e.currentTarget);
 
     // Convert percentage values back to fractional values (0-1 scale)
-    for (const nom of ["taux_iep", "taux_nuisance", "taux_responsabilite", "taux_disponibilite", "taux_pri", "taux_prc"]) {
+    for (const nom of CHAMPS_TAUX_POURCENTAGE) {
       const brut = formData.get(nom);
       if (brut !== null) {
         const valeur = parseFloat(brut.toString().replace(",", "."));
@@ -339,7 +391,7 @@ export default function SaisieFormulaireConsolide({
   async function handleSupprimer() {
     if (!salarieActive || !initialBulletin?.bulletin_id) return;
     if (!confirm("Voulez-vous vraiment supprimer ce bulletin ?")) return;
-    
+
     startTransition(async () => {
       try {
         await supprimerBulletin(salarieActive.id, initialBulletin.bulletin_id);
@@ -409,6 +461,19 @@ export default function SaisieFormulaireConsolide({
           >
             Charger
           </button>
+
+          {salarieActive && (
+            <button
+              type="button"
+              onClick={handleCopierMoisPrecedent}
+              disabled={isPending}
+              className="btn btn-secondary"
+              style={{ height: "42px", padding: "0 24px", fontWeight: "bold" }}
+              title="Copier les données saisies le mois précédent"
+            >
+              📋 Copier mois précédent
+            </button>
+          )}
         </div>
       </div>
 
@@ -426,10 +491,10 @@ export default function SaisieFormulaireConsolide({
 
       {salarieActive ? (
         <div style={{ display: "grid", gap: "var(--s6)", alignItems: "start" }} className="grid grid-cols-1 lg:grid-cols-3">
-          
+
           {/* Main Form Column (BULLETIN DE PAIE) */}
           <div className="lg:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "var(--s4)" }}>
-            
+
             {/* Header style bar */}
             <div style={{
               background: "#0f233c",
@@ -454,11 +519,6 @@ export default function SaisieFormulaireConsolide({
               {/* Pass Month/Year as hidden values */}
               <input type="hidden" name="annee" value={annee} />
               <input type="hidden" name="mois" value={mois} />
-
-              {/* Render non-visible fields as hidden to avoid losing their data */}
-              {CHAMPS_CACHES.map((nom) => (
-                <input key={nom} type="hidden" name={nom} defaultValue={initialValues[nom] ?? 0} />
-              ))}
 
               {/* SALAIRE DE BASE */}
               <div style={{ borderBottom: "var(--hairline)", paddingBottom: "var(--s4)" }}>
@@ -526,13 +586,72 @@ export default function SaisieFormulaireConsolide({
                 </div>
               </div>
 
-              {/* PRIMES, INDEMNITÉS ET RETENUES */}
+              {/* PRIMES FIXES + POURCENTAGE (rétabli — étaient devenus des champs cachés par erreur) */}
+              <div style={{ borderBottom: "var(--hairline)", paddingBottom: "var(--s4)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s4)" }}>
+                  <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
+                    💰 PRIMES ET INDEMNITÉS STANDARD
+                  </h4>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "var(--s3)" }}>
+                  {CHAMPS_PRIMES_MONTANT.map((c) => (
+                    <div key={c.name} className="field" style={{ marginBottom: 0 }}>
+                      <label style={{ fontSize: "9px" }}>{c.label}</label>
+                      <input
+                        name={c.name}
+                        type="number"
+                        step="0.01"
+                        defaultValue={initialValues[c.name] ?? 0}
+                        style={{ textAlign: "center" }}
+                      />
+                    </div>
+                  ))}
+                  {CHAMPS_PRIMES_POURCENTAGE.map((c) => (
+                    <div key={c.name} className="field" style={{ marginBottom: 0 }}>
+                      <label style={{ fontSize: "9px" }}>{c.label}</label>
+                      <input
+                        name={c.name}
+                        type="number"
+                        step="0.01"
+                        defaultValue={initialValues[c.name] ?? 0}
+                        placeholder="ex: 2.5 pour 2,5%"
+                        style={{ textAlign: "center" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* RETENUES ADDITIONNELLES (rétabli) */}
+              <div style={{ borderBottom: "var(--hairline)", paddingBottom: "var(--s4)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s4)" }}>
+                  <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
+                    ➖ RETENUES ADDITIONNELLES
+                  </h4>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "var(--s3)" }}>
+                  {CHAMPS_RETENUES.map((c) => (
+                    <div key={c.name} className="field" style={{ marginBottom: 0 }}>
+                      <label style={{ fontSize: "9px" }}>{c.label}</label>
+                      <input
+                        name={c.name}
+                        type="number"
+                        step="0.01"
+                        defaultValue={initialValues[c.name] ?? 0}
+                        style={{ textAlign: "center" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* PRIMES, INDEMNITÉS ET RETENUES — CATALOGUE DYNAMIQUE */}
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s4)" }}>
                   <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
-                    💵 PRIMES, INDEMNITÉS ET RETENUES
+                    💵 RUBRIQUES DU CATALOGUE
                   </h4>
-                  <span className="badge badge-teal" style={{ fontSize: "9px", padding: "2px 8px" }}>CATALOGUE DES RUBRIQUES</span>
+                  <span className="badge badge-teal" style={{ fontSize: "9px", padding: "2px 8px" }}>PERSONNALISÉES PAR SALARIÉ</span>
                 </div>
 
                 {/* Add Rubric Input search bar */}
@@ -611,7 +730,7 @@ export default function SaisieFormulaireConsolide({
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--s2)" }}>
                   {lignes.map((ligne) => {
                     const isGain = ligne.type_valeur === "Gain (+)" || !ligne.type_valeur?.includes("Retenue");
-                    
+
                     return (
                       <div
                         key={ligne.code}
@@ -642,7 +761,7 @@ export default function SaisieFormulaireConsolide({
                           }}>
                             {ligne.code}
                           </div>
-                          
+
                           {/* Libellé */}
                           <div style={{ fontWeight: 600, fontSize: "var(--tsm)" }}>
                             {ligne.libelle}
@@ -758,7 +877,7 @@ export default function SaisieFormulaireConsolide({
 
           {/* Right Column (RÉSULTAT DU CALCUL) */}
           <div className="lg:col-span-1" style={{ display: "flex", flexDirection: "column", gap: "var(--s4)", position: "sticky", top: "var(--s6)" }}>
-            
+
             <div style={{
               background: "#0f233c",
               color: "white",
@@ -884,6 +1003,14 @@ export default function SaisieFormulaireConsolide({
                         >
                           👁️ Voir bulletin employeur
                         </a>
+                        {/* Lien "explication détaillée" rétabli — supprimé par erreur lors du refactor */}
+                        <Link
+                          href={`/salaries/${salarieActive.id}/bulletin/explication?annee=${resultat.annee}&mois=${resultat.mois}`}
+                          className="btn btn-secondary"
+                          style={{ width: "100%", textAlign: "center", justifyContent: "center" }}
+                        >
+                          🔍 Voir l&apos;explication détaillée du calcul
+                        </Link>
                       </>
                     ) : (
                       <>
@@ -892,6 +1019,9 @@ export default function SaisieFormulaireConsolide({
                         </button>
                         <button disabled className="btn btn-secondary" style={{ width: "100%", opacity: 0.5, cursor: "not-allowed" }}>
                           👁️ Voir bulletin employeur
+                        </button>
+                        <button disabled className="btn btn-secondary" style={{ width: "100%", opacity: 0.5, cursor: "not-allowed" }}>
+                          🔍 Voir l&apos;explication détaillée du calcul
                         </button>
                         <p style={{ fontSize: "11px", color: "var(--text-muted)", textAlign: "center" }}>
                           Enregistrez d&apos;abord le bulletin.
