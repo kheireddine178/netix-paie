@@ -276,14 +276,32 @@ export default function SaisieFormulaireConsolide({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formKey, lignes.length]);
 
-  function handleCharger() {
-    if (!salarieId) {
-      alert("Veuillez sélectionner un salarié");
-      return;
-    }
+  // Auto-chargement : dès qu'on choisit un salarié (ou change mois/année alors
+  // qu'un salarié est déjà sélectionné), on navigue automatiquement — plus besoin
+  // d'un bouton "Charger" séparé.
+  function naviguerVersSaisie(nouveauSalarieId: number | string, nouvelleAnnee: number, nouveauMois: number) {
+    if (!nouveauSalarieId) return;
     setErreur(null);
     setMessageCharge(null);
-    router.push(`/saisie?salarieId=${salarieId}&annee=${annee}&mois=${mois}`);
+    router.push(`/saisie?salarieId=${nouveauSalarieId}&annee=${nouvelleAnnee}&mois=${nouveauMois}`);
+  }
+
+  function handleChangerSalarie(e: React.ChangeEvent<HTMLSelectElement>) {
+    const val = e.target.value;
+    setSalarieId(val);
+    naviguerVersSaisie(val, annee, mois);
+  }
+
+  function handleChangerMois(e: React.ChangeEvent<HTMLSelectElement>) {
+    const val = parseInt(e.target.value, 10);
+    setMois(val);
+    naviguerVersSaisie(salarieId, annee, val);
+  }
+
+  function handleChangerAnnee(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = parseInt(e.target.value, 10) || anneeActive;
+    setAnnee(val);
+    naviguerVersSaisie(salarieId, val, mois);
   }
 
   // Copier les données saisies le mois précédent (rétabli — supprimé par erreur)
@@ -416,7 +434,7 @@ export default function SaisieFormulaireConsolide({
             <label style={{ fontSize: "var(--t2xs)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em" }}>SALARIÉ</label>
             <select
               value={salarieId}
-              onChange={(e) => setSalarieId(e.target.value)}
+              onChange={handleChangerSalarie}
               style={{ width: "100%", height: "42px" }}
             >
               <option value="">Sélectionner un salarié…</option>
@@ -432,7 +450,7 @@ export default function SaisieFormulaireConsolide({
             <label style={{ fontSize: "var(--t2xs)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em" }}>MOIS</label>
             <select
               value={mois}
-              onChange={(e) => setMois(parseInt(e.target.value, 10))}
+              onChange={handleChangerMois}
               style={{ width: "100%", height: "42px" }}
             >
               {MOIS.map((m, i) => (
@@ -448,19 +466,10 @@ export default function SaisieFormulaireConsolide({
             <input
               type="number"
               value={annee}
-              onChange={(e) => setAnnee(parseInt(e.target.value, 10) || anneeActive)}
+              onChange={handleChangerAnnee}
               style={{ width: "100%", height: "42px" }}
             />
           </div>
-
-          <button
-            type="button"
-            onClick={handleCharger}
-            className="btn btn-secondary"
-            style={{ height: "42px", padding: "0 24px", fontWeight: "bold" }}
-          >
-            Charger
-          </button>
 
           {salarieActive && (
             <button
@@ -1042,7 +1051,7 @@ export default function SaisieFormulaireConsolide({
         </div>
       ) : (
         <div className="card" style={{ textAlign: "center", padding: "var(--s6)", color: "var(--text-muted)" }}>
-          👈 Sélectionnez un salarié, puis cliquez sur <strong>Charger</strong> pour afficher et saisir ses données mensuelles de paie.
+          👈 Sélectionnez un salarié ci-dessus pour afficher et saisir ses données mensuelles de paie.
         </div>
       )}
     </div>
