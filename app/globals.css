@@ -87,7 +87,7 @@
   --amber-bg: #fef7eb;
 
   /* Typographie */
-  --font: var(--font-inter), "Segoe UI", -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+  --font: var(--font-jakarta), "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-display: var(--font);
   --mono: var(--font-geist-mono), "Cascadia Code", "Fira Code", Consolas, "Courier New", monospace;
 
@@ -375,7 +375,16 @@ input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
   box-shadow: var(--shsm);
   padding: var(--s5);
 }
-.card-title { font-size: var(--tmd); font-weight: 700; color: var(--text); margin-bottom: var(--s3); }
+
+/* Carte cliquable avec effet de survol premium */
+.hover-card {
+  cursor: pointer;
+  transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
+}
+.hover-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shmd);
+}
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--s2);
@@ -394,7 +403,20 @@ input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
 .btn-secondary:hover { background: var(--surface-2); }
 .btn-danger { background: var(--red-100); color: var(--red-700); border-color: var(--red-200); }
 .btn-danger:hover { background: var(--red-200); }
+.btn-ghost { background: transparent; border-color: var(--border); color: var(--text-2); }
+.btn-ghost:hover { background: var(--surface-2); }
 .btn-sm { padding: 6px 12px; font-size: var(--t2xs); }
+.btn-lg { padding: 13px 28px; font-size: var(--tbase); }
+
+.card-title { font-size: var(--tmd); font-weight: 700; color: var(--text); margin-bottom: var(--s3); }
+
+/* Respect les préférences de réduction de mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .hover-card { transition: none; }
+  .hover-card:hover { transform: none; }
+  .btn { transition: background 0.1s; }
+}
+
 
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
