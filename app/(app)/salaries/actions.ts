@@ -738,3 +738,88 @@ export async function supprimerBulletin(salarieId: number, bulletinId: number) {
   revalidatePath(`/salaries/${salarieId}/historique`);
   revalidatePath("/historique");
 }
+
+/**
+ * Copie en masse les bulletins du mois précédent pour le mois cible.
+ */
+export async function copierMoisPrecedentMasse(anneeCible: number, moisCible: number): Promise<{ copies: number }> {
+  const prevMois = moisCible === 1 ? 12 : moisCible - 1;
+  const prevAnnee = moisCible === 1 ? anneeCible - 1 : anneeCible;
+
+  const { data: bulletinsPrev, error: bError } = await supabase
+    .from("bulletins")
+    .select("*")
+    .eq("annee", prevAnnee)
+    .eq("mois", prevMois);
+
+  if (bError) throw new Error(bError.message);
+  if (!bulletinsPrev || bulletinsPrev.length === 0) {
+    throw new Error(`Aucun bulletin trouvé pour le mois précédent (${prevMois}/${prevAnnee})`);
+  }
+
+  const { data: bulletinsExistent } = await supabase
+    .from("bulletins")
+    .select("salarie_id")
+    .eq("annee", anneeCible)
+    .eq("mois", moisCible);
+
+  const salariesExistent = new Set((bulletinsExistent ?? []).map((b) => b.salarie_id));
+  let count = 0;
+
+  for (const b of bulletinsPrev) {
+    if (salariesExistent.has(b.salarie_id)) continue;
+
+    const { data: rubriquesSource } = await supabase
+      .from("bulletin_rubriques")
+      .select("rubrique_code, valeur_1, valeur_2")
+      .eq("bulletin_id", b.id);
+
+    const { data: nouveauB, error: insError } = await supabase
+      .from("bulletins")
+      .insert({
+        salarie_id: b.salarie_id,
+        annee: anneeCible,
+        mois: moisCible,
+        salaire_base_theorique: b.salaire_base_theorique,
+        maladie_h: b.maladie_h,
+        mise_a_pied_h: b.mise_a_pied_h,
+        accident_travail_h: b.accident_travail_h,
+        retard_h: b.retard_h,
+        absence_irreguliere_h: b.absence_irreguliere_h,
+        heures_sup_1: b.heures_sup_1,
+        heures_sup_2: b.heures_sup_2,
+        heures_sup_3: b.heures_sup_3,
+        icr: b.icr,
+        taux_iep: b.taux_iep,
+        taux_nuisance: b.taux_nuisance,
+        taux_responsabilite: b.taux_responsabilite,
+        taux_disponibilite: b.taux_disponibilite,
+        taux_pri: b.taux_pri,
+        taux_prc: b.taux_prc,
+        panier_jours: b.panier_jours,
+        panier_forfait_jour: b.panier_forfait_jour,
+        autre_prime_fixe: b.autre_prime_fixe,
+        cotis_mutuelle: b.cotis_mutuelle,
+        autres_retenues: b.autres_retenues,
+      })
+      .select()
+      .single();
+
+    if (insError) continue;
+
+    if (rubriquesSource && rubriquesSource.length > 0 && nouveauB) {
+      await supabase.from("bulletin_rubriques").insert(
+        rubriquesSource.map((r) => ({
+          bulletin_id: nouveauB.id,
+          rubrique_code: r.rubrique_code,
+          valeur_1: r.valeur_1,
+          valeur_2: r.valeur_2,
+        }))
+      );
+    }
+    count++;
+  }
+
+  revalidatePath("/saisie");
+  return { copies: count };
+}

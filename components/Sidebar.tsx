@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/salaries", label: "Salariés" },
   { href: "/saisie", label: "Saisie mensuelle" },
   { href: "/rubriques", label: "Rubriques" },
+  { href: "/rapports", label: "États de Paie" },
   { href: "/historique", label: "Historique" },
   { href: "/guide", label: "Guide RH" },
   { href: "/parametres", label: "Paramètres" },
