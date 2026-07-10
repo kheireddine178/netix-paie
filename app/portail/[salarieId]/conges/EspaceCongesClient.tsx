@@ -119,7 +119,7 @@ export default function EspaceCongesClient({ salarie, conges, contrats }: Props)
       <div className="grid md:grid-cols-3 gap-6">
         {/* Historique demandes */}
         <div className="md:col-span-2 card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>📅 Mes demandes de congés</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Mes demandes de congés</h3>
           {conges.length === 0 ? (
             <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>Aucun congé enregistré pour le moment.</p>
           ) : (
@@ -151,7 +151,7 @@ export default function EspaceCongesClient({ salarie, conges, contrats }: Props)
                       <td>
                         {c.justificatif_url ? (
                           <a href={c.justificatif_url} target="_blank" rel="noopener noreferrer" className="btn-link">
-                            Voir 🔗
+                            Voir
                           </a>
                         ) : (
                           <span style={{ color: "var(--text-muted)" }}>—</span>
@@ -178,8 +178,8 @@ export default function EspaceCongesClient({ salarie, conges, contrats }: Props)
 
         {/* Nouvelle demande */}
         <div className="card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>➕ Nouvelle demande</h3>
-          {erreur && <div style={{ color: "var(--red)", fontSize: "var(--txs)", marginBottom: 8 }}>⚠️ {erreur}</div>}
+          <h3 style={{ marginBottom: "var(--s3)" }}>Nouvelle demande</h3>
+          {erreur && <div style={{ color: "var(--red)", fontSize: "var(--txs)", marginBottom: 8 }}>Erreur : {erreur}</div>}
 
           <form onSubmit={handleAjouterConge} style={{ display: "flex", flexDirection: "column", gap: "var(--s3)" }}>
             <div className="field" style={{ marginBottom: 0 }}>

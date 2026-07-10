@@ -38,15 +38,15 @@ export default async function PortailDashboard({ params }: Props) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--s5)", borderBottom: "var(--hairline)", paddingBottom: "var(--s3)" }}>
         <div>
           <span style={{ fontSize: "var(--t2xs)", color: "var(--accent)", fontWeight: "bold", textTransform: "uppercase" }}>Espace Employé</span>
-          <h1 style={{ fontSize: "var(--txl)", margin: "4px 0" }}>Bonjour, {salarie.nom_prenom} 👋</h1>
+          <h1 style={{ fontSize: "var(--txl)", margin: "4px 0" }}>Bonjour, {salarie.nom_prenom}</h1>
           <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>{salarie.fonction || "Collaborateur"} · Matricule {salarie.matricule || "—"}</p>
         </div>
         <div style={{ display: "flex", gap: 12 }}>
           <Link href="/portail" className="btn btn-secondary btn-sm">
-            🚪 Changer de Salarié
+            Changer de Salarié
           </Link>
           <Link href="/dashboard" className="btn btn-primary btn-sm">
-            💼 RH Admin
+            RH Admin
           </Link>
         </div>
       </div>
@@ -55,20 +55,20 @@ export default async function PortailDashboard({ params }: Props) {
         {/* Colonne Gauche : Actions rapides */}
         <div className="space-y-6">
           <div className="card text-center" style={{ padding: "var(--s4)" }}>
-            <h3 style={{ marginBottom: "var(--s3)" }}>⚡ Actions Rapides</h3>
+            <h3 style={{ marginBottom: "var(--s3)" }}>Actions Rapides</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               <Link href={`/portail/${salarie.id}/conges`} className="btn btn-primary" style={{ width: "100%", justifyContent: "center", textDecoration: "none" }}>
-                📅 Mes Congés & Absences
+                Mes Congés &amp; Absences
               </Link>
               <Link href={`/portail/${salarie.id}/bulletins`} className="btn btn-secondary" style={{ width: "100%", justifyContent: "center", textDecoration: "none" }}>
-                📄 Mes Bulletins de Paie
+                Mes Bulletins de Paie
               </Link>
             </div>
           </div>
 
           {/* Fiche contrat */}
           <div className="card">
-            <h3 style={{ marginBottom: "var(--s3)" }}>💼 Mon Contrat</h3>
+            <h3 style={{ marginBottom: "var(--s3)" }}>Mon Contrat</h3>
             {contratActif ? (
               <div style={{ fontSize: "var(--tsm)", display: "flex", flexDirection: "column", gap: "8px" }}>
                 <p><strong>Type :</strong> {contratActif.type_contrat}</p>
@@ -87,7 +87,7 @@ export default async function PortailDashboard({ params }: Props) {
         <div className="md:col-span-2 space-y-6">
           {/* Dernières formations */}
           <div className="card">
-            <h3 style={{ marginBottom: "var(--s3)" }}>🎓 Mes Formations</h3>
+            <h3 style={{ marginBottom: "var(--s3)" }}>Mes Formations</h3>
             {inscriptions.length === 0 ? (
               <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>Aucune formation programmée.</p>
             ) : (
@@ -109,7 +109,7 @@ export default async function PortailDashboard({ params }: Props) {
 
           {/* Derniers congés */}
           <div className="card">
-            <h3 style={{ marginBottom: "var(--s3)" }}>📅 Mes Derniers Congés</h3>
+            <h3 style={{ marginBottom: "var(--s3)" }}>Mes Derniers Congés</h3>
             {conges.length === 0 ? (
               <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>Aucune demande de congé.</p>
             ) : (

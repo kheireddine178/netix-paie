@@ -39,7 +39,7 @@ export default async function Page({ params }: Props) {
       </div>
 
       <div className="card">
-        <h3 style={{ marginBottom: "var(--s3)" }}>📄 Historique des fiches de paie</h3>
+        <h3 style={{ marginBottom: "var(--s3)" }}>Historique des fiches de paie</h3>
         {bulletins.length === 0 ? (
           <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>Aucun bulletin de paie disponible pour le moment.</p>
         ) : (
@@ -71,7 +71,7 @@ export default async function Page({ params }: Props) {
                         className="btn btn-primary btn-sm"
                         style={{ padding: "4px 8px", fontSize: "11px" }}
                       >
-                        🖨️ Télécharger le Bulletin (PDF)
+                        Télécharger le Bulletin (PDF)
                       </a>
                     </td>
                   </tr>
