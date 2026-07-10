@@ -198,71 +198,71 @@ function construireLignes(saisie: SaisieMensuelle, resultat: ResultatPaie): Lign
   const lignes: LigneAffichage[] = [];
 
   lignes.push({
-    libelle: "Salaire de base",
+    libelle: "R030 - Salaire de base",
     base: `${fmtNombre(resultat.heures_travaillees)} h`,
     gain: resultat.salaire_base_reel,
   });
 
   if (resultat.total_heures_sup_da) {
-    lignes.push({ libelle: "Heures supplémentaires", gain: resultat.total_heures_sup_da });
+    lignes.push({ libelle: "R120 - Heures supplémentaires", gain: resultat.total_heures_sup_da });
   }
-  if (saisie.icr) lignes.push({ libelle: "I.C.R", gain: saisie.icr });
+  if (saisie.icr) lignes.push({ libelle: "R100 - I.C.R", gain: saisie.icr });
   if (saisie.taux_iep) {
     lignes.push({
-      libelle: "I.E.P",
+      libelle: "R110 - I.E.P",
       base: `${fmtNombre(saisie.taux_iep * 100)} %`,
       gain: resultat.prime_iep,
     });
   }
   if (saisie.taux_nuisance) {
     lignes.push({
-      libelle: "Indemnité de nuisance",
+      libelle: "R200 - Indemnité de nuisance",
       base: `${fmtNombre(saisie.taux_nuisance * 100)} %`,
       gain: resultat.prime_nuisance,
     });
   }
   if (saisie.taux_responsabilite) {
     lignes.push({
-      libelle: "Prime de responsabilité",
+      libelle: "R201 - Prime de responsabilité",
       base: `${fmtNombre(saisie.taux_responsabilite * 100)} %`,
       gain: resultat.prime_responsabilite,
     });
   }
   if (saisie.taux_disponibilite) {
     lignes.push({
-      libelle: "Prime de disponibilité",
+      libelle: "R202 - Prime de disponibilité",
       base: `${fmtNombre(saisie.taux_disponibilite * 100)} %`,
       gain: resultat.prime_disponibilite,
     });
   }
   if (saisie.taux_pri) {
     lignes.push({
-      libelle: "P.R.I",
+      libelle: "R203 - P.R.I",
       base: `${fmtNombre(saisie.taux_pri * 100)} %`,
       gain: resultat.prime_pri,
     });
   }
   if (saisie.taux_prc) {
     lignes.push({
-      libelle: "P.R.C",
+      libelle: "R204 - P.R.C",
       base: `${fmtNombre(saisie.taux_prc * 100)} %`,
       gain: resultat.prime_prc,
     });
   }
   if (saisie.panier_jours) {
     lignes.push({
-      libelle: "Panier",
+      libelle: "R250 - Panier",
       base: `${fmtNombre(saisie.panier_jours, 0)} j`,
       gain: saisie.panier_jours * saisie.panier_forfait_jour,
     });
   }
   if (saisie.autre_prime_fixe) {
-    lignes.push({ libelle: "Autre prime", gain: saisie.autre_prime_fixe });
+    lignes.push({ libelle: "R260 - Autre prime", gain: saisie.autre_prime_fixe });
   }
 
   for (const d of resultat.detail_rubriques) {
     if (d.sens === "gain") {
-      lignes.push({ libelle: d.libelle, base: d.code, gain: d.montant });
+      lignes.push({ libelle: `${d.code} - ${d.libelle}`, base: "", gain: d.montant });
     }
   }
 
@@ -274,34 +274,34 @@ function construireLignes(saisie: SaisieMensuelle, resultat: ResultatPaie): Lign
   }
 
   lignes.push({
-    libelle: "Retenue sécurité sociale (CNAS)",
+    libelle: "R950 - Retenue sécurité sociale (CNAS)",
     base: fmtDa(resultat.base_cnas),
     retenue: resultat.retenue_cnas,
   });
   if (resultat.retenue_irg_nette) {
     lignes.push({
-      libelle: "Retenue IRG",
+      libelle: "R980 - Retenue IRG",
       base: fmtDa(resultat.base_imposable_irg),
       retenue: resultat.retenue_irg_nette,
     });
   }
   if (resultat.retenue_10pct) {
     lignes.push({
-      libelle: "Retenue forfaitaire 10%",
+      libelle: "R985 - Retenue forfaitaire 10%",
       base: fmtDa(resultat.base_imposable_10pct),
       retenue: resultat.retenue_10pct,
     });
   }
   if (saisie.cotis_mutuelle) {
-    lignes.push({ libelle: "Cotisation mutuelle", retenue: saisie.cotis_mutuelle });
+    lignes.push({ libelle: "R995 - Cotisation mutuelle", retenue: saisie.cotis_mutuelle });
   }
   if (saisie.autres_retenues) {
-    lignes.push({ libelle: "Autres retenues", retenue: saisie.autres_retenues });
+    lignes.push({ libelle: "R999 - Autres retenues", retenue: saisie.autres_retenues });
   }
 
   for (const d of resultat.detail_rubriques) {
     if (d.sens === "retenue") {
-      lignes.push({ libelle: d.libelle, base: d.code, retenue: d.montant });
+      lignes.push({ libelle: `${d.code} - ${d.libelle}`, base: "", retenue: d.montant });
     }
   }
 

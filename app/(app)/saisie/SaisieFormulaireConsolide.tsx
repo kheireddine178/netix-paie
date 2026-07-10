@@ -166,7 +166,7 @@ export default function SaisieFormulaireConsolide({
           type_valeur: catalogueRubriques.find((cr) => cr.code === r.code)?.type_valeur || null,
           valeur_1: r.categorie === "pourcentage" ? r.valeur_1 * 100 : r.valeur_1,
           valeur_2: r.valeur_2,
-        })).sort((a: LigneEtat, b: LigneEtat) => a.code.localeCompare(b.code));
+        })).sort((a: LigneEtat, b: LigneEtat) => a.code.localeCompare(b.code, undefined, { numeric: true }));
 
         setInitialValues(champs);
         setLignes(lignesChargees);
@@ -174,7 +174,7 @@ export default function SaisieFormulaireConsolide({
       } else {
         // No saved bulletin, use empty fields + default assigned rubrics
         setInitialValues({});
-        setLignes(rubriquesAssignees.map(ligneDepuisAssignee).sort((a, b) => a.code.localeCompare(b.code)));
+        setLignes(rubriquesAssignees.map(ligneDepuisAssignee).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true })));
         setEstEnregistre(false);
       }
       setFormKey((k) => k + 1);
@@ -207,7 +207,7 @@ export default function SaisieFormulaireConsolide({
     };
 
     const champsAbsences = {
-      salaire_base_theorique: salarieActive.salaire_base_theorique,
+      salaire_base_theorique: num("salaire_base_theorique") || salarieActive.salaire_base_theorique,
       maladie_h: num("maladie_h"),
       mise_a_pied_h: num("mise_a_pied_h"),
       accident_travail_h: num("accident_travail_h"),
@@ -332,7 +332,7 @@ export default function SaisieFormulaireConsolide({
           type_valeur: catalogueRubriques.find((cr) => cr.code === r.code)?.type_valeur || null,
           valeur_1: r.categorie === "pourcentage" ? r.valeur_1 * 100 : r.valeur_1,
           valeur_2: r.valeur_2,
-        })).sort((a, b) => a.code.localeCompare(b.code));
+        })).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
 
         setInitialValues(champs);
         setLignes(lignesChargees);
@@ -351,7 +351,7 @@ export default function SaisieFormulaireConsolide({
     if (!salarieActive) return;
     setLignes((prev) => {
       const next = [...prev, ligneVide(r)];
-      return next.sort((a, b) => a.code.localeCompare(b.code));
+      return next.sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
     });
     setRecherche("");
     ajouterRubriqueSalarie(salarieActive.id, r.code).catch((e) => {
@@ -539,10 +539,11 @@ export default function SaisieFormulaireConsolide({
                 <div className="field" style={{ marginBottom: 0 }}>
                   <label style={{ fontSize: "10px", color: "var(--text-muted)" }}>SALAIRE DE BASE THÉORIQUE (DA)</label>
                   <input
-                    type="text"
-                    value={salarieActive.salaire_base_theorique.toLocaleString("fr-FR") + " DA"}
-                    disabled
-                    style={{ background: "var(--surface-2)", color: "var(--text-muted)", cursor: "not-allowed", fontWeight: "bold" }}
+                    name="salaire_base_theorique"
+                    type="number"
+                    step="0.01"
+                    defaultValue={initialValues["salaire_base_theorique"] ?? salarieActive.salaire_base_theorique}
+                    style={{ fontWeight: "bold" }}
                   />
                 </div>
               </div>
@@ -595,64 +596,16 @@ export default function SaisieFormulaireConsolide({
                 </div>
               </div>
 
-              {/* PRIMES FIXES + POURCENTAGE (rétabli — étaient devenus des champs cachés par erreur) */}
-              <div style={{ borderBottom: "var(--hairline)", paddingBottom: "var(--s4)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s4)" }}>
-                  <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
-                    💰 PRIMES ET INDEMNITÉS STANDARD
-                  </h4>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "var(--s3)" }}>
-                  {CHAMPS_PRIMES_MONTANT.map((c) => (
-                    <div key={c.name} className="field" style={{ marginBottom: 0 }}>
-                      <label style={{ fontSize: "9px" }}>{c.label}</label>
-                      <input
-                        name={c.name}
-                        type="number"
-                        step="0.01"
-                        defaultValue={initialValues[c.name] ?? 0}
-                        style={{ textAlign: "center" }}
-                      />
-                    </div>
-                  ))}
-                  {CHAMPS_PRIMES_POURCENTAGE.map((c) => (
-                    <div key={c.name} className="field" style={{ marginBottom: 0 }}>
-                      <label style={{ fontSize: "9px" }}>{c.label}</label>
-                      <input
-                        name={c.name}
-                        type="number"
-                        step="0.01"
-                        defaultValue={initialValues[c.name] ?? 0}
-                        placeholder="ex: 2.5 pour 2,5%"
-                        style={{ textAlign: "center" }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* RETENUES ADDITIONNELLES (rétabli) */}
-              <div style={{ borderBottom: "var(--hairline)", paddingBottom: "var(--s4)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s4)" }}>
-                  <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
-                    ➖ RETENUES ADDITIONNELLES
-                  </h4>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "var(--s3)" }}>
-                  {CHAMPS_RETENUES.map((c) => (
-                    <div key={c.name} className="field" style={{ marginBottom: 0 }}>
-                      <label style={{ fontSize: "9px" }}>{c.label}</label>
-                      <input
-                        name={c.name}
-                        type="number"
-                        step="0.01"
-                        defaultValue={initialValues[c.name] ?? 0}
-                        style={{ textAlign: "center" }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {/* Champs masqués pour préserver la compatibilité et les valeurs existantes */}
+              {CHAMPS_PRIMES_MONTANT.map((c) => (
+                <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
+              ))}
+              {CHAMPS_PRIMES_POURCENTAGE.map((c) => (
+                <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
+              ))}
+              {CHAMPS_RETENUES.map((c) => (
+                <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
+              ))}
 
               {/* PRIMES, INDEMNITÉS ET RETENUES — CATALOGUE DYNAMIQUE */}
               <div>

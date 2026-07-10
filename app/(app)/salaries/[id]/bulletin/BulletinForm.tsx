@@ -120,7 +120,7 @@ export default function BulletinForm({
   
   // Sort rubriques by code on initial load
   const [lignes, setLignes] = useState<LigneEtat[]>(() =>
-    rubriquesAssignees.map(ligneDepuisAssignee).sort((a, b) => a.code.localeCompare(b.code))
+    rubriquesAssignees.map(ligneDepuisAssignee).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }))
   );
 
   const [recherche, setRecherche] = useState("");
@@ -147,7 +147,7 @@ export default function BulletinForm({
     };
 
     const champsAbsences = {
-      salaire_base_theorique: salarie.salaire_base_theorique,
+      salaire_base_theorique: num("salaire_base_theorique") || salarie.salaire_base_theorique,
       maladie_h: num("maladie_h"),
       mise_a_pied_h: num("mise_a_pied_h"),
       accident_travail_h: num("accident_travail_h"),
@@ -224,7 +224,7 @@ export default function BulletinForm({
     setLignes((prev) => {
       const next = [...prev, ligneVide(r)];
       // Auto-sort rubriques by code in ascending order
-      return next.sort((a, b) => a.code.localeCompare(b.code));
+      return next.sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
     });
     setRecherche("");
     ajouterRubriqueSalarie(salarie.id, r.code).catch((e) => {
@@ -268,7 +268,7 @@ export default function BulletinForm({
           categorie: r.categorie,
           valeur_1: r.categorie === "pourcentage" ? r.valeur_1 * 100 : r.valeur_1,
           valeur_2: r.valeur_2,
-        })).sort((a, b) => a.code.localeCompare(b.code));
+        })).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
 
         const codesCharges = new Set(lignesChargees.map((l) => l.code));
         const lignesConservees = lignes
@@ -311,7 +311,7 @@ export default function BulletinForm({
           categorie: r.categorie,
           valeur_1: r.categorie === "pourcentage" ? r.valeur_1 * 100 : r.valeur_1,
           valeur_2: r.valeur_2,
-        })).sort((a, b) => a.code.localeCompare(b.code));
+        })).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
 
         setInitialValues(champs);
         setLignes(lignesChargees);
@@ -424,6 +424,20 @@ export default function BulletinForm({
           )}
         </div>
 
+        <Section titre="Salaire de Base">
+          <div className="field" style={{ marginBottom: 0, gridColumn: "span 2" }}>
+            <label htmlFor="salaire_base_theorique">Salaire de base théorique (DA)</label>
+            <input
+              id="salaire_base_theorique"
+              name="salaire_base_theorique"
+              type="number"
+              step="0.01"
+              defaultValue={initialValues["salaire_base_theorique"] ?? salarie.salaire_base_theorique}
+              style={{ fontWeight: "bold" }}
+            />
+          </div>
+        </Section>
+
         <Section titre="Absences (heures) — réduisent le salaire">
           {CHAMPS_ABSENCES.map((c) => (
             <Champ key={c.name} {...c} defaultValue={initialValues[c.name] ?? 0} />
@@ -436,25 +450,16 @@ export default function BulletinForm({
           ))}
         </Section>
 
-        <Section titre="Primes et indemnités">
-          {CHAMPS_PRIMES_MONTANT.map((c) => (
-            <Champ key={c.name} {...c} defaultValue={initialValues[c.name] ?? 0} />
-          ))}
-          {CHAMPS_PRIMES_POURCENTAGE.map((c) => (
-            <Champ
-              key={c.name}
-              {...c}
-              defaultValue={initialValues[c.name] ?? 0}
-              placeholder="ex: 2.5 pour 2,5%"
-            />
-          ))}
-        </Section>
-
-        <Section titre="Retenues additionnelles">
-          {CHAMPS_RETENUES.map((c) => (
-            <Champ key={c.name} {...c} defaultValue={initialValues[c.name] ?? 0} />
-          ))}
-        </Section>
+        {/* Champs masqués pour préserver la compatibilité et les valeurs existantes */}
+        {CHAMPS_PRIMES_MONTANT.map((c) => (
+          <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
+        ))}
+        {CHAMPS_PRIMES_POURCENTAGE.map((c) => (
+          <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
+        ))}
+        {CHAMPS_RETENUES.map((c) => (
+          <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
+        ))}
 
         {/* Custom Rubrics Section */}
         <div className="card">

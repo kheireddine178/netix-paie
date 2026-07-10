@@ -314,7 +314,7 @@ export async function creerBulletin(salarieId: number, formData: FormData): Prom
   const params = await getParametres();
 
   const champsAbsences = {
-    salaire_base_theorique: salarie.salaire_base_theorique,
+    salaire_base_theorique: num("salaire_base_theorique") || salarie.salaire_base_theorique,
     maladie_h: num("maladie_h"),
     mise_a_pied_h: num("mise_a_pied_h"),
     accident_travail_h: num("accident_travail_h"),
@@ -588,6 +588,7 @@ export async function chargerBulletinPourSaisie(
   return {
     bulletin_id: bulletin.id,
     champs: {
+      salaire_base_theorique: bulletin.salaire_base_theorique,
       maladie_h: bulletin.maladie_h,
       mise_a_pied_h: bulletin.mise_a_pied_h,
       accident_travail_h: bulletin.accident_travail_h,
