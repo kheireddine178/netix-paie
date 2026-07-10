@@ -19,7 +19,7 @@ export default async function FormationsPage() {
   return (
     <div className="space-y-6">
       <div className="page-header">
-        <h1>🎓 Formations & Évaluations</h1>
+        <h1>Formations & Évaluations</h1>
         <p>Sélectionnez un collaborateur pour gérer ses inscriptions aux formations et éditer sa fiche d'évaluation.</p>
       </div>
 

@@ -145,7 +145,7 @@ export default function CongesClientPage({ salarie, conges, contrats }: Props) {
         {/* Colonnes 1 & 2 : Demandes de congés */}
         <div className="md:col-span-2 space-y-6">
           <div className="card">
-            <h3 style={{ marginBottom: "var(--s3)" }}>📅 Historique des demandes</h3>
+            <h3 style={{ marginBottom: "var(--s3)" }}>Historique des demandes</h3>
             
             {conges.length === 0 ? (
               <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>Aucun congé enregistré pour le moment.</p>
@@ -217,8 +217,8 @@ export default function CongesClientPage({ salarie, conges, contrats }: Props) {
         {/* Colonne 3 : Formulaire de demande */}
         <div>
           <div className="card">
-            <h3 style={{ marginBottom: "var(--s3)" }}>➕ Demander un congé</h3>
-            {erreur && <div style={{ color: "var(--red)", fontSize: "var(--txs)", marginBottom: 8 }}>⚠️ {erreur}</div>}
+            <h3 style={{ marginBottom: "var(--s3)" }}>Demander un congé</h3>
+            {erreur && <div style={{ color: "var(--red)", fontSize: "var(--txs)", marginBottom: 8 }}>Erreur : {erreur}</div>}
 
             <form onSubmit={handleAjouterConge} style={{ display: "flex", flexDirection: "column", gap: "var(--s3)" }}>
               <div className="field" style={{ marginBottom: 0 }}>

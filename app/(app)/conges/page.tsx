@@ -23,7 +23,7 @@ export default async function CongesPage() {
   return (
     <div className="space-y-6">
       <div className="page-header">
-        <h1>📅 Congés & Absences</h1>
+        <h1>Congés &amp; Absences</h1>
         <p>Sélectionnez un collaborateur pour gérer ses demandes de congés, valider ou rejeter.</p>
       </div>
 

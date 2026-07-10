@@ -43,54 +43,55 @@ export default async function SalarieHubPage({ params }: Props) {
 
   const modules = [
     {
-      title: "🧮 Paie Mensuelle",
+      title: "Paie Mensuelle",
       desc: "Saisir les variables du mois et calculer le bulletin.",
       href: `/saisie?salarieId=${salarie.id}`,
       color: "var(--accent)",
     },
     {
-      title: "💼 Contrats & Documents",
+      title: "Contrats & Documents",
       desc: "Gérer le contrat CDI/CDD, imprimer PV et attestation.",
       href: `/salaries/${salarie.id}/contrat`,
       color: "var(--teal)",
     },
     {
-      title: "📅 Congés & Absences",
+      title: "Congés & Absences",
       desc: "Valider les demandes de congés et suivre le reliquat.",
       href: `/salaries/${salarie.id}/conges`,
       color: "var(--amber)",
     },
     {
-      title: "✈️ Ordres de Mission",
+      title: "Ordres de Mission",
       desc: "Saisir les déplacements et imprimer l'ordre de mission.",
       href: `/salaries/${salarie.id}/missions`,
       color: "#6366f1",
     },
     {
-      title: "📈 Carrière & discipline",
+      title: "Carrière & Discipline",
       desc: "Suivre les promotions et notifier les sanctions disciplinaires.",
       href: `/salaries/${salarie.id}/carriere`,
       color: "#ec4899",
     },
     {
-      title: "🎓 Formations & Talent",
+      title: "Formations & Talent",
       desc: "Gérer les formations et imprimer les évaluations.",
       href: `/salaries/${salarie.id}/formations`,
       color: "#8b5cf6",
     },
     {
-      title: "📋 Rubriques du Catalogue",
+      title: "Rubriques du Catalogue",
       desc: "Activer ou désactiver des primes et indemnités du catalogue.",
       href: `/salaries/${salarie.id}/rubriques`,
       color: "#06b6d4",
     },
     {
-      title: "📜 Historique des Bulletins",
+      title: "Historique des Bulletins",
       desc: "Consulter et imprimer les anciens bulletins de paie PDF.",
       href: `/salaries/${salarie.id}/historique`,
       color: "#f59e0b",
     },
   ];
+
 
   return (
     <div className="space-y-6">

@@ -117,12 +117,12 @@ export default function CarriereClientPage({ salarie, promotions, sanctions }: P
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--s4)" }}>
-      {erreur && <div style={{ color: "var(--red)", fontSize: "var(--txs)" }}>⚠️ {erreur}</div>}
+      {erreur && <div style={{ color: "var(--red)", fontSize: "var(--txs)" }}>Erreur : {erreur}</div>}
 
       {/* SECTION 1 : PROMOTIONS & POSTES */}
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2 card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>📈 Historique des postes & Promotions</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Historique des postes &amp; Promotions</h3>
           {promotions.length === 0 ? (
             <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>Aucune promotion ou modification de poste enregistrée.</p>
           ) : (
@@ -153,7 +153,7 @@ export default function CarriereClientPage({ salarie, promotions, sanctions }: P
                           className="btn btn-secondary btn-sm"
                           style={{ padding: "2px 6px", fontSize: "10px" }}
                         >
-                          📄 PDF Décision
+                          Générer PDF Décision
                         </a>
                       </td>
                       <td>
@@ -173,7 +173,7 @@ export default function CarriereClientPage({ salarie, promotions, sanctions }: P
         </div>
 
         <div className="card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>➕ Enregistrer une promotion</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Enregistrer une promotion</h3>
           <form onSubmit={handleAjouterPromotion} style={{ display: "flex", flexDirection: "column", gap: "var(--s3)" }}>
             <div className="field" style={{ marginBottom: 0 }}>
               <label>Nouveau Poste / Fonction</label>
@@ -212,7 +212,7 @@ export default function CarriereClientPage({ salarie, promotions, sanctions }: P
       {/* SECTION 2 : DISCIPLINE & SANCTIONS */}
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2 card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>⚠️ Historique disciplinaire & Sanctions</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Historique disciplinaire &amp; Sanctions</h3>
           {sanctions.length === 0 ? (
             <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>Aucune sanction disciplinaire enregistrée.</p>
           ) : (
@@ -243,7 +243,7 @@ export default function CarriereClientPage({ salarie, promotions, sanctions }: P
                           className="btn btn-secondary btn-sm"
                           style={{ padding: "2px 6px", fontSize: "10px" }}
                         >
-                          📄 PDF Lettre
+                          Générer PDF Lettre
                         </a>
                       </td>
                       <td>
@@ -263,7 +263,7 @@ export default function CarriereClientPage({ salarie, promotions, sanctions }: P
         </div>
 
         <div className="card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>➕ Enregistrer une sanction</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Enregistrer une sanction</h3>
           <form onSubmit={handleAjouterSanction} style={{ display: "flex", flexDirection: "column", gap: "var(--s3)" }}>
             <div className="field" style={{ marginBottom: 0 }}>
               <label>Type de sanction</label>

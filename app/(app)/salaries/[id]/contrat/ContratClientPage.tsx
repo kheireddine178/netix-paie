@@ -97,7 +97,7 @@ export default function ContratClientPage({ salarie, contrats, documents }: Prop
         
         {/* Liste des contrats */}
         <div className="card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>💼 Contrats de travail</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Contrats de travail</h3>
           
           {contrats.length === 0 ? (
             <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
@@ -148,7 +148,7 @@ export default function ContratClientPage({ salarie, contrats, documents }: Prop
 
         {/* Documents joints */}
         <div className="card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>📄 Dossier documentaire (Justificatifs)</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Dossier documentaire (Justificatifs)</h3>
           
           <form onSubmit={handleAjouterDocument} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "var(--s2)", marginBottom: "var(--s4)", borderBottom: "1px dashed var(--border)", paddingBottom: "var(--s3)" }}>
             <div className="field" style={{ marginBottom: 0 }}>
@@ -221,7 +221,7 @@ export default function ContratClientPage({ salarie, contrats, documents }: Prop
         
         {/* Génération automatique de documents officiels */}
         <div className="card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>🖨️ Édition Administrative</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Édition Administrative</h3>
           <p style={{ color: "var(--text-muted)", fontSize: "var(--txs)", marginBottom: "var(--s4)" }}>
             Générez les documents de conformité administrative en un clic.
           </p>
@@ -234,7 +234,7 @@ export default function ContratClientPage({ salarie, contrats, documents }: Prop
               className="btn btn-secondary"
               style={{ width: "100%", justifyContent: "center" }}
             >
-              📄 Imprimer le PV d'installation
+              Imprimer le PV d'installation
             </a>
             <a
               href={`/salaries/${salarie.id}/contrat/pdf-attestation`}
@@ -243,15 +243,15 @@ export default function ContratClientPage({ salarie, contrats, documents }: Prop
               className="btn btn-secondary"
               style={{ width: "100%", justifyContent: "center" }}
             >
-              📄 Imprimer l'Attestation de travail
+              Imprimer l'Attestation de travail
             </a>
           </div>
         </div>
 
         {/* Formulaire d'ajout de contrat */}
         <div className="card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>➕ Nouveau contrat</h3>
-          {erreur && <div style={{ color: "var(--red)", fontSize: "var(--txs)", marginBottom: 8 }}>⚠️ {erreur}</div>}
+          <h3 style={{ marginBottom: "var(--s3)" }}>Nouveau contrat</h3>
+          {erreur && <div style={{ color: "var(--red)", fontSize: "var(--txs)", marginBottom: 8 }}>Erreur : {erreur}</div>}
 
           <form onSubmit={handleAjouterContrat} style={{ display: "flex", flexDirection: "column", gap: "var(--s3)" }}>
             <div className="field" style={{ marginBottom: 0 }}>

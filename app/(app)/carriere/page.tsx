@@ -9,7 +9,7 @@ export default async function CarrierePage() {
   return (
     <div className="space-y-6">
       <div className="page-header">
-        <h1>📈 Carrière & Discipline</h1>
+        <h1>Carrière & Discipline</h1>
         <p>Sélectionnez un collaborateur pour gérer son évolution de poste, ses promotions et son dossier disciplinaire.</p>
       </div>
 

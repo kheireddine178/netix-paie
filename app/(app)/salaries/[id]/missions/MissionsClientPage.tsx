@@ -85,7 +85,7 @@ export default function MissionsClientPage({ salarie, missions }: Props) {
       {/* Colonne 1 & 2 : Liste des missions */}
       <div className="md:col-span-2 space-y-6">
         <div className="card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>✈️ Ordres de mission & Déplacements</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Ordres de mission & Déplacements</h3>
 
           {missions.length === 0 ? (
             <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>Aucun déplacement enregistré pour le moment.</p>
@@ -126,7 +126,7 @@ export default function MissionsClientPage({ salarie, missions }: Props) {
                             className="btn btn-secondary btn-sm"
                             style={{ padding: "2px 6px", fontSize: "10px" }}
                           >
-                            📄 PDF Ordre
+                            Générer PDF Ordre
                           </a>
                         ) : (
                           <span style={{ color: "var(--text-muted)", fontSize: "10px" }}>En attente</span>
@@ -164,8 +164,8 @@ export default function MissionsClientPage({ salarie, missions }: Props) {
       {/* Colonne 3 : Formulaire de création */}
       <div>
         <div className="card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>➕ Nouveau déplacement</h3>
-          {erreur && <div style={{ color: "var(--red)", fontSize: "var(--txs)", marginBottom: 8 }}>⚠️ {erreur}</div>}
+          <h3 style={{ marginBottom: "var(--s3)" }}>Nouveau déplacement</h3>
+          {erreur && <div style={{ color: "var(--red)", fontSize: "var(--txs)", marginBottom: 8 }}>Erreur : {erreur}</div>}
 
           <form onSubmit={handleAjouterMission} style={{ display: "flex", flexDirection: "column", gap: "var(--s3)" }}>
             <div className="field" style={{ marginBottom: 0 }}>

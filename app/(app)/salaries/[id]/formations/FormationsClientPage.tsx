@@ -118,13 +118,13 @@ export default function FormationsClientPage({ salarie, catalogue, inscriptions 
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--s4)" }}>
-      {erreur && <div style={{ color: "var(--red)", fontSize: "var(--txs)" }}>⚠️ {erreur}</div>}
+      {erreur && <div style={{ color: "var(--red)", fontSize: "var(--txs)" }}>Erreur : {erreur}</div>}
 
       {/* SECTION 1 : SUIVI DES FORMATIONS */}
       <div className="grid md:grid-cols-3 gap-6">
         {/* Liste des inscriptions */}
         <div className="md:col-span-2 card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>🎓 Formations suivies</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Formations suivies</h3>
           {inscriptions.length === 0 ? (
             <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>Ce salarié n'est inscrit à aucune formation.</p>
           ) : (
@@ -172,7 +172,7 @@ export default function FormationsClientPage({ salarie, catalogue, inscriptions 
 
         {/* Formulaire d'inscription */}
         <div className="card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>➕ Inscrire à une formation</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Inscrire à une formation</h3>
           {catalogue.length === 0 ? (
             <p style={{ color: "var(--text-muted)", fontSize: "var(--txs)" }}>
               Le catalogue est vide. Créez d'abord des cours ci-dessous.
@@ -243,11 +243,11 @@ export default function FormationsClientPage({ salarie, catalogue, inscriptions 
             <div className="field col-span-2" style={{ marginBottom: 0 }}>
               <label>Note globale de performance</label>
               <select value={evalNote} onChange={(e) => setEvalNote(e.target.value)}>
-                <option value="5">⭐⭐⭐⭐⭐ Excellent (Dépasse largement les attentes)</option>
-                <option value="4">⭐⭐⭐⭐ Très Bon (Au-dessus des objectifs)</option>
-                <option value="3">⭐⭐⭐ Satisfaisant (Objectifs atteints)</option>
-                <option value="2">⭐⭐ À améliorer (Objectifs partiellement atteints)</option>
-                <option value="1">⭐ Insuffisant (Objectifs non atteints)</option>
+                <option value="5">5 / Excellent (Dépasse largement les attentes)</option>
+                <option value="4">4 / Très Bon (Au-dessus des objectifs)</option>
+                <option value="3">3 / Satisfaisant (Objectifs atteints)</option>
+                <option value="2">2 / À améliorer (Objectifs partiellement atteints)</option>
+                <option value="1">1 / Insuffisant (Objectifs non atteints)</option>
               </select>
             </div>
 
@@ -275,7 +275,7 @@ export default function FormationsClientPage({ salarie, catalogue, inscriptions 
 
             <div className="col-span-2" style={{ textAlign: "right", marginTop: 8 }}>
               <button type="submit" className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }}>
-                🖨️ Générer la Fiche d'Évaluation (PDF)
+                Générer la Fiche d'Évaluation (PDF)
               </button>
             </div>
           </form>

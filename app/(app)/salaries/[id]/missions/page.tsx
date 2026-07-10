@@ -54,7 +54,7 @@ export default async function Page({ params }: Props) {
         </Link>
         <span style={{ color: "var(--border)" }}>|</span>
         <strong style={{ color: "var(--accent)", fontSize: "var(--tsm)" }}>
-          ✈️ Missions & Déplacements
+          Missions & Déplacements
         </strong>
       </div>
 

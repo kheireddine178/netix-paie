@@ -63,7 +63,7 @@ export default async function MissionsPage() {
   return (
     <div className="space-y-6">
       <div className="page-header">
-        <h1>✈️ Missions & Déplacements</h1>
+        <h1>Missions & Déplacements</h1>
         <p>Sélectionnez un collaborateur pour saisir un déplacement et imprimer l'ordre de mission.</p>
       </div>
 
