@@ -87,7 +87,8 @@
   --amber-bg: #fef7eb;
 
   /* Typographie */
-  --font: "Segoe UI", -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+  --font: var(--font-inter), "Segoe UI", -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+  --font-display: var(--font);
   --mono: "Cascadia Code", "Fira Code", Consolas, "Courier New", monospace;
 
   --t2xs: 12px;
