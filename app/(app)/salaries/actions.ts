@@ -823,3 +823,118 @@ export async function copierMoisPrecedentMasse(anneeCible: number, moisCible: nu
   revalidatePath("/saisie");
   return { copies: count };
 }
+
+export interface ContratRow {
+  id: number;
+  salarie_id: number;
+  type_contrat: string;
+  date_debut: string;
+  date_fin: string | null;
+  periode_essai_mois: number;
+  statut: string;
+  salaire_base_contrat: number;
+}
+
+export interface DocumentSalarieRow {
+  id: number;
+  salarie_id: number;
+  nom_document: string;
+  categorie: string;
+  fichier_url: string;
+  cree_le: string;
+}
+
+export async function listerContratsSalarie(salarieId: number): Promise<ContratRow[]> {
+  const { data, error } = await supabase
+    .from("contrats")
+    .select("*")
+    .eq("salarie_id", salarieId)
+    .order("date_debut", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function listerDocumentsSalarie(salarieId: number): Promise<DocumentSalarieRow[]> {
+  const { data, error } = await supabase
+    .from("documents_salaries")
+    .select("*")
+    .eq("salarie_id", salarieId)
+    .order("cree_le", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function creerContratSalarie(salarieId: number, formData: FormData): Promise<ContratRow> {
+  const type_contrat = formData.get("type_contrat") as string;
+  const date_debut = formData.get("date_debut") as string;
+  const date_fin = (formData.get("date_fin") as string) || null;
+  const periode_essai_mois = parseInt(formData.get("periode_essai_mois") as string, 10) || 0;
+  const salaire_base_contrat = parseFloat(formData.get("salaire_base_contrat") as string) || 0;
+  const statut = formData.get("statut") as string || "En cours";
+
+  const { data, error } = await supabase
+    .from("contrats")
+    .insert({
+      salarie_id: salarieId,
+      type_contrat,
+      date_debut,
+      date_fin,
+      periode_essai_mois,
+      salaire_base_contrat,
+      statut,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/salaries/${salarieId}/contrat`);
+  return data;
+}
+
+export async function supprimerContratSalarie(contratId: number, salarieId: number): Promise<void> {
+  const { error } = await supabase
+    .from("contrats")
+    .delete()
+    .eq("id", contratId)
+    .eq("salarie_id", salarieId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/salaries/${salarieId}/contrat`);
+}
+
+export async function creerDocumentSalarie(
+  salarieId: number,
+  nomDocument: string,
+  categorie: string,
+  fichierUrl: string
+): Promise<DocumentSalarieRow> {
+  const { data, error } = await supabase
+    .from("documents_salaries")
+    .insert({
+      salarie_id: salarieId,
+      nom_document: nomDocument,
+      categorie,
+      fichier_url: fichierUrl,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/salaries/${salarieId}/contrat`);
+  return data;
+}
+
+export async function supprimerDocumentSalarie(documentId: number, salarieId: number): Promise<void> {
+  const { error } = await supabase
+    .from("documents_salaries")
+    .delete()
+    .eq("id", documentId)
+    .eq("salarie_id", salarieId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/salaries/${salarieId}/contrat`);
+}
