@@ -59,17 +59,11 @@ export default async function SalariesPage() {
                   <td>{s.salaire_base_theorique.toLocaleString("fr-FR")} DA</td>
                   <td>
                     <div style={{ display: "flex", gap: "var(--s3)", justifyContent: "flex-end", flexWrap: "wrap" }}>
-                      <Link href={`/salaries/${s.id}/bulletin`} className="btn btn-secondary btn-sm">
-                        Bulletin
-                      </Link>
-                      <Link href={`/salaries/${s.id}/rubriques`} className="btn btn-secondary btn-sm">
-                        Rubriques
-                      </Link>
-                      <Link href={`/salaries/${s.id}/historique`} className="btn btn-secondary btn-sm">
-                        Historique
+                      <Link href={`/salaries/${s.id}`} className="btn btn-primary btn-sm">
+                        📁 Gérer
                       </Link>
                       <Link href={`/salaries/${s.id}/modifier`} className="btn btn-secondary btn-sm">
-                        Modifier
+                        ✏️ Modifier
                       </Link>
                       <SalarieRowActions id={s.id} actif={s.actif} />
                     </div>

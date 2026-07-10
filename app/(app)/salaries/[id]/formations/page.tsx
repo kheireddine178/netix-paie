@@ -27,8 +27,8 @@ export default async function Page({ params }: Props) {
           <h1>Formations & Évaluations — {salarie.nom_prenom}</h1>
           <p>Gérez le développement des compétences (formations) et évaluez les performances.</p>
         </div>
-        <Link href="/salaries" className="btn btn-secondary btn-sm">
-          ← Retour à la liste
+        <Link href={`/salaries/${salarie.id}`} className="btn btn-secondary btn-sm">
+          ← Retour au Profil
         </Link>
       </div>
 

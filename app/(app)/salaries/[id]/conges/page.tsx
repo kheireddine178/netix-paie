@@ -27,8 +27,8 @@ export default async function Page({ params }: Props) {
           <h1>Absences & Congés — {salarie.nom_prenom}</h1>
           <p>Suivez les congés annuels, maladies, maternités et calculez les soldes en temps réel.</p>
         </div>
-        <Link href="/salaries" className="btn btn-secondary btn-sm">
-          ← Retour à la liste
+        <Link href={`/salaries/${salarie.id}`} className="btn btn-secondary btn-sm">
+          ← Retour au Profil
         </Link>
       </div>
 

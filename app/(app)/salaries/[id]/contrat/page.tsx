@@ -27,8 +27,8 @@ export default async function Page({ params }: Props) {
           <h1>Contrats & Documents — {salarie.nom_prenom}</h1>
           <p>Gérez les contrats de travail, téléversez les justificatifs et générez les documents officiels.</p>
         </div>
-        <Link href="/salaries" className="btn btn-secondary btn-sm">
-          ← Retour à la liste
+        <Link href={`/salaries/${salarie.id}`} className="btn btn-secondary btn-sm">
+          ← Retour au Profil
         </Link>
       </div>
 

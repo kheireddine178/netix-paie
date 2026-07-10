@@ -27,8 +27,8 @@ export default async function Page({ params }: Props) {
           <h1>Carrière & Discipline — {salarie.nom_prenom}</h1>
           <p>Gérez l'évolution de poste (promotions) et le dossier disciplinaire (sanctions) du salarié.</p>
         </div>
-        <Link href="/salaries" className="btn btn-secondary btn-sm">
-          ← Retour à la liste
+        <Link href={`/salaries/${salarie.id}`} className="btn btn-secondary btn-sm">
+          ← Retour au Profil
         </Link>
       </div>
 

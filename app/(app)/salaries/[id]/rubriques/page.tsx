@@ -34,8 +34,8 @@ export default async function RubriquesPage({
             pouvez toujours la modifier au moment de la saisie du bulletin).
           </p>
         </div>
-        <Link href={`/salaries/${salarie.id}/bulletin`} className="btn btn-secondary btn-sm">
-          ← Retour au bulletin
+        <Link href={`/salaries/${salarie.id}`} className="btn btn-secondary btn-sm">
+          ← Retour au Profil
         </Link>
       </div>
 

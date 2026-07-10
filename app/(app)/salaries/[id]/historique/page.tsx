@@ -36,8 +36,8 @@ export default async function HistoriquePage({
             {bulletins.length > 1 ? "s" : ""} enregistré{bulletins.length > 1 ? "s" : ""}
           </p>
         </div>
-        <Link href={`/salaries/${salarie.id}/bulletin`} className="btn btn-secondary btn-sm">
-          ← Saisie mensuelle
+        <Link href={`/salaries/${salarie.id}`} className="btn btn-secondary btn-sm">
+          ← Retour au Profil
         </Link>
       </div>
 

@@ -26,8 +26,8 @@ export default async function Page({ params }: Props) {
           <h1>Missions & Déplacements — {salarie.nom_prenom}</h1>
           <p>Gérez les déplacements professionnels et générez les Ordres de Mission officiels.</p>
         </div>
-        <Link href="/salaries" className="btn btn-secondary btn-sm">
-          ← Retour à la liste
+        <Link href={`/salaries/${salarie.id}`} className="btn btn-secondary btn-sm">
+          ← Retour au Profil
         </Link>
       </div>
 
