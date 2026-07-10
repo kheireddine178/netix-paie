@@ -133,14 +133,14 @@ const styles = StyleSheet.create({
     lineHeight: 1.3,
   },
   codeBlock: {
-    fontFamily: "Courier",
-    fontSize: 8,
+    fontFamily: "Helvetica",
+    fontSize: 8.5,
     backgroundColor: GREY_BG,
     padding: 6,
     marginBottom: 6,
     borderWidth: 0.5,
     borderColor: GREY_LINE,
-    lineHeight: 1.3,
+    lineHeight: 1.4,
   },
   footer: {
     marginTop: 20,
@@ -287,7 +287,7 @@ export function PdfExplicationDocument({ donnees }: PdfExplicationProps) {
                 <View key={i} style={styles.trow}>
                   <Text style={{ flexBasis: "40%", padding: 4, fontSize: 8 }}>{tr.tranche}</Text>
                   <Text style={{ flexBasis: "15%", padding: 4, fontSize: 8, textAlign: "right" }}>{tr.taux}</Text>
-                  <Text style={{ flexBasis: "45%", padding: 4, fontSize: 8, textAlign: "right", fontFamily: "Courier" }}>{tr.detail}</Text>
+                  <Text style={{ flexBasis: "45%", padding: 4, fontSize: 8, textAlign: "right", fontFamily: "Helvetica" }}>{tr.detail}</Text>
                 </View>
               ))}
               <View style={[styles.trow, { backgroundColor: GREY_BG }]}>
