@@ -564,9 +564,71 @@ export async function chargerBulletinPourSaisie(
     .eq("salarie_id", salarieId)
     .eq("annee", annee)
     .eq("mois", mois)
-    .single();
+    .maybeSingle();
 
-  if (error || !bulletin) return null;
+  if (error) throw new Error(error.message);
+
+  if (!bulletin) {
+    // Si aucun bulletin n'existe, on pré-remplit les absences à partir des congés approuvés
+    const { data: congesApprouves } = await supabase
+      .from("conges")
+      .select("type_conge, date_debut, date_fin, jours_ouvrables")
+      .eq("salarie_id", salarieId)
+      .eq("statut", "Approuvé");
+
+    let maladieHrs = 0;
+    let absIrrHrs = 0;
+
+    if (congesApprouves && congesApprouves.length > 0) {
+      const debutTarget = new Date(annee, mois - 1, 1);
+      const finTarget = new Date(annee, mois, 0);
+
+      for (const c of congesApprouves) {
+        const debut = new Date(c.date_debut);
+        const fin = new Date(c.date_fin);
+
+        if (debut <= finTarget && fin >= debutTarget) {
+          const hrs = (c.jours_ouvrables ?? 0) * 8;
+          if (c.type_conge === "Maladie") {
+            maladieHrs += hrs;
+          } else if (c.type_conge === "Sans solde") {
+            absIrrHrs += hrs;
+          }
+        }
+      }
+    }
+
+    const sal = await getSalarie(salarieId);
+    const baseTheorique = sal ? sal.salaire_base_theorique : 0;
+
+    return {
+      bulletin_id: 0,
+      champs: {
+        salaire_base_theorique: baseTheorique,
+        maladie_h: maladieHrs,
+        mise_a_pied_h: 0,
+        accident_travail_h: 0,
+        retard_h: 0,
+        absence_irreguliere_h: absIrrHrs,
+        heures_sup_1: 0,
+        heures_sup_2: 0,
+        heures_sup_3: 0,
+        icr: 0,
+        taux_iep: 0,
+        taux_nuisance: 0,
+        taux_responsabilite: 0,
+        taux_disponibilite: 0,
+        taux_pri: 0,
+        taux_prc: 0,
+        panier_jours: 0,
+        panier_forfait_jour: 0,
+        autre_prime_fixe: 0,
+        cotis_mutuelle: 0,
+        autres_retenues: 0,
+      },
+      rubriques: [],
+    };
+  }
 
   const { data: bulletinRubriques } = await supabase
     .from("bulletin_rubriques")
@@ -937,4 +999,80 @@ export async function supprimerDocumentSalarie(documentId: number, salarieId: nu
 
   if (error) throw new Error(error.message);
   revalidatePath(`/salaries/${salarieId}/contrat`);
+}
+
+export interface CongeRow {
+  id: number;
+  salarie_id: number;
+  type_conge: string;
+  date_debut: string;
+  date_fin: string;
+  jours_ouvrables: number;
+  statut: string;
+  motif: string | null;
+  justificatif_url: string | null;
+  cree_le: string;
+}
+
+export async function listerCongesSalarie(salarieId: number): Promise<CongeRow[]> {
+  const { data, error } = await supabase
+    .from("conges")
+    .select("*")
+    .eq("salarie_id", salarieId)
+    .order("date_debut", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function creerCongeSalarie(salarieId: number, formData: FormData): Promise<CongeRow> {
+  const type_conge = formData.get("type_conge") as string;
+  const date_debut = formData.get("date_debut") as string;
+  const date_fin = formData.get("date_fin") as string;
+  const jours_ouvrables = parseInt(formData.get("jours_ouvrables") as string, 10) || 0;
+  const motif = (formData.get("motif") as string) || null;
+  const justificatif_url = (formData.get("justificatif_url") as string) || null;
+  const statut = (formData.get("statut") as string) || "En attente";
+
+  const { data, error } = await supabase
+    .from("conges")
+    .insert({
+      salarie_id: salarieId,
+      type_conge,
+      date_debut,
+      date_fin,
+      jours_ouvrables,
+      motif,
+      justificatif_url,
+      statut,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/salaries/${salarieId}/conges`);
+  return data;
+}
+
+export async function supprimerCongeSalarie(congeId: number, salarieId: number): Promise<void> {
+  const { error } = await supabase
+    .from("conges")
+    .delete()
+    .eq("id", congeId)
+    .eq("salarie_id", salarieId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/salaries/${salarieId}/conges`);
+}
+
+export async function changerStatutConge(congeId: number, statut: string, salarieId: number): Promise<void> {
+  const { error } = await supabase
+    .from("conges")
+    .update({ statut })
+    .eq("id", congeId)
+    .eq("salarie_id", salarieId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/salaries/${salarieId}/conges`);
 }
