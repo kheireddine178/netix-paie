@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/saisie", label: "Saisie mensuelle" },
   { href: "/rubriques", label: "Rubriques" },
   { href: "/historique", label: "Historique" },
+  { href: "/guide", label: "Guide RH" },
   { href: "/parametres", label: "Paramètres" },
 ];
 
