@@ -1076,3 +1076,76 @@ export async function changerStatutConge(congeId: number, statut: string, salari
   if (error) throw new Error(error.message);
   revalidatePath(`/salaries/${salarieId}/conges`);
 }
+
+export interface MissionRow {
+  id: number;
+  salarie_id: number;
+  objet: string;
+  destination: string;
+  date_debut: string;
+  date_fin: string;
+  moyen_transport: string;
+  statut: string;
+  cree_le: string;
+}
+
+export async function listerMissionsSalarie(salarieId: number): Promise<MissionRow[]> {
+  const { data, error } = await supabase
+    .from("missions")
+    .select("*")
+    .eq("salarie_id", salarieId)
+    .order("date_debut", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function creerMissionSalarie(salarieId: number, formData: FormData): Promise<MissionRow> {
+  const objet = formData.get("objet") as string;
+  const destination = formData.get("destination") as string;
+  const date_debut = formData.get("date_debut") as string;
+  const date_fin = formData.get("date_fin") as string;
+  const moyen_transport = formData.get("moyen_transport") as string;
+  const statut = (formData.get("statut") as string) || "En attente";
+
+  const { data, error } = await supabase
+    .from("missions")
+    .insert({
+      salarie_id: salarieId,
+      objet,
+      destination,
+      date_debut,
+      date_fin,
+      moyen_transport,
+      statut,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/salaries/${salarieId}/missions`);
+  return data;
+}
+
+export async function supprimerMissionSalarie(missionId: number, salarieId: number): Promise<void> {
+  const { error } = await supabase
+    .from("missions")
+    .delete()
+    .eq("id", missionId)
+    .eq("salarie_id", salarieId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/salaries/${salarieId}/missions`);
+}
+
+export async function changerStatutMission(missionId: number, statut: string, salarieId: number): Promise<void> {
+  const { error } = await supabase
+    .from("missions")
+    .update({ statut })
+    .eq("id", missionId)
+    .eq("salarie_id", salarieId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/salaries/${salarieId}/missions`);
+}
