@@ -7,14 +7,18 @@ import { useEffect, useState } from "react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Accueil" },
-  { href: "/salaries", label: "Salariés" },
-  { href: "/saisie", label: "Saisie mensuelle" },
-  { href: "/rubriques", label: "Rubriques" },
-  { href: "/rapports", label: "États de Paie" },
-  { href: "/historique", label: "Historique" },
-  { href: "/guide", label: "Guide RH" },
-  { href: "/parametres", label: "Paramètres" },
-  { href: "/portail", label: "🔑 Portail Salarié" },
+  { href: "/salaries", label: "Collaborateurs" },
+  { href: "/saisie", label: "🧮 Saisie mensuelle" },
+  { href: "/contrats", label: "💼 Contrats & Docs" },
+  { href: "/conges", label: "📅 Congés & Absences" },
+  { href: "/missions", label: "✈️ Missions & Ordres" },
+  { href: "/carriere", label: "📈 Carrière & Discipline" },
+  { href: "/formations", label: "🎓 Formations & Talent" },
+  { href: "/rapports", label: "📊 États de Paie" },
+  { href: "/rubriques", label: "📋 Rubriques" },
+  { href: "/historique", label: "📜 Historique" },
+  { href: "/guide", label: "📖 Guide RH" },
+  { href: "/parametres", label: "⚙️ Paramètres" },
 ];
 
 export default function Sidebar() {
