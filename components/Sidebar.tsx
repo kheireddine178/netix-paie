@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/historique", label: "Historique" },
   { href: "/guide", label: "Guide RH" },
   { href: "/parametres", label: "Paramètres" },
+  { href: "/portail", label: "🔑 Portail Salarié" },
 ];
 
 export default function Sidebar() {
