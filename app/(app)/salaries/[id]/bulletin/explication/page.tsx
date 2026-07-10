@@ -108,7 +108,7 @@ export default async function ExplicationPage({ params, searchParams }: PageProp
               padding: "var(--s3)",
               background: "var(--bg-2)",
               borderRadius: "var(--radius)",
-              fontFamily: "monospace",
+              fontFamily: "var(--mono)",
               fontSize: "var(--tsm)",
             }}
           >
@@ -155,7 +155,7 @@ export default async function ExplicationPage({ params, searchParams }: PageProp
               padding: "var(--s4)",
               background: "var(--bg-2)",
               borderRadius: "var(--radius)",
-              fontFamily: "monospace",
+              fontFamily: "var(--mono)",
               fontSize: "var(--tsm)",
               marginBottom: "var(--s4)",
             }}
@@ -204,7 +204,7 @@ export default async function ExplicationPage({ params, searchParams }: PageProp
                         <td>{tr.tranche}</td>
                         <td style={{ textAlign: "right" }}>{tr.taux}</td>
                         <td style={{ textAlign: "right" }}>{fmtDa(tr.montantTranche)}</td>
-                        <td style={{ textAlign: "right", fontFamily: "monospace" }}>{fmtDa(tr.impotPartiel)}</td>
+                        <td style={{ textAlign: "right", fontFamily: "var(--mono)" }}>{fmtDa(tr.impotPartiel)}</td>
                       </tr>
                     ))}
                     <tr style={{ background: "var(--bg-2)" }}>
@@ -223,7 +223,7 @@ export default async function ExplicationPage({ params, searchParams }: PageProp
                   padding: "var(--s4)",
                   background: "var(--bg-2)",
                   borderRadius: "var(--radius)",
-                  fontFamily: "monospace",
+                  fontFamily: "var(--mono)",
                   fontSize: "var(--tsm)",
                 }}
               >
@@ -243,7 +243,7 @@ export default async function ExplicationPage({ params, searchParams }: PageProp
                 marginTop: "var(--s4)",
                 padding: "var(--s3)",
                 background: "var(--bg-2)",
-                fontFamily: "monospace",
+                fontFamily: "var(--mono)",
                 fontSize: "var(--tsm)",
                 borderRadius: "var(--radius)",
               }}
