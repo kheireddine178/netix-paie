@@ -1279,3 +1279,104 @@ export async function supprimerSanctionSalarie(sanctionId: number, salarieId: nu
   if (error) throw new Error(error.message);
   revalidatePath(`/salaries/${salarieId}/carriere`);
 }
+
+export interface FormationRow {
+  id: number;
+  titre: string;
+  theme: string;
+  organisme: string;
+  duree_jours: number;
+  prix_da: number;
+}
+
+export interface InscriptionRow {
+  id: number;
+  formation_id: number;
+  salarie_id: number;
+  date_debut: string;
+  statut: string;
+  formations?: FormationRow;
+}
+
+export async function listerCatalogueFormations(): Promise<FormationRow[]> {
+  const { data, error } = await supabase
+    .from("formations")
+    .select("*")
+    .order("titre");
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function creerFormationCatalogue(formData: FormData): Promise<FormationRow> {
+  const titre = formData.get("titre") as string;
+  const theme = formData.get("theme") as string;
+  const organisme = formData.get("organisme") as string;
+  const duree_jours = parseInt(formData.get("duree_jours") as string, 10) || 0;
+  const prix_da = parseFloat(formData.get("prix_da") as string) || 0;
+
+  const { data, error } = await supabase
+    .from("formations")
+    .insert({
+      titre,
+      theme,
+      organisme,
+      duree_jours,
+      prix_da,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function listerInscriptionsSalarie(salarieId: number): Promise<InscriptionRow[]> {
+  const { data, error } = await supabase
+    .from("formations_inscriptions")
+    .select("*, formations(*)")
+    .eq("salarie_id", salarieId)
+    .order("date_debut", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((d: any) => ({
+    id: d.id,
+    formation_id: d.formation_id,
+    salarie_id: d.salarie_id,
+    date_debut: d.date_debut,
+    statut: d.statut,
+    formations: Array.isArray(d.formations) ? d.formations[0] : d.formations,
+  }));
+}
+
+export async function creerInscriptionFormation(salarieId: number, formData: FormData): Promise<InscriptionRow> {
+  const formation_id = parseInt(formData.get("formation_id") as string, 10);
+  const date_debut = formData.get("date_debut") as string;
+  const statut = (formData.get("statut") as string) || "Prévue";
+
+  const { data, error } = await supabase
+    .from("formations_inscriptions")
+    .insert({
+      formation_id,
+      salarie_id: salarieId,
+      date_debut,
+      statut,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/salaries/${salarieId}/formations`);
+  return data;
+}
+
+export async function supprimerInscriptionFormation(inscriptionId: number, salarieId: number): Promise<void> {
+  const { error } = await supabase
+    .from("formations_inscriptions")
+    .delete()
+    .eq("id", inscriptionId)
+    .eq("salarie_id", salarieId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/salaries/${salarieId}/formations`);
+}
