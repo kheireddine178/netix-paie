@@ -1149,3 +1149,133 @@ export async function changerStatutMission(missionId: number, statut: string, sa
   if (error) throw new Error(error.message);
   revalidatePath(`/salaries/${salarieId}/missions`);
 }
+
+export interface PromotionRow {
+  id: number;
+  salarie_id: number;
+  ancien_poste: string | null;
+  nouveau_poste: string;
+  ancienne_categorie: string | null;
+  nouvelle_categorie: string | null;
+  date_effet: string;
+  salaire_base_nouveau: number;
+  cree_le: string;
+}
+
+export interface SanctionRow {
+  id: number;
+  salarie_id: number;
+  type_sanction: string;
+  motif: string;
+  date_sanction: string;
+  duree_mise_a_pied: number | null;
+  cree_le: string;
+}
+
+export async function listerPromotionsSalarie(salarieId: number): Promise<PromotionRow[]> {
+  const { data, error } = await supabase
+    .from("promotions")
+    .select("*")
+    .eq("salarie_id", salarieId)
+    .order("date_effet", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function creerPromotionSalarie(salarieId: number, formData: FormData): Promise<PromotionRow> {
+  const ancien_poste = formData.get("ancien_poste") as string || null;
+  const nouveau_poste = formData.get("nouveau_poste") as string;
+  const ancienne_categorie = formData.get("ancienne_categorie") as string || null;
+  const nouvelle_categorie = formData.get("nouvelle_categorie") as string || null;
+  const date_effet = formData.get("date_effet") as string;
+  const salaire_base_nouveau = parseFloat(formData.get("salaire_base_nouveau") as string) || 0;
+
+  const { data, error } = await supabase
+    .from("promotions")
+    .insert({
+      salarie_id: salarieId,
+      ancien_poste,
+      nouveau_poste,
+      ancienne_categorie,
+      nouvelle_categorie,
+      date_effet,
+      salaire_base_nouveau,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  // Mettre à jour automatiquement la table salaries pour synchroniser la fonction et le salaire de base
+  const { error: updateError } = await supabase
+    .from("salaries")
+    .update({
+      fonction: nouveau_poste,
+      salaire_base_theorique: salaire_base_nouveau,
+    })
+    .eq("id", salarieId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  revalidatePath(`/salaries/${salarieId}/carriere`);
+  revalidatePath("/salaries");
+  return data;
+}
+
+export async function supprimerPromotionSalarie(promotionId: number, salarieId: number): Promise<void> {
+  const { error } = await supabase
+    .from("promotions")
+    .delete()
+    .eq("id", promotionId)
+    .eq("salarie_id", salarieId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/salaries/${salarieId}/carriere`);
+}
+
+export async function listerSanctionsSalarie(salarieId: number): Promise<SanctionRow[]> {
+  const { data, error } = await supabase
+    .from("sanctions")
+    .select("*")
+    .eq("salarie_id", salarieId)
+    .order("date_sanction", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function creerSanctionSalarie(salarieId: number, formData: FormData): Promise<SanctionRow> {
+  const type_sanction = formData.get("type_sanction") as string;
+  const motif = formData.get("motif") as string;
+  const date_sanction = formData.get("date_sanction") as string;
+  const duree_mise_a_pied = parseInt(formData.get("duree_mise_a_pied") as string, 10) || null;
+
+  const { data, error } = await supabase
+    .from("sanctions")
+    .insert({
+      salarie_id: salarieId,
+      type_sanction,
+      motif,
+      date_sanction,
+      duree_mise_a_pied,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/salaries/${salarieId}/carriere`);
+  return data;
+}
+
+export async function supprimerSanctionSalarie(sanctionId: number, salarieId: number): Promise<void> {
+  const { error } = await supabase
+    .from("sanctions")
+    .delete()
+    .eq("id", sanctionId)
+    .eq("salarie_id", salarieId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/salaries/${salarieId}/carriere`);
+}
