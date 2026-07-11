@@ -815,86 +815,150 @@ tr:last-child td { border-bottom: none; }
   font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
 }
 
-/* Tab bar éditorial — wrapper avec flèches */
-.rh-guide-root .rh-tab-bar-wrapper {
-  position: sticky; top: 0; z-index: 80;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
-  margin-bottom: var(--s5);
+/* Redesigned Navigation Layout */
+.rh-guide-root .rh-guide-container {
+  display: flex;
+  gap: var(--s6);
+  align-items: flex-start;
+  margin-top: var(--s4);
+}
+
+/* Sidebar navigation on Desktop */
+.rh-guide-root .rh-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 70px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rlg);
+  padding: var(--s4);
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  box-shadow: var(--shxs);
+}
+
+.rh-guide-root .rh-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+.rh-guide-root .rh-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.rh-guide-root .rh-sidebar-group {
+  margin-bottom: var(--s4);
+}
+.rh-guide-root .rh-sidebar-group:last-child {
+  margin-bottom: 0;
+}
+
+.rh-guide-root .rh-sidebar-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: var(--s2);
+  letter-spacing: 0.05em;
+  padding-left: var(--s2);
+}
+
+.rh-guide-root .rh-sidebar-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rh-guide-root .rh-sidebar-item {
   display: flex;
   align-items: center;
-  gap: 0;
-  padding: var(--s2) 0;
-}
-.rh-guide-root .rh-tab-bar {
-  flex: 1;
-  display: flex; gap: 2px;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-  padding: 2px 4px;
-}
-.rh-guide-root .rh-tab-bar::-webkit-scrollbar { display: none; }
-
-/* Fade edges to hint scrollability */
-.rh-guide-root .rh-tab-bar-wrapper::before,
-.rh-guide-root .rh-tab-bar-wrapper::after {
-  content: '';
-  position: absolute;
-  top: 0; bottom: 0;
-  width: 40px;
-  pointer-events: none;
-  z-index: 1;
-}
-.rh-guide-root .rh-tab-bar-wrapper {
-  position: sticky;
-  top: 0;
-}
-
-/* Scroll arrow buttons */
-.rh-guide-root .rh-tab-arrow {
-  appearance: none; border: 1px solid var(--border);
+  gap: var(--s2.5);
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
   border-radius: var(--rsm);
-  background: var(--bg);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rh-guide-root .rh-sidebar-item svg {
   color: var(--text-muted);
-  font-size: 18px; font-weight: 700;
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; flex-shrink: 0;
-  transition: background-color .12s, color .12s, opacity .12s;
-  line-height: 1;
-  padding: 0;
-  z-index: 2;
-}
-.rh-guide-root .rh-tab-arrow:hover { background: var(--surface-2); color: var(--text); }
-.rh-guide-root .rh-tab-arrow.hidden { opacity: 0; pointer-events: none; }
-.rh-guide-root .rh-tab-arrow-left { margin-right: 4px; }
-.rh-guide-root .rh-tab-arrow-right { margin-left: 4px; }
-
-/* Tab counter badge */
-.rh-guide-root .rh-tab-count {
-  font-size: 10px; color: var(--text-muted);
-  white-space: nowrap;
-  padding: 0 8px;
-  flex-shrink: 0;
+  transition: color 0.15s ease;
 }
 
-.rh-guide-root .rh-tab {
-  appearance: none; border: none;
-  border-radius: var(--rsm);
-  padding: 7px 13px;
-  font-size: 12px; font-weight: 600; cursor: pointer;
-  background: transparent; color: var(--text-muted);
-  transition: background-color .12s, color .12s;
-  white-space: nowrap;
+.rh-guide-root .rh-sidebar-item:hover {
+  background: var(--surface-2);
+  color: var(--text);
 }
-.rh-guide-root .rh-tab:hover { background: var(--surface-2); color: var(--text); }
-.rh-guide-root .rh-tab.active {
+.rh-guide-root .rh-sidebar-item:hover svg {
+  color: var(--text);
+}
+
+.rh-guide-root .rh-sidebar-item.active {
   background: var(--teal-50);
   color: var(--teal-700);
-  font-weight: 700;
-  box-shadow: inset 0 -2px 0 var(--teal-500);
+  font-weight: 650;
+}
+.rh-guide-root .rh-sidebar-item.active svg {
+  color: var(--teal-600);
+}
+
+:root[data-theme=dark] .rh-guide-root .rh-sidebar-item.active {
+  background: rgba(15, 110, 86, 0.15);
+  color: var(--teal-400);
+}
+:root[data-theme=dark] .rh-guide-root .rh-sidebar-item.active svg {
+  color: var(--teal-400);
+}
+
+/* Mobile Navigation Dropdown */
+.rh-guide-root .rh-mobile-nav {
+  display: none;
+  flex-direction: column;
+  gap: var(--s2);
+  margin-bottom: var(--s4);
+  width: 100%;
+}
+.rh-guide-root .rh-mobile-nav label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.rh-guide-root .rh-mobile-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+.rh-guide-root .rh-mobile-select-wrapper select {
+  width: 100%;
+  padding: 10px 16px;
+  padding-right: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  appearance: none;
+  cursor: pointer;
+}
+.rh-guide-root .rh-mobile-select-wrapper .select-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* Main Content Area */
+.rh-guide-root .rh-main-content {
+  flex: 1;
+  min-width: 0;
 }
 
 /* Panels éditoriaux : kicker Teal — marque de fabrique */
@@ -1190,6 +1254,116 @@ tr:last-child td { border-bottom: none; }
 .rh-guide-root .res-val   { font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; font-family: var(--mono); }
 .rh-guide-root .res-total .res-label { font-size: 14px; font-weight: 700; color: #fff; }
 .rh-guide-root .res-total .res-val   { font-size: 18px; color: var(--teal-200); }
+
+
+/* Media Queries for responsive Guide layout */
+@media (max-width: 1024px) {
+  .rh-guide-root .rh-guide-container {
+    flex-direction: column;
+  }
+  .rh-guide-root .rh-sidebar {
+    display: none;
+  }
+  .rh-guide-root .rh-mobile-nav {
+    display: flex;
+  }
+}
+
+/* Limit readable width of long text bodies */
+.rh-guide-root .rh-main-content p,
+.rh-guide-root .rh-main-content ul,
+.rh-guide-root .rh-main-content ol {
+  max-width: 720px;
+}
+
+/* FAQ Accordion Styles & Smooth Transitions */
+.rh-guide-root #faq-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rh-guide-root .faq-item {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--surface);
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rh-guide-root .faq-item:hover {
+  border-color: var(--teal-500);
+  box-shadow: var(--shxs);
+}
+
+.rh-guide-root .faq-question {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.rh-guide-root .faq-question strong {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.rh-guide-root .faq-arrow {
+  color: var(--text-muted);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.rh-guide-root .faq-arrow.open {
+  transform: rotate(180deg);
+  color: var(--teal-600);
+}
+
+.rh-guide-root .faq-answer {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+}
+
+.rh-guide-root .faq-answer.open {
+  max-height: 1000px; /* Large enough for long FAQ answers */
+  opacity: 1;
+}
+
+.rh-guide-root .faq-answer-inner {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-soft);
+}
+
+.rh-guide-root .faq-answer-inner p {
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.65;
+  margin-bottom: 8px;
+}
+
+.rh-guide-root .faq-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.rh-guide-root .faq-ref {
+  font-family: var(--mono);
+  color: var(--teal-700);
+  font-weight: 600;
+}
+
+:root[data-theme=dark] .rh-guide-root .faq-ref {
+  color: var(--teal-500);
+}
 .rh-guide-root .res-tip { font-size: 11px; color: rgba(255,255,255,.55); margin-top: var(--s3); line-height: 1.55; }
 
 .rh-guide-root .res-line.res-sub { padding-left: 14px; border-bottom: none; padding-top: 2px; padding-bottom: 2px; }

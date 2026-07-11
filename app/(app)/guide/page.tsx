@@ -8,6 +8,85 @@ import {
   DICO_DATA,
   RubriqueItem,
 } from "./guideData";
+import {
+  BookOpen,
+  Scale,
+  FileText,
+  HelpCircle,
+  Globe,
+  ShieldAlert,
+  Search,
+  Copy,
+  Check,
+  Calculator,
+  Users,
+  AlertTriangle,
+  Award,
+  Briefcase,
+  TrendingUp,
+  Compass,
+  Heart,
+  Lock,
+  Book,
+  Folder,
+  ChevronDown
+} from "lucide-react";
+
+const IconMap: Record<string, React.ComponentType<any>> = {
+  Calculator,
+  FileText,
+  Scale,
+  Users,
+  ShieldAlert,
+  AlertTriangle,
+  Award,
+  Briefcase,
+  TrendingUp,
+  Compass,
+  Heart,
+  Lock,
+  Globe,
+  BookOpen,
+  Book,
+  Folder,
+  HelpCircle,
+};
+
+function RenderIcon({ name, size = 16, className }: { name: string; size?: number; className?: string }) {
+  const IconComponent = IconMap[name];
+  if (!IconComponent) return null;
+  return <IconComponent size={size} className={className} />;
+}
+
+const CATEGORIES = [
+  {
+    title: "1. Thématiques Légales",
+    items: [
+      { id: "theme1", label: "Paie & Fiscalité", icon: "Calculator" },
+      { id: "theme2", label: "Administration RH", icon: "FileText" },
+      { id: "theme3", label: "Droit du travail", icon: "Scale" },
+      { id: "theme4", label: "Droit syndical", icon: "Users" },
+      { id: "theme5", label: "Santé & Sécurité", icon: "ShieldAlert" },
+      { id: "theme6", label: "Conflits & Discipline", icon: "AlertTriangle" },
+      { id: "theme7", label: "Formation & Talent", icon: "Award" },
+      { id: "theme8", label: "GPEC & Recrutement", icon: "Briefcase" },
+      { id: "theme9", label: "Pilotage RH", icon: "TrendingUp" },
+      { id: "theme10", label: "Stratégie & Climat", icon: "Compass" },
+      { id: "theme11", label: "Retraite & Prévoyance", icon: "Heart" },
+      { id: "theme12", label: "Protection Données", icon: "Lock" },
+      { id: "theme13", label: "Travailleurs Étrangers", icon: "Globe" },
+    ],
+  },
+  {
+    title: "2. Outils & Lexique",
+    items: [
+      { id: "suppl", label: "Référentiels de paie", icon: "BookOpen" },
+      { id: "dico", label: "Dictionnaire RH", icon: "Book" },
+      { id: "modeles", label: "Modèles & Documents", icon: "Folder" },
+      { id: "faq", label: "FAQ RH", icon: "HelpCircle" },
+    ],
+  },
+];
 
 export default function GuidePage() {
   const [activeTab, setActiveTab] = useState("theme1");
@@ -29,6 +108,7 @@ export default function GuidePage() {
   const [faqSearch, setFaqSearch] = useState("");
   const [faqCat, setFaqCat] = useState("tous");
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Main Tabs definitions
   const TABS = [
@@ -321,7 +401,8 @@ export default function GuidePage() {
     if (!el) return;
     const text = el.innerText.trim();
     navigator.clipboard.writeText(text).then(() => {
-      alert(`Modèle "${name}" copié dans le presse-papiers !`);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
     });
   };
 
@@ -351,43 +432,59 @@ export default function GuidePage() {
         </div>
       </div>
 
-      {/* Main horizontal scrolling tabs bar */}
-      <div className="rh-tab-bar-wrapper">
-        <button
-          className={`rh-tab-arrow rh-tab-arrow-left ${
-            !showLeftArrow ? "hidden" : ""
-          }`}
-          onClick={() => scrollTabs(-1)}
-          aria-label="Défiler à gauche"
-        >
-          &#8249;
-        </button>
-        <div className="rh-tab-bar" ref={tabContainerRef}>
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              className={`rh-tab ${activeTab === tab.id ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab(tab.id);
+      {/* Redesigned layout container: Sidebar on desktop, Select on mobile */}
+      <div className="rh-guide-container">
+        {/* Sidebar for Desktop */}
+        <aside className="rh-sidebar">
+          {CATEGORIES.map((cat, idx) => (
+            <div key={idx} className="rh-sidebar-group">
+              <h3 className="rh-sidebar-group-title">{cat.title}</h3>
+              <div className="rh-sidebar-group-items">
+                {cat.items.map((item) => (
+                  <button
+                    key={item.id}
+                    className={`rh-sidebar-item ${activeTab === item.id ? "active" : ""}`}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                  >
+                    <RenderIcon name={item.icon} size={15} />
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </aside>
+
+        {/* Mobile Dropdown Navigator */}
+        <div className="rh-mobile-nav">
+          <label htmlFor="rh-mobile-select">Thématique active :</label>
+          <div className="rh-mobile-select-wrapper">
+            <select
+              id="rh-mobile-select"
+              value={activeTab}
+              onChange={(e) => {
+                setActiveTab(e.target.value);
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
             >
-              {tab.label}
-            </button>
-          ))}
+              {CATEGORIES.map((cat) => (
+                <optgroup key={cat.title} label={cat.title}>
+                  {cat.items.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <ChevronDown size={16} className="select-arrow" />
+          </div>
         </div>
-        <button
-          className={`rh-tab-arrow rh-tab-arrow-right ${
-            !showRightArrow ? "hidden" : ""
-          }`}
-          onClick={() => scrollTabs(1)}
-          aria-label="Défiler à droite"
-        >
-          &#8250;
-        </button>
-      </div>
 
-      <div className="guide-content">
+        <div className="rh-main-content">
         {/* THEME 1 — PAIE & FISCALITE SPECIAL REACT RENDER FOR THE CALCULATOR */}
         {activeTab === "theme1" && (
           <div>
@@ -706,7 +803,7 @@ export default function GuidePage() {
 
                 <div className="toolbar">
                   <div className="search-wrap">
-                    <span className="search-icon">🔍</span>
+                    <Search size={16} className="search-icon" />
                     <input
                       type="text"
                       placeholder="Rechercher une rubrique, une loi…"
@@ -807,7 +904,7 @@ export default function GuidePage() {
 
             <div className="toolbar" style={{ flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
               <div className="search-wrap" style={{ flex: 1, minWidth: 220 }}>
-                <span className="search-icon">🔍</span>
+                <Search size={16} className="search-icon" />
                 <input
                   type="text"
                   placeholder="Rechercher un terme, un acronyme, une loi…"
@@ -947,8 +1044,9 @@ export default function GuidePage() {
                 <div className="rh-card">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <strong>Contrat de Travail à Durée Indéterminée (CDI)</strong>
-                    <button className="mod-copy-btn btn btn-sm btn-secondary" onClick={() => copyModel("mod-cdi", "CDI")}>
-                      📋 Copier
+                    <button className="mod-copy-btn btn btn-sm btn-secondary" style={{ display: "flex", alignItems: "center", gap: "6px" }} onClick={() => copyModel("mod-cdi", "CDI")}>
+                      {copiedId === "mod-cdi" ? <Check size={14} style={{ color: "var(--teal-600)" }} /> : <Copy size={14} />}
+                      {copiedId === "mod-cdi" ? "Copié !" : "Copier"}
                     </button>
                   </div>
                   <pre id="mod-cdi" className="mod-pre" style={{ whiteSpace: "pre-wrap", maxHeight: 350, overflowY: "auto", fontSize: "11.5px", padding: 12, background: "var(--surface-2)", borderRadius: 6 }}>
@@ -1001,8 +1099,9 @@ L'Employeur (signature & cachet)               Le Salarié (signature précédé
                 <div className="rh-card">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <strong>Contrat de Travail à Durée Déterminée (CDD)</strong>
-                    <button className="mod-copy-btn btn btn-sm btn-secondary" onClick={() => copyModel("mod-cdd", "CDD")}>
-                      📋 Copier
+                    <button className="mod-copy-btn btn btn-sm btn-secondary" style={{ display: "flex", alignItems: "center", gap: "6px" }} onClick={() => copyModel("mod-cdd", "CDD")}>
+                      {copiedId === "mod-cdd" ? <Check size={14} style={{ color: "var(--teal-600)" }} /> : <Copy size={14} />}
+                      {copiedId === "mod-cdd" ? "Copié !" : "Copier"}
                     </button>
                   </div>
                   <pre id="mod-cdd" className="mod-pre" style={{ whiteSpace: "pre-wrap", maxHeight: 350, overflowY: "auto", fontSize: "11.5px", padding: 12, background: "var(--surface-2)", borderRadius: 6 }}>
@@ -1049,8 +1148,9 @@ L'Employeur                                     Le Salarié`}
                 <div className="rh-card">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <strong>Lettre d'Avertissement Disciplinaire</strong>
-                    <button className="mod-copy-btn btn btn-sm btn-secondary" onClick={() => copyModel("mod-avert", "Avertissement")}>
-                      📋 Copier
+                    <button className="mod-copy-btn btn btn-sm btn-secondary" style={{ display: "flex", alignItems: "center", gap: "6px" }} onClick={() => copyModel("mod-avert", "Avertissement")}>
+                      {copiedId === "mod-avert" ? <Check size={14} style={{ color: "var(--teal-600)" }} /> : <Copy size={14} />}
+                      {copiedId === "mod-avert" ? "Copié !" : "Copier"}
                     </button>
                   </div>
                   <pre id="mod-avert" className="mod-pre" style={{ whiteSpace: "pre-wrap", maxHeight: 350, overflowY: "auto", fontSize: "11.5px", padding: 12, background: "var(--surface-2)", borderRadius: 6 }}>
@@ -1087,8 +1187,9 @@ Pour l'Entreprise,
                 <div className="rh-card">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <strong>Convocation à Audition Disciplinaire</strong>
-                    <button className="mod-copy-btn btn btn-sm btn-secondary" onClick={() => copyModel("mod-map", "Mise à pied / Audition")}>
-                      📋 Copier
+                    <button className="mod-copy-btn btn btn-sm btn-secondary" style={{ display: "flex", alignItems: "center", gap: "6px" }} onClick={() => copyModel("mod-map", "Mise à pied / Audition")}>
+                      {copiedId === "mod-map" ? <Check size={14} style={{ color: "var(--teal-600)" }} /> : <Copy size={14} />}
+                      {copiedId === "mod-map" ? "Copié !" : "Copier"}
                     </button>
                   </div>
                   <pre id="mod-map" className="mod-pre" style={{ whiteSpace: "pre-wrap", maxHeight: 350, overflowY: "auto", fontSize: "11.5px", padding: 12, background: "var(--surface-2)", borderRadius: 6 }}>
@@ -1131,8 +1232,9 @@ Accusé de réception par le salarié (signature + date) :`}
                 <div className="rh-card">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <strong>Certificat de Travail (Sortie)</strong>
-                    <button className="mod-copy-btn btn btn-sm btn-secondary" onClick={() => copyModel("mod-cert", "Certificat")}>
-                      📋 Copier
+                    <button className="mod-copy-btn btn btn-sm btn-secondary" style={{ display: "flex", alignItems: "center", gap: "6px" }} onClick={() => copyModel("mod-cert", "Certificat")}>
+                      {copiedId === "mod-cert" ? <Check size={14} style={{ color: "var(--teal-600)" }} /> : <Copy size={14} />}
+                      {copiedId === "mod-cert" ? "Copié !" : "Copier"}
                     </button>
                   </div>
                   <pre id="mod-cert" className="mod-pre" style={{ whiteSpace: "pre-wrap", maxHeight: 350, overflowY: "auto", fontSize: "11.5px", padding: 12, background: "var(--surface-2)", borderRadius: 6 }}>
@@ -1167,8 +1269,9 @@ Pour l'Entreprise,
                 <div className="rh-card">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <strong>Attestation de Travail (Salarié actif)</strong>
-                    <button className="mod-copy-btn btn btn-sm btn-secondary" onClick={() => copyModel("mod-att", "Attestation")}>
-                      📋 Copier
+                    <button className="mod-copy-btn btn btn-sm btn-secondary" style={{ display: "flex", alignItems: "center", gap: "6px" }} onClick={() => copyModel("mod-att", "Attestation")}>
+                      {copiedId === "mod-att" ? <Check size={14} style={{ color: "var(--teal-600)" }} /> : <Copy size={14} />}
+                      {copiedId === "mod-att" ? "Copié !" : "Copier"}
                     </button>
                   </div>
                   <pre id="mod-att" className="mod-pre" style={{ whiteSpace: "pre-wrap", maxHeight: 350, overflowY: "auto", fontSize: "11.5px", padding: 12, background: "var(--surface-2)", borderRadius: 6 }}>
@@ -1201,8 +1304,9 @@ Pour l'Entreprise,
                 <div className="rh-card">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <strong>Grille d'Évaluation de l'Entretien Annuel</strong>
-                    <button className="mod-copy-btn btn btn-sm btn-secondary" onClick={() => copyModel("mod-eval", "Évaluation")}>
-                      📋 Copier
+                    <button className="mod-copy-btn btn btn-sm btn-secondary" style={{ display: "flex", alignItems: "center", gap: "6px" }} onClick={() => copyModel("mod-eval", "Évaluation")}>
+                      {copiedId === "mod-eval" ? <Check size={14} style={{ color: "var(--teal-600)" }} /> : <Copy size={14} />}
+                      {copiedId === "mod-eval" ? "Copié !" : "Copier"}
                     </button>
                   </div>
                   <pre id="mod-eval" className="mod-pre" style={{ whiteSpace: "pre-wrap", maxHeight: 350, overflowY: "auto", fontSize: "11.5px", padding: 12, background: "var(--surface-2)", borderRadius: 6 }}>
@@ -1245,8 +1349,9 @@ Salarié                                         Évaluateur`}
                 <div className="rh-card">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <strong>Règlement Intérieur (Sommaire Type)</strong>
-                    <button className="mod-copy-btn btn btn-sm btn-secondary" onClick={() => copyModel("mod-ri", "Règlement intérieur")}>
-                      📋 Copier
+                    <button className="mod-copy-btn btn btn-sm btn-secondary" style={{ display: "flex", alignItems: "center", gap: "6px" }} onClick={() => copyModel("mod-ri", "Règlement intérieur")}>
+                      {copiedId === "mod-ri" ? <Check size={14} style={{ color: "var(--teal-600)" }} /> : <Copy size={14} />}
+                      {copiedId === "mod-ri" ? "Copié !" : "Copier"}
                     </button>
                   </div>
                   <pre id="mod-ri" className="mod-pre" style={{ whiteSpace: "pre-wrap", maxHeight: 350, overflowY: "auto", fontSize: "11.5px", padding: 12, background: "var(--surface-2)", borderRadius: 6 }}>
@@ -1298,7 +1403,7 @@ TITRE V — DISPOSITIONS FINALES
 
             <div className="toolbar" style={{ flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
               <div className="search-wrap" style={{ flex: 1, minWidth: 220 }}>
-                <span className="search-icon">🔍</span>
+                <Search size={16} className="search-icon" />
                 <input
                   type="text"
                   placeholder="Rechercher une question…"
@@ -1369,24 +1474,24 @@ TITRE V — DISPOSITIONS FINALES
               </span>
             </div>
 
-            <div id="faq-grid" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div id="faq-grid">
               {filteredFaq.map((item, idx) => {
                 const isOpen = faqOpenIndex === idx;
                 return (
-                  <div key={idx} className="rh-card" style={{ border: "1px solid var(--border)", borderRadius: "var(--r)", background: "var(--surface)", cursor: "pointer", padding: "12px 16px" }} onClick={() => setFaqOpenIndex(isOpen ? null : idx)}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <strong style={{ fontSize: "14px", color: "var(--text)" }}>{item.q}</strong>
-                      <span style={{ fontSize: 18, color: "var(--text-muted)", transition: "transform .2s", transform: isOpen ? "rotate(90deg)" : "none" }}>&rarr;</span>
+                  <div key={idx} className="faq-item" onClick={() => setFaqOpenIndex(isOpen ? null : idx)}>
+                    <div className="faq-question">
+                      <strong>{item.q}</strong>
+                      <ChevronDown size={18} className={`faq-arrow ${isOpen ? "open" : ""}`} />
                     </div>
-                    {isOpen && (
-                      <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px dashed var(--border-soft)", fontSize: "13px", color: "var(--text-2)", lineHeight: 1.65 }}>
+                    <div className={`faq-answer ${isOpen ? "open" : ""}`}>
+                      <div className="faq-answer-inner">
                         <p>{item.a}</p>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 11, color: "var(--text-muted)" }}>
+                        <div className="faq-meta">
                           <span>{item.theme}</span>
-                          {item.ref && <span style={{ fontFamily: "var(--mono)", color: "var(--teal-700)" }}>Réf : {item.ref}</span>}
+                          {item.ref && <span className="faq-ref">Réf : {item.ref}</span>}
                         </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 );
               })}
@@ -1412,6 +1517,7 @@ TITRE V — DISPOSITIONS FINALES
               }}
             />
           )}
+        </div>
       </div>
     </div>
   );
