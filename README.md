@@ -1,87 +1,87 @@
-# Netix SIRH (Système d'Information des Ressources Humaines)
+# Netix SIRH (Systeme d'Information des Ressources Humaines)
 
-**Logiciel de gestion de paie algérienne et SIRH Complet** — conforme au CIDTA, à la loi n°90-11, à la loi n°83-11 et aux dernières Lois de Finances (LF 2024 / LF 2026).
+**Logiciel de gestion de paie algerienne et SIRH Complet** — conforme au CIDTA, a la loi n°90-11, a la loi n°83-11 et aux dernieres Lois de Finances (LF 2024 / LF 2026).
 
-Application web full-stack destinée aux entreprises et gestionnaires RH algériens pour gérer les collaborateurs, éditer la paie, suivre les carrières et permettre le self-service salarié.
+Application web full-stack destinee aux entreprises et gestionnaires RH algeriens pour gerer les collaborateurs, editer la paie, suivre les carrieres et permettre le self-service salarie.
 
-🌐 **Démo en ligne :** [netix-paie.vercel.app](https://netix-paie.vercel.app)
+**Demo en ligne :** [netix-paie.vercel.app](https://netix-paie.vercel.app)
 
 ---
 
-## 🏛️ Les 7 Modules Fonctionnels
+## Les 7 Modules Fonctionnels
 
-### 1. 🧮 Module Paie & Bulletins
-- **Calcul en cascade** : salaire de base réel proratisé selon les absences, heures supplémentaires (3 paliers), IEP, nuisance, responsabilité, panier et ICR.
-- **Cotisations et impôts** : Retenue CNAS 9% (base cotisable conforme à l'Art. 74 de la loi n°83-11) et IRG au barème progressif avec abattement de 40% (Art. 104 du CIDTA).
+### 1. Module Paie & Bulletins
+- **Calcul en cascade** : salaire de base reel proratise selon les absences, heures supplementaires (3 paliers), IEP, nuisance, responsabilite, panier et ICR.
+- **Cotisations et impots** : Retenue CNAS 9% (base cotisable conforme a l'Art. 74 de la loi n°83-11) et IRG au bareme progressif avec abattement de 40% (Art. 104 du CIDTA).
 - **Catalogue Hydrocanal** : Gestion de 402 rubriques dynamiques de gains et retenues.
-- **Export PDF** : Bulletins de paie individuels (variante Salarié et Variante Employeur).
+- **Export PDF** : Bulletins de paie individuels (variante Salarie et Variante Employeur).
 
-### 2. 📂 Module Contrats & Dossier Collaborateur (HR Core)
-- **Suivi des contrats** : Enregistrement des CDI, CDD, CTA, SIVP, périodes d'essai et avenants.
-- **Dossier documentaire** : Téléversement sécurisé de pièces justificatives (CNI, diplôme, contrat physique signé) classées par catégorie.
-- **Générateur PDF** : Édition automatique du **PV d'installation** à l'embauche et de l'**Attestation de travail** avec calcul d'ancienneté.
+### 2. Module Contrats & Dossier Collaborateur (HR Core)
+- **Suivi des contrats** : Enregistrement des CDI, CDD, CTA, SIVP, periodes d'essai et avenants.
+- **Dossier documentaire** : Televersement securise de pieces justificatives (CNI, diplome, contrat physique signe) classees par categorie.
+- **Generateur PDF** : Edition automatique du **PV d'installation** a l'embauche et de l'**Attestation de travail** avec calcul d'anciennete.
 
-### 3. 📅 Module Absences & Congés (Time & Attendance)
-- **Compteurs automatiques** : Calcul de l'acquisition des congés (2.5 jours par mois travaillé), congés pris, et reliquat de solde (loi algérienne).
-- **Workflow d'approbation** : Soumission des demandes par le salarié et validation/rejet par la RH.
-- **Liaison Paie** : Les absences maladie et sans solde approuvées s'injectent automatiquement sous forme d'heures d'absences dans la saisie mensuelle de la paie pour déduire le salaire.
+### 3. Module Absences & Conges (Time & Attendance)
+- **Compteurs automatiques** : Calcul de l'acquisition des conges (2.5 jours par mois travaille), conges pris, et reliquat de solde (loi algerienne).
+- **Workflow d'approbation** : Soumission des demandes par le salarie et validation/rejet par la RH.
+- **Liaison Paie** : Les absences maladie et sans solde approuvees s'injectent automatiquement sous forme d'heures d'absences dans la saisie mensuelle de la paie pour deduire le salaire.
 
-### 4. ✈️ Module Déplacements & Missions
+### 4. Module Deplacements & Missions
 - **Ordres de mission** : Enregistrement de l'objet, de la destination, des dates de mission et du moyen de transport.
-- **Édition PDF** : Génération en un clic de l'**Ordre de Mission** officiel.
+- **Edition PDF** : Generation en un clic de l'**Ordre de Mission** officiel.
 
-### 5. 📈 Module Carrière & Discipline (Promotions & Sanctions)
-- **Promotions** : Historique d'évolution de poste avec **mise à jour automatique synchrone** de la fonction et du salaire de base du salarié. PDF de Décision de Promotion.
-- **Discipline** : Enregistrement des avertissements, blâmes et mises à pied. PDF de Lettre de Notification de Sanction.
+### 5. Module Carriere & Discipline (Promotions & Sanctions)
+- **Promotions** : Historique d'evolution de poste avec **mise a jour automatique synchrone** de la fonction et du salaire de base du salarie. PDF de Decision de Promotion.
+- **Discipline** : Enregistrement des avertissements, blames et mises a pied. PDF de Lettre de Notification de Sanction.
 
-### 6. 🎓 Module Formations & Évaluations (Talent)
-- **Catalogue de formation** : Catalogue interne des cours, durée, coûts et inscriptions des salariés.
-- **Évaluation annuelle** : Formulaire d'entretien de fin d'année et impression du document PDF de **Fiche d'Évaluation de Performance**.
+### 6. Module Formations & Evaluations (Talent)
+- **Catalogue de formation** : Catalogue interne des cours, duree, couts et inscriptions des salaries.
+- **Evaluation annuelle** : Formulaire d'entretien de fin d'annee et impression du document PDF de **Fiche d'Evaluation de Performance**.
 
-### 7. 🔑 Module Portail Salarié (Employee Self-Service)
-- Espace personnel sécurisé pour le collaborateur.
-- L'employé peut suivre ses compteurs de congés, soumettre ses demandes de congé ou de mission, et télécharger lui-même l'historique de ses bulletins de paie en PDF.
+### 7. Module Portail Salarie (Employee Self-Service)
+- Espace personnel securise pour le collaborateur.
+- L'employe peut suivre ses compteurs de conges, soumettre ses demandes de conge ou de mission, et telecharger lui-meme l'historique de ses bulletins de paie en PDF.
 
 ---
 
-## 🗄️ Initialisation de la Base de Données (Supabase)
+## Initialisation de la Base de Donnees (Supabase)
 
-Pour configurer votre base de données en ligne ou locale, exécutez le script SQL contenu dans le fichier [schema_sirh.sql](schema_sirh.sql) directement dans l'éditeur de requêtes SQL (SQL Editor) de votre console **Supabase**.
+Pour configurer votre base de donnees en ligne ou locale, executez le script SQL contenu dans le fichier [schema_sirh.sql](schema_sirh.sql) directement dans l'editeur de requetes SQL (SQL Editor) de votre console **Supabase**.
 
-Ce script va créer et configurer automatiquement les tables de données suivantes :
+Ce script va creer et configurer automatiquement les tables de donnees suivantes :
 - `contrats` (Contrats de travail)
 - `documents_salaries` (Dossiers documentaires)
 - `conges` (Suivi des absences)
 - `missions` (Ordres de mission)
-- `promotions` (Carrière)
+- `promotions` (Carriere)
 - `sanctions` (Dossier disciplinaire)
-- `formations` et `formations_inscriptions` (Compétences)
+- `formations` et `formations_inscriptions` (Competences)
 
 ---
 
-## 🛠️ Stack technique
+## Stack technique
 
 | Couche | Technologie |
 |---|---|
 | Framework | Next.js 16 (App Router, Server Actions) |
 | Langage | TypeScript 5 |
-| Base de données | Supabase (PostgreSQL) |
+| Base de donnees | Supabase (PostgreSQL) |
 | Moteur PDF | @react-pdf/renderer 4 |
 | Styling | Vanilla CSS premium (Aesthetics Expert) |
-| Déploiement | Vercel |
+| Deploiement | Vercel |
 
 ---
 
-## 🛠️ Installation locale
+## Installation locale
 
-**Prérequis :** Node.js 20+
+**Prerequis :** Node.js 20+
 
 ```bash
 git clone https://github.com/kheireddine178/netix-paie.git
 cd netix-paie
 npm install
 cp .env.local.example .env.local
-# Renseigner vos clés d'accès dans .env.local
+# Renseigner vos cles d'acces dans .env.local
 npm run dev
 ```
 
@@ -89,4 +89,4 @@ L'application sera accessible sur [http://localhost:3000](http://localhost:3000)
 
 ---
 
-*Netix SIRH — Solution complète de Gestion RH et de Paie conforme à la réglementation algérienne.*
+*Netix SIRH — Solution complete de Gestion RH et de Paie conforme a la reglementation algerienne.*

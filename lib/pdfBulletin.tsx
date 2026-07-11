@@ -38,6 +38,7 @@ const AMBER_BG = "#fbf1de";
  * valeurs numériques ni sur le calcul.
  */
 function normaliserEspaces(s: string): string {
+  // Remplacer l'espace fine insécable (U+202F) et l'espace insécable standard (U+00A0) par un espace standard
   return s.replace(/[\u202F\u00A0]/g, " ");
 }
 

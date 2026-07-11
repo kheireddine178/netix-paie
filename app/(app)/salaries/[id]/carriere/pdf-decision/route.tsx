@@ -56,7 +56,8 @@ const styles = StyleSheet.create({
 function DecisionPromotionPdf({ salarie, promotion }: { salarie: any; promotion: any }) {
   const dateEffet = new Date(promotion.date_effet).toISOString().split("T")[0].split("-").reverse().join("/");
   const dateDuJour = new Date().toISOString().split("T")[0].split("-").reverse().join("/");
-  const salaireNouveau = promotion.salaire_base_nouveau.toLocaleString("fr-FR", { minimumFractionDigits: 2 }) + " DA";
+  const sRaw = promotion.salaire_base_nouveau.toLocaleString("fr-FR", { minimumFractionDigits: 2 });
+  const salaireNouveau = sRaw.replace(/[\u202F\u00A0]/g, " ") + " DA";
 
   return (
     <Document title={`Décision de Promotion — ${salarie.nom_prenom}`}>

@@ -44,11 +44,11 @@ export default function GuidePage() {
     { id: "theme10", label: "10. Stratégie & Climat" },
     { id: "theme11", label: "11. Retraite & Prévoyance" },
     { id: "suppl", label: "+ Référentiels" },
-    { id: "dico", label: "📖 Dictionnaire RH" },
-    { id: "modeles", label: "📄 Modèles & Documents" },
-    { id: "theme12", label: "🔒 Protection données RH" },
-    { id: "theme13", label: "🌍 Travail des étrangers" },
-    { id: "faq", label: "❓ FAQ RH" },
+    {id: "dico", label: "Dictionnaire RH" },
+    {id: "modeles", label: "Modèles & Documents" },
+    {id: "theme12", label: "Protection données RH" },
+    {id: "theme13", label: "Travail des étrangers" },
+    {id: "faq", label: "FAQ RH" },
   ];
 
   // Handle Tab bar scroll arrow visibility

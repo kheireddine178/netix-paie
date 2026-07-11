@@ -116,7 +116,7 @@ export default async function DashboardPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "var(--s4)" }}>
             {cddExpirations.length > 0 && (
               <div>
-                <h4 style={{ fontSize: "var(--tsm)", fontWeight: "bold", marginBottom: "8px" }}>📅 Échéances de Contrats (CDD) :</h4>
+                <h4 style={{ fontSize: "var(--tsm)", fontWeight: "bold", marginBottom: "8px" }}>Échéances de Contrats (CDD) :</h4>
                 <ul style={{ paddingLeft: "16px", margin: 0, fontSize: "var(--txs)", display: "flex", flexDirection: "column", gap: "4px" }}>
                   {cddExpirations.map((c) => (
                     <li key={c.id}>
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
 
             {visitesMedicalesExpirations.length > 0 && (
               <div>
-                <h4 style={{ fontSize: "var(--tsm)", fontWeight: "bold", marginBottom: "8px" }}>🩺 Médecine du travail (Visites médicales) :</h4>
+                <h4 style={{ fontSize: "var(--tsm)", fontWeight: "bold", marginBottom: "8px" }}>Médecine du travail (Visites médicales) :</h4>
                 <ul style={{ paddingLeft: "16px", margin: 0, fontSize: "var(--txs)", display: "flex", flexDirection: "column", gap: "4px" }}>
                   {visitesMedicalesExpirations.map((s) => (
                     <li key={s.id}>
