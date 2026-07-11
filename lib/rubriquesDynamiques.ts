@@ -63,11 +63,22 @@ export function resoudreLigneRubrique(
   let montant: number;
   let typeValeur: "Gain (+)" | "Retenue (-)";
 
-  if (categorie === "regularisation") {
-    montant = Math.abs(valeur1);
+  const libelle = catalogue.libelle || "";
+  
+  if (libelle.includes("R-")) {
+    typeValeur = "Retenue (-)";
+  } else if (libelle.includes("R+")) {
+    typeValeur = "Gain (+)";
+  } else if (categorie === "regularisation") {
+    // Comportement hérité pour les codes régul si aucun suffixe explicite n'est présent
     typeValeur = valeur1 < 0 ? "Retenue (-)" : "Gain (+)";
   } else {
     typeValeur = catalogue.type_valeur === "Retenue (-)" ? "Retenue (-)" : "Gain (+)";
+  }
+
+  if (categorie === "regularisation") {
+    montant = Math.abs(valeur1);
+  } else {
     if (categorie === "pourcentage") {
       montant = base * valeur1;
     } else if (categorie === "nombre_x_taux") {
