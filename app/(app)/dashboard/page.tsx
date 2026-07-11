@@ -2,7 +2,9 @@ import Link from "next/link";
 import {
   IconUsers, IconCalculator, IconFileText, IconCalendar,
   IconPlane, IconTrendingUp, IconGraduation, IconBook, IconSettings,
+  IconAlertTriangle,
 } from "@/components/Icons";
+import { listerSalaries, listerTousContrats } from "../salaries/actions";
 
 const MODULES = [
   {
@@ -63,14 +65,96 @@ const MODULES = [
   },
 ];
 
-export default function DashboardPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  const [salaries, contrats] = await Promise.all([
+    listerSalaries(),
+    listerTousContrats(),
+  ]);
+
+  const 📅 = new Date();
+  const limiteAlertes = new Date();
+  limiteAlertes.setDate(📅.getDate() + 30); // Alertes sous 30 jours
+
+  // 1. Détecter les CDD se terminant sous 30 jours
+  const cddExpirations = contrats.filter((c) => {
+    if (c.type_contrat !== "CDD" || c.statut !== "En cours" || !c.date_fin) return false;
+    const dateFin = new Date(c.date_fin);
+    return dateFin >= 📅 && dateFin <= limiteAlertes;
+  });
+
+  // 2. Détecter les visites médicales expirant ou en retard (visite annuelle obligatoire)
+  const visitesMedicalesExpirations = salaries.filter((s) => {
+    if (!s.actif) return false;
+    if (!s.date_visite_medicale) return true; // Pas de visite renseignée = alerte
+    const derniereVisite = new Date(s.date_visite_medicale);
+    const dateEcheance = new Date(derniereVisite);
+    dateEcheance.setFullYear(dateEcheance.getFullYear() + 1); // Visite valable 1 an
+    return dateEcheance <= limiteAlertes;
+  });
+
+  const totalAlertes = cddExpirations.length + visitesMedicalesExpirations.length;
+
   return (
     <div className="space-y-6">
-      <div className="page-header">
-        <h1>Plateforme Netix SIRH</h1>
-        <p>Gérez l'intégralité de vos ressources humaines et votre paie en toute conformité réglementaire.</p>
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1>Plateforme Netix SIRH</h1>
+          <p>Gérez l'intégralité de vos ressources humaines et votre paie en toute conformité réglementaire.</p>
+        </div>
       </div>
 
+      {/* SECTION ALERTES & VIGILANCE RH */}
+      {totalAlertes > 0 && (
+        <div className="card" style={{ borderLeft: "4px solid var(--red)", background: "rgba(239, 68, 68, 0.05)", padding: "var(--s4)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--red)", marginBottom: "var(--s3)" }}>
+            <IconAlertTriangle size={20} />
+            <h3 style={{ margin: 0, fontSize: "var(--tmd)", fontWeight: "bold" }}>Alertes &amp; Vigilance RH ({totalAlertes})</h3>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "var(--s4)" }}>
+            {cddExpirations.length > 0 && (
+              <div>
+                <h4 style={{ fontSize: "var(--tsm)", fontWeight: "bold", marginBottom: "8px" }}>📅 Échéances de Contrats (CDD) :</h4>
+                <ul style={{ paddingLeft: "16px", margin: 0, fontSize: "var(--txs)", display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {cddExpirations.map((c) => (
+                    <li key={c.id}>
+                      <span style={{ fontWeight: "bold" }}>{c.salaries?.nom_prenom}</span> : contrat CDD se termine le{" "}
+                      <span style={{ color: "var(--red)", fontWeight: "bold" }}>
+                        {c.date_fin?.split("-").reverse().join("/")}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {visitesMedicalesExpirations.length > 0 && (
+              <div>
+                <h4 style={{ fontSize: "var(--tsm)", fontWeight: "bold", marginBottom: "8px" }}>🩺 Médecine du travail (Visites médicales) :</h4>
+                <ul style={{ paddingLeft: "16px", margin: 0, fontSize: "var(--txs)", display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {visitesMedicalesExpirations.map((s) => (
+                    <li key={s.id}>
+                      <span style={{ fontWeight: "bold" }}>{s.nom_prenom}</span> :{" "}
+                      {s.date_visite_medicale ? (
+                        <>
+                          dernière visite le {s.date_visite_medicale.split("-").reverse().join("/")}{" "}
+                          <span style={{ color: "var(--red)", fontWeight: "bold" }}>(Échue ou expire bientôt)</span>
+                        </>
+                      ) : (
+                        <span style={{ color: "var(--red)", fontWeight: "bold" }}>Aucune visite médicale enregistrée</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODULES GRID */}
       <div
         style={{
           display: "grid",
@@ -111,7 +195,7 @@ export default function DashboardPage() {
         <div className="card">
           <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s2)", color: "var(--teal)" }}>
             <IconBook size={18} />
-            <h3>Guide Juridique & RH</h3>
+            <h3>Guide Juridique &amp; RH</h3>
           </div>
           <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)", marginBottom: "var(--s4)" }}>
             Accédez aux articles clés de la loi n°90-11, du CIDTA et de la loi n°83-11 pour vos calculs.

@@ -10,6 +10,7 @@ interface SalarieFormProps {
     matricule: string | null;
     fonction: string | null;
     salaire_base_theorique: number;
+    date_visite_medicale?: string | null;
   };
   actionSubmit: (formData: FormData) => Promise<void>;
   buttonText: string;
@@ -25,6 +26,7 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
   const [matricule, setMatricule] = useState(initialData?.matricule ?? "");
   const [fonction, setFonction] = useState(initialData?.fonction ?? "");
   const [salaireBase, setSalaireBase] = useState<number | string>(initialData?.salaire_base_theorique ?? 0);
+  const [dateVisiteMedicale, setDateVisiteMedicale] = useState(initialData?.date_visite_medicale ?? "");
 
   // Format Nom & Prénom on blur (capitalize first letters)
   function handleNameBlur() {
@@ -112,6 +114,17 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
               value={salaireBase}
               onChange={(e) => setSalaireBase(e.target.value)}
               placeholder="0.00"
+            />
+          </div>
+
+          <div className="field">
+            <label htmlFor="date_visite_medicale">Date de dernière visite médicale</label>
+            <input
+              id="date_visite_medicale"
+              name="date_visite_medicale"
+              type="date"
+              value={dateVisiteMedicale}
+              onChange={(e) => setDateVisiteMedicale(e.target.value)}
             />
           </div>
 

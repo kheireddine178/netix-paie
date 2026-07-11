@@ -25,6 +25,7 @@ export interface Salarie {
   fonction: string | null;
   salaire_base_theorique: number;
   actif: boolean;
+  date_visite_medicale?: string | null;
 }
 
 export async function listerSalaries(): Promise<Salarie[]> {
@@ -42,12 +43,14 @@ export async function creerSalarie(formData: FormData) {
   const matricule = (formData.get("matricule") as string) || null;
   const fonction = (formData.get("fonction") as string) || null;
   const salaire_base_theorique = parseFloat(formData.get("salaire_base_theorique") as string) || 0;
+  const date_visite_medicale = (formData.get("date_visite_medicale") as string) || null;
 
   const { error } = await supabase.from("salaries").insert({
     nom_prenom,
     matricule,
     fonction,
     salaire_base_theorique,
+    date_visite_medicale,
   });
 
   if (error) throw new Error(error.message);
@@ -62,6 +65,7 @@ export async function modifierSalarie(id: number, formData: FormData) {
   const matricule = (formData.get("matricule") as string) || null;
   const fonction = (formData.get("fonction") as string) || null;
   const salaire_base_theorique = parseFloat(formData.get("salaire_base_theorique") as string) || 0;
+  const date_visite_medicale = (formData.get("date_visite_medicale") as string) || null;
 
   const { error } = await supabase
     .from("salaries")
@@ -70,6 +74,7 @@ export async function modifierSalarie(id: number, formData: FormData) {
       matricule,
       fonction,
       salaire_base_theorique,
+      date_visite_medicale,
     })
     .eq("id", id);
 
@@ -976,6 +981,16 @@ export async function supprimerContratSalarie(contratId: number, salarieId: numb
 
   if (error) throw new Error(error.message);
   revalidatePath(`/salaries/${salarieId}/contrat`);
+}
+
+export async function listerTousContrats(): Promise<(ContratRow & { salaries?: { nom_prenom: string } })[]> {
+  const { data, error } = await supabase
+    .from("contrats")
+    .select("*, salaries(nom_prenom)")
+    .order("date_debut", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
 }
 
 export async function creerDocumentSalarie(
