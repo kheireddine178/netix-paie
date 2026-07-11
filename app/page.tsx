@@ -12,44 +12,45 @@ import {
   FileText,
   ShieldAlert,
   Scale,
-  Bookmark
+  Bookmark,
+  ChevronRight
 } from "lucide-react";
 
 const SIRH_MODULES = [
   { 
     title: "Paie & Bulletins", 
     icon: CreditCard, 
-    desc: "Calcul conforme CIDTA / CNAS, abattement 40%, 402 rubriques du catalogue et édition de bulletins PDF." 
+    desc: "Calcul conforme CIDTA / CNAS, abattement 40%, catalogue de rubriques et édition de bulletins PDF." 
   },
   { 
     title: "Contrats & Core RH", 
     icon: Briefcase, 
-    desc: "Suivi des CDI, CDD, CTA, avenants. Impression du PV d'installation et de l'Attestation de travail." 
+    desc: "Suivi des CDI, CDD, CTA, PV d'installation et de l'Attestation de travail." 
   },
   { 
     title: "Congés & Absences", 
     icon: Calendar, 
-    desc: "Calculateur de solde légal (2.5j/mois), workflow de validation et liaison de déduction automatique sur la paie." 
+    desc: "Calculateur de solde légal (2.5j/mois), validation et déduction automatique sur la paie." 
   },
   { 
     title: "Missions", 
     icon: Plane, 
-    desc: "Enregistrement des déplacements professionnels et édition instantanée de l'Ordre de Mission PDF réglementaire." 
+    desc: "Déplacements professionnels et édition instantanée de l'Ordre de Mission PDF réglementaire." 
   },
   { 
     title: "Promotions & Sanctions", 
     icon: TrendingUp, 
-    desc: "Suivi d'évolution de carrière (mise à jour de salaire automatique) et dossier disciplinaire (lettre d'avertissement)." 
+    desc: "Changements de poste (mise à jour de salaire automatique) et dossier disciplinaire." 
   },
   { 
     title: "Formations & Talent", 
     icon: GraduationCap, 
-    desc: "Catalogue de cours, suivi des inscriptions des salariés et génération de la Fiche d'Évaluation de Performance." 
+    desc: "Catalogue de cours, inscriptions et génération de la Fiche d'Évaluation de Performance." 
   },
   { 
     title: "Portail Salarié (ESS)", 
     icon: UserCheck, 
-    desc: "Espace self-service sécurisé permettant à chaque collaborateur de soumettre ses congés et de télécharger ses bulletins." 
+    desc: "Espace self-service pour soumettre les congés et télécharger les bulletins." 
   },
 ];
 
@@ -68,7 +69,7 @@ export default function LandingPage() {
       <header className="landing-hero">
         <nav className="landing-nav">
           <div className="landing-nav-logo">
-            <Image src="/logo.svg" alt="Netix SIRH" width={110} height={30} priority />
+            <Image src="/logo.svg" alt="Netix SIRH" width={148} height={40} priority />
           </div>
           <Link href="/dashboard" className="btn btn-ghost-light btn-sm">
             Entrer →
@@ -76,15 +77,21 @@ export default function LandingPage() {
         </nav>
 
         <div className="landing-hero-inner">
+          <div className="landing-eyebrow">
+            <span>SIRH &amp; Paie Algérie</span>
+          </div>
           <h1>
             Le premier SIRH complet &amp; Paie conforme conçu pour <span className="accent">l'entreprise algérienne</span>.
           </h1>
           <p>
-            Netix centralise vos processus RH : du recrutement et contrats à la paie réglementaire en dinars algériens (DA) conforme au CIDTA, loi n°90-11, loi n°83-11 et LF 2024. Suivez les carrières, les congés et donnez un accès self-service à vos salariés.
+            Netix centralise vos processus RH, congés et paie conforme (CIDTA &amp; CNAS) au sein d'une plateforme moderne, collaborative et sécurisée.
           </p>
           <div className="landing-hero-actions">
-            <Link href="/dashboard" className="btn btn-primary btn-lg">
-              Entrer dans le SIRH
+            <Link href="/dashboard" className="btn btn-primary btn-lg btn-button-in-button">
+              <span>Entrer dans le SIRH</span>
+              <span className="btn-icon-circle">
+                <ChevronRight size={16} />
+              </span>
             </Link>
             <Link href="/portail" className="btn btn-ghost-light btn-lg">
               Accès Portail Salarié
@@ -112,12 +119,14 @@ export default function LandingPage() {
           {SIRH_MODULES.map((m) => {
             const Icon = m.icon;
             return (
-              <div className="module-card" key={m.title}>
-                <div className="module-card-icon-wrap">
-                  <Icon size={20} className="text-teal" />
+              <div className="nested-bezel-outer" key={m.title}>
+                <div className="nested-bezel-inner module-card">
+                  <div className="module-card-icon-wrap">
+                    <Icon size={20} className="text-teal" />
+                  </div>
+                  <h3>{m.title}</h3>
+                  <p>{m.desc}</p>
                 </div>
-                <h3>{m.title}</h3>
-                <p>{m.desc}</p>
               </div>
             );
           })}
@@ -144,13 +153,15 @@ export default function LandingPage() {
           {LEGAL_ITEMS.map((item) => {
             const Icon = item.icon;
             return (
-              <div className="legal-card" key={item.title}>
-                <div className="legal-card-icon-wrap">
-                  <Icon size={18} className="text-marine" />
-                </div>
-                <div>
-                  <strong>{item.title}</strong>
-                  <span>{item.desc}</span>
+              <div className="nested-bezel-outer" key={item.title}>
+                <div className="nested-bezel-inner legal-card">
+                  <div className="legal-card-icon-wrap">
+                    <Icon size={18} className="text-marine" />
+                  </div>
+                  <div>
+                    <strong>{item.title}</strong>
+                    <span>{item.desc}</span>
+                  </div>
                 </div>
               </div>
             );
@@ -162,8 +173,11 @@ export default function LandingPage() {
         <div className="landing-cta">
           <h2>Prêt à digitaliser votre gestion des ressources humaines ?</h2>
           <p>Configurez vos contrats, gérez vos salariés et éditez vos bulletins en toute conformité.</p>
-          <Link href="/dashboard" className="btn btn-primary btn-lg">
-            Entrer dans l&rsquo;application
+          <Link href="/dashboard" className="btn btn-primary btn-lg btn-button-in-button">
+            <span>Entrer dans l&rsquo;application</span>
+            <span className="btn-icon-circle">
+              <ChevronRight size={16} />
+            </span>
           </Link>
         </div>
       </section>

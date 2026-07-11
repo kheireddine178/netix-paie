@@ -1613,3 +1613,74 @@ tr:last-child td { border-bottom: none; }
   letter-spacing: 0.05em;
 }
 
+
+/* Double Bezel Nested Architecture */
+.nested-bezel-outer {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 2.2rem;
+  padding: 6px;
+  box-shadow: var(--shxs);
+  transition: all 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+:root[data-theme=dark] .nested-bezel-outer {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.04);
+}
+
+.nested-bezel-inner {
+  border-radius: calc(2.2rem - 6px) !important;
+}
+
+.nested-bezel-outer:hover {
+  border-color: rgba(13, 148, 136, 0.3);
+  background: rgba(13, 148, 136, 0.04);
+  transform: translateY(-2px);
+  box-shadow: var(--shmd);
+}
+
+/* Button-in-Button Layout & Hover Physics */
+.btn-button-in-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: 10px 14px 10px 24px !important;
+  border-radius: 9999px !important;
+  font-weight: 600;
+  transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.btn-icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.btn-button-in-button:hover .btn-icon-circle {
+  transform: translateX(2px) scale(1.05);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Landing Eyebrow Badge */
+.landing-eyebrow {
+  display: inline-block;
+  margin-bottom: var(--s4);
+}
+
+.landing-eyebrow span {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(52, 211, 153, 0.15);
+}
