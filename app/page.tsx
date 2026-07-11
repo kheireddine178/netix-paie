@@ -1,24 +1,65 @@
 import Image from "next/image";
 import Link from "next/link";
 import FeatureSlides from "@/components/FeatureSlides";
+import {
+  CreditCard,
+  Briefcase,
+  Calendar,
+  Plane,
+  TrendingUp,
+  GraduationCap,
+  UserCheck,
+  FileText,
+  ShieldAlert,
+  Scale,
+  Bookmark
+} from "lucide-react";
 
 const SIRH_MODULES = [
-  { title: "Paie & Bulletins", desc: "Calcul conforme CIDTA / CNAS, abattement 40%, 402 rubriques du catalogue et édition de bulletins PDF." },
-  { title: "Contrats & Core RH", desc: "Suivi des CDI, CDD, CTA, avenants. Impression du PV d'installation et de l'Attestation de travail." },
-  { title: "Congés & Absences", desc: "Calculateur de solde légal (2.5j/mois), workflow de validation et liaison de déduction automatique sur la paie." },
-  { title: "Missions", desc: "Enregistrement des déplacements professionnels et édition instantanée de l'Ordre de Mission PDF réglementaire." },
-  { title: "Promotions & Sanctions", desc: "Suivi d'évolution de carrière (mise à jour de salaire automatique) et dossier disciplinaire (lettre d'avertissement)." },
-  { title: "Formations & Talent", desc: "Catalogue de cours, suivi des inscriptions des salariés et génération de la Fiche d'Évaluation de Performance." },
-  { title: "Portail Salarié (ESS)", desc: "Espace self-service sécurisé permettant à chaque collaborateur de soumettre ses congés et de télécharger ses bulletins." },
+  { 
+    title: "Paie & Bulletins", 
+    icon: CreditCard, 
+    desc: "Calcul conforme CIDTA / CNAS, abattement 40%, 402 rubriques du catalogue et édition de bulletins PDF." 
+  },
+  { 
+    title: "Contrats & Core RH", 
+    icon: Briefcase, 
+    desc: "Suivi des CDI, CDD, CTA, avenants. Impression du PV d'installation et de l'Attestation de travail." 
+  },
+  { 
+    title: "Congés & Absences", 
+    icon: Calendar, 
+    desc: "Calculateur de solde légal (2.5j/mois), workflow de validation et liaison de déduction automatique sur la paie." 
+  },
+  { 
+    title: "Missions", 
+    icon: Plane, 
+    desc: "Enregistrement des déplacements professionnels et édition instantanée de l'Ordre de Mission PDF réglementaire." 
+  },
+  { 
+    title: "Promotions & Sanctions", 
+    icon: TrendingUp, 
+    desc: "Suivi d'évolution de carrière (mise à jour de salaire automatique) et dossier disciplinaire (lettre d'avertissement)." 
+  },
+  { 
+    title: "Formations & Talent", 
+    icon: GraduationCap, 
+    desc: "Catalogue de cours, suivi des inscriptions des salariés et génération de la Fiche d'Évaluation de Performance." 
+  },
+  { 
+    title: "Portail Salarié (ESS)", 
+    icon: UserCheck, 
+    desc: "Espace self-service sécurisé permettant à chaque collaborateur de soumettre ses congés et de télécharger ses bulletins." 
+  },
 ];
 
 const LEGAL_ITEMS = [
-  { title: "CIDTA — Art. 104", desc: "Barème IRG progressif + abattement salarial 40 %" },
-  { title: "Loi n°83-11 — Art. 52", desc: "Taux CNAS salariale : 9 %" },
-  { title: "Loi n°83-11 — Art. 74", desc: "Assiette cotisable (exclusions de panier, transport…)" },
-  { title: "LF 2022 — Art. 31", desc: "Barème IRG actuel (6 tranches)" },
-  { title: "Décret exéc. n°24-01", desc: "SNMG 24 000 DA / seuil exonération IRG 30 000 DA" },
-  { title: "Loi n°90-11", desc: "Code du travail (durée légale, contrat de travail)" },
+  { title: "CIDTA — Art. 104", icon: FileText, desc: "Barème IRG progressif + abattement salarial 40 %" },
+  { title: "Loi n°83-11 — Art. 52", icon: ShieldAlert, desc: "Taux CNAS salariale : 9 %" },
+  { title: "Loi n°83-11 — Art. 74", icon: Bookmark, desc: "Assiette cotisable (exclusions de panier, transport…)" },
+  { title: "LF 2022 — Art. 31", icon: FileText, desc: "Barème IRG actuel (6 tranches)" },
+  { title: "Décret exéc. n°24-01", icon: Scale, desc: "SNMG 24 000 DA / seuil exonération IRG 30 000 DA" },
+  { title: "Loi n°90-11", icon: Scale, desc: "Code du travail (durée légale, contrat de travail)" },
 ];
 
 export default function LandingPage() {
@@ -36,7 +77,7 @@ export default function LandingPage() {
 
         <div className="landing-hero-inner">
           <h1>
-            Le premier SIRH complet & Paie conforme conçu pour <span className="accent">l'entreprise algérienne</span>.
+            Le premier SIRH complet &amp; Paie conforme conçu pour <span className="accent">l'entreprise algérienne</span>.
           </h1>
           <p>
             Netix centralise vos processus RH : du recrutement et contrats à la paie réglementaire en dinars algériens (DA) conforme au CIDTA, loi n°90-11, loi n°83-11 et LF 2024. Suivez les carrières, les congés et donnez un accès self-service à vos salariés.
@@ -67,15 +108,19 @@ export default function LandingPage() {
             Découvrez nos 7 modules fonctionnels pour automatiser l'intégralité de vos ressources humaines.
           </p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "var(--s4)", marginTop: "var(--s6)" }}>
-          {SIRH_MODULES.map((m) => (
-            <div className="card" key={m.title} style={{ padding: "var(--s4)", borderTop: "3px solid var(--accent)" }}>
-              <h3 style={{ fontSize: "var(--tmd)", marginBottom: "var(--s2)", display: "flex", alignItems: "center", gap: 8 }}>
-                {m.title}
-              </h3>
-              <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)", lineHeight: 1.5 }}>{m.desc}</p>
-            </div>
-          ))}
+        <div className="modules-grid">
+          {SIRH_MODULES.map((m) => {
+            const Icon = m.icon;
+            return (
+              <div className="module-card" key={m.title}>
+                <div className="module-card-icon-wrap">
+                  <Icon size={20} className="text-teal" />
+                </div>
+                <h3>{m.title}</h3>
+                <p>{m.desc}</p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -96,12 +141,20 @@ export default function LandingPage() {
           <p>Les textes qui encadrent le calcul sont directement intégrés au moteur de paie.</p>
         </div>
         <div className="legal-grid">
-          {LEGAL_ITEMS.map((item) => (
-            <div className="legal-card" key={item.title}>
-              <strong>{item.title}</strong>
-              <span>{item.desc}</span>
-            </div>
-          ))}
+          {LEGAL_ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div className="legal-card" key={item.title}>
+                <div className="legal-card-icon-wrap">
+                  <Icon size={18} className="text-marine" />
+                </div>
+                <div>
+                  <strong>{item.title}</strong>
+                  <span>{item.desc}</span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 

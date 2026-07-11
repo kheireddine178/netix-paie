@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { Calculator, Scale, Users, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 
 type Slide = {
-  emoji: string;
+  icon: React.ComponentType<any>;
   iconBg: string;
   title: string;
   description: string;
@@ -13,8 +14,8 @@ type Slide = {
 
 const SLIDES: Slide[] = [
   {
-    emoji: "🧾",
-    iconBg: "var(--accent-bg)",
+    icon: Calculator,
+    iconBg: "rgba(13, 148, 136, 0.15)",
     title: "Calcul de paie conforme",
     description:
       "Le moteur de calcul applique en cascade le salaire de base, les absences, les heures supplémentaires et les primes pour produire un net à payer fiable, mois après mois.",
@@ -29,8 +30,8 @@ const SLIDES: Slide[] = [
     ],
   },
   {
-    emoji: "⚖️",
-    iconBg: "var(--teal-100)",
+    icon: Scale,
+    iconBg: "rgba(59, 130, 246, 0.15)",
     title: "Cotisations et impôt à jour",
     description:
       "Le barème IRG et les cotisations CNAS sont appliqués selon les textes en vigueur, sans configuration manuelle des tranches ni des taux.",
@@ -45,8 +46,8 @@ const SLIDES: Slide[] = [
     ],
   },
   {
-    emoji: "👥",
-    iconBg: "var(--amber-100)",
+    icon: Users,
+    iconBg: "rgba(245, 158, 11, 0.15)",
     title: "Gestion des salariés",
     description:
       "Chaque salarié dispose d'une fiche complète et de ses propres rubriques, avec un historique jamais perdu même après désactivation.",
@@ -61,8 +62,8 @@ const SLIDES: Slide[] = [
     ],
   },
   {
-    emoji: "📄",
-    iconBg: "var(--green-100)",
+    icon: FileText,
+    iconBg: "rgba(16, 185, 129, 0.15)",
     title: "Bulletins PDF prêts à l'emploi",
     description:
       "Chaque bulletin est généré à la volée en PDF, en version salarié ou en version employeur avec le détail des charges patronales.",
@@ -94,30 +95,33 @@ export default function FeatureSlides() {
         className="slide-track"
         style={{ transform: `translateX(-${index * 100}%)` }}
       >
-        {SLIDES.map((slide, i) => (
-          <div className="slide" key={i} aria-hidden={i !== index}>
-            <div className="slide-copy">
-              <div className="slide-icon" style={{ background: slide.iconBg }}>
-                {slide.emoji}
-              </div>
-              <h3>{slide.title}</h3>
-              <p>{slide.description}</p>
-              <ul>
-                {slide.points.map((point) => (
-                  <li key={point}>{point}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="slide-visual">
-              {slide.stat.map((s) => (
-                <div className="stat" key={s.label}>
-                  <strong>{s.value}</strong>
-                  <span>{s.label}</span>
+        {SLIDES.map((slide, i) => {
+          const Icon = slide.icon;
+          return (
+            <div className="slide" key={i} aria-hidden={i !== index}>
+              <div className="slide-copy">
+                <div className="slide-icon-wrap" style={{ background: slide.iconBg }}>
+                  <Icon size={24} className="text-teal" />
                 </div>
-              ))}
+                <h3>{slide.title}</h3>
+                <p>{slide.description}</p>
+                <ul>
+                  {slide.points.map((point) => (
+                    <li key={point}>{point}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="slide-visual">
+                {slide.stat.map((s) => (
+                  <div className="stat" key={s.label}>
+                    <strong>{s.value}</strong>
+                    <span>{s.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="slide-controls">
@@ -127,7 +131,7 @@ export default function FeatureSlides() {
           onClick={() => go(index - 1)}
           aria-label="Diapositive précédente"
         >
-          ‹
+          <ChevronLeft size={16} />
         </button>
         <div className="slide-dots">
           {SLIDES.map((slide, i) => (
@@ -146,7 +150,7 @@ export default function FeatureSlides() {
           onClick={() => go(index + 1)}
           aria-label="Diapositive suivante"
         >
-          ›
+          <ChevronRight size={16} />
         </button>
       </div>
     </div>
