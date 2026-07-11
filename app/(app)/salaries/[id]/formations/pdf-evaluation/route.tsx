@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { createElement } from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { getSalarie } from "../../../actions";
+import { getSalarie, listerObjectifsSalarie } from "../../../actions";
 import { Document, Page, View, Text, StyleSheet } from "@react-pdf/renderer";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +58,21 @@ const styles = StyleSheet.create({
   value: {
     flex: 1,
   },
+  tableHeader: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#111827",
+    paddingBottom: 4,
+    marginBottom: 6,
+    fontFamily: "Helvetica-Bold",
+  },
+  tableRow: {
+    flexDirection: "row",
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#e5e7eb",
+    paddingBottom: 4,
+    marginBottom: 4,
+  },
   notesBox: {
     marginTop: 10,
     padding: 10,
@@ -81,7 +96,7 @@ const styles = StyleSheet.create({
   }
 });
 
-function EvaluationPdf({ salarie, details }: { salarie: any; details: any }) {
+function EvaluationPdf({ salarie, details, objectifs }: { salarie: any; details: any; objectifs: any[] }) {
   const dateDuJour = new Date().toISOString().split("T")[0].split("-").reverse().join("/");
 
   const ratings = ["⭐", "⭐⭐", "⭐⭐⭐", "⭐⭐⭐⭐", "⭐⭐⭐⭐⭐"];
@@ -117,9 +132,36 @@ function EvaluationPdf({ salarie, details }: { salarie: any; details: any }) {
           </View>
         </View>
 
-        {/* Évaluation */}
+        {/* Objectifs KPIs */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>2. RÉSULTATS DE L'ENTRETIEN</Text>
+          <Text style={styles.sectionTitle}>2. EVALUATION DES OBJECTIFS (KPIs)</Text>
+          {objectifs.length === 0 ? (
+            <Text style={{ color: "#6b7280" }}>Aucun KPI de performance enregistré pour cette année.</Text>
+          ) : (
+            <View>
+              <View style={styles.tableHeader}>
+                <Text style={{ flex: 3 }}>Objectif</Text>
+                <Text style={{ flex: 1 }}>Importance</Text>
+                <Text style={{ flex: 1.5 }}>Cible</Text>
+                <Text style={{ flex: 1.5 }}>Réalisé</Text>
+                <Text style={{ flex: 1, textAlign: "right" }}>Réussite</Text>
+              </View>
+              {objectifs.map((o) => (
+                <View key={o.id} style={styles.tableRow}>
+                  <Text style={{ flex: 3 }}>{o.titre}</Text>
+                  <Text style={{ flex: 1 }}>x{o.poids}</Text>
+                  <Text style={{ flex: 1.5 }}>{o.cible || "—"}</Text>
+                  <Text style={{ flex: 1.5 }}>{o.realise || "—"}</Text>
+                  <Text style={{ flex: 1, textAlign: "right", fontFamily: "Helvetica-Bold" }}>{o.taux_reussite}%</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Évaluation globale */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>3. RÉSULTATS DE L'ENTRETIEN & APPRÉCIATION</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Évaluateur (Manager) :</Text>
             <Text style={styles.value}>{details.evaluateur}</Text>
@@ -175,7 +217,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const salarie = await getSalarie(salarieId);
   if (!salarie) return new Response("Salarié introuvable", { status: 404 });
 
-  const doc = createElement(EvaluationPdf, { salarie, details });
+  // Récupérer et filtrer les objectifs de cette année pour le PDF
+  const tousObjectifs = await listerObjectifsSalarie(salarieId);
+  const objectifsAnnee = tousObjectifs.filter((o) => String(o.annee) === details.annee);
+
+  const doc = createElement(EvaluationPdf, { salarie, details, objectifs: objectifsAnnee });
   const buffer = await renderToBuffer(doc as Parameters<typeof renderToBuffer>[0]);
 
   const nomFichier = `Evaluation_Performance_${salarie.nom_prenom.replace(/\s+/g, "_")}_${details.annee}.pdf`;

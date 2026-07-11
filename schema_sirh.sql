@@ -130,3 +130,20 @@ CREATE TABLE IF NOT EXISTS avances_salaire (
     motif TEXT,
     cree_le TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ==================================================================
+-- MODULE 7 : OBJECTIFS & EVALUATION DE PERFORMANCE
+-- ==================================================================
+
+-- Table des objectifs annuels (KPIs)
+CREATE TABLE IF NOT EXISTS objectifs_salarie (
+    id SERIAL PRIMARY KEY,
+    salarie_id INT REFERENCES salaries(id) ON DELETE CASCADE,
+    annee INT NOT NULL,
+    titre VARCHAR(255) NOT NULL,
+    poids INT DEFAULT 1,
+    cible VARCHAR(100),
+    realise VARCHAR(100),
+    taux_reussite INT DEFAULT 0, -- 0 à 100%
+    cree_le TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

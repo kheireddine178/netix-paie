@@ -1475,3 +1475,69 @@ export async function supprimerAvanceSalarie(avanceId: number, salarieId: number
 
   if (error) throw new Error(error.message);
 }
+
+// ------------------------------------------------------------------
+// MODULE 7 — OBJECTIFS ANNUELS (KPIs)
+// ------------------------------------------------------------------
+
+export interface ObjectifRow {
+  id: number;
+  salarie_id: number;
+  annee: number;
+  titre: string;
+  poids: number;
+  cible: string | null;
+  realise: string | null;
+  taux_reussite: number;
+  cree_le: string;
+}
+
+export async function listerObjectifsSalarie(salarieId: number): Promise<ObjectifRow[]> {
+  const { data, error } = await supabase
+    .from("objectifs_salarie")
+    .select("*")
+    .eq("salarie_id", salarieId)
+    .order("annee", { ascending: false })
+    .order("cree_le", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function creerObjectifSalarie(salarieId: number, formData: FormData): Promise<ObjectifRow> {
+  const annee = parseInt(formData.get("annee") as string, 10);
+  const titre = formData.get("titre") as string;
+  const poids = parseInt(formData.get("poids") as string, 10) || 1;
+  const cible = (formData.get("cible") as string) || null;
+  const realise = (formData.get("realise") as string) || null;
+  const taux_reussite = parseInt(formData.get("taux_reussite") as string, 10) || 0;
+
+  const { data, error } = await supabase
+    .from("objectifs_salarie")
+    .insert({
+      salarie_id: salarieId,
+      annee,
+      titre,
+      poids,
+      cible,
+      realise,
+      taux_reussite,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/salaries/${salarieId}/carriere`);
+  return data;
+}
+
+export async function supprimerObjectifSalarie(objectifId: number, salarieId: number): Promise<void> {
+  const { error } = await supabase
+    .from("objectifs_salarie")
+    .delete()
+    .eq("id", objectifId)
+    .eq("salarie_id", salarieId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/salaries/${salarieId}/carriere`);
+}

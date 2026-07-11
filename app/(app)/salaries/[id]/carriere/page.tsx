@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getSalarie, listerPromotionsSalarie, listerSanctionsSalarie } from "../../actions";
+import { getSalarie, listerPromotionsSalarie, listerSanctionsSalarie, listerObjectifsSalarie } from "../../actions";
 import CarriereClientPage from "./CarriereClientPage";
 
 export const dynamic = "force-dynamic";
@@ -17,8 +17,11 @@ export default async function Page({ params }: Props) {
   const salarie = await getSalarie(salarieId);
   if (!salarie) notFound();
 
-  const promotions = await listerPromotionsSalarie(salarieId);
-  const sanctions = await listerSanctionsSalarie(salarieId);
+  const [promotions, sanctions, objectifs] = await Promise.all([
+    listerPromotionsSalarie(salarieId),
+    listerSanctionsSalarie(salarieId),
+    listerObjectifsSalarie(salarieId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -63,7 +66,7 @@ export default async function Page({ params }: Props) {
         </strong>
       </div>
 
-      <CarriereClientPage salarie={salarie} promotions={promotions} sanctions={sanctions} />
+      <CarriereClientPage salarie={salarie} promotions={promotions} sanctions={sanctions} objectifs={objectifs} />
     </div>
   );
 }

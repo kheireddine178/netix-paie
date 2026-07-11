@@ -7,8 +7,11 @@ import {
   supprimerPromotionSalarie,
   creerSanctionSalarie,
   supprimerSanctionSalarie,
+  creerObjectifSalarie,
+  supprimerObjectifSalarie,
   type PromotionRow,
   type SanctionRow,
+  type ObjectifRow,
   type Salarie,
 } from "../../actions";
 
@@ -16,9 +19,10 @@ interface Props {
   salarie: Salarie;
   promotions: PromotionRow[];
   sanctions: SanctionRow[];
+  objectifs: ObjectifRow[];
 }
 
-export default function CarriereClientPage({ salarie, promotions, sanctions }: Props) {
+export default function CarriereClientPage({ salarie, promotions, sanctions, objectifs }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [erreur, setErreur] = useState<string | null>(null);
@@ -34,6 +38,14 @@ export default function CarriereClientPage({ salarie, promotions, sanctions }: P
   const [motifSanction, setMotifSanction] = useState("");
   const [dateSanction, setDateSanction] = useState("");
   const [dureeMiseAPied, setDureeMiseAPied] = useState(0);
+
+  // Formulaire d'ajout objectif
+  const [objAnnee, setObjAnnee] = useState(new Date().getFullYear());
+  const [objTitre, setObjTitre] = useState("");
+  const [objPoids, setObjPoids] = useState(1);
+  const [objCible, setObjCible] = useState("");
+  const [objRealise, setObjRealise] = useState("");
+  const [objTauxReussite, setObjTauxReussite] = useState(0);
 
   const formatDA = (val: number) => {
     return val.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DA";
@@ -108,6 +120,47 @@ export default function CarriereClientPage({ salarie, promotions, sanctions }: P
     startTransition(async () => {
       try {
         await supprimerSanctionSalarie(id, salarie.id);
+        router.refresh();
+      } catch (err) {
+        setErreur(err instanceof Error ? err.message : "Erreur de suppression");
+      }
+    });
+  };
+
+  const handleAjouterObjectif = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!objTitre || objPoids <= 0) return;
+    setErreur(null);
+
+    const formData = new FormData();
+    formData.append("annee", String(objAnnee));
+    formData.append("titre", objTitre);
+    formData.append("poids", String(objPoids));
+    formData.append("cible", objCible);
+    formData.append("realise", objRealise);
+    formData.append("taux_reussite", String(objTauxReussite));
+
+    startTransition(async () => {
+      try {
+        await creerObjectifSalarie(salarie.id, formData);
+        setObjTitre("");
+        setObjPoids(1);
+        setObjCible("");
+        setObjRealise("");
+        setObjTauxReussite(0);
+        router.refresh();
+      } catch (err) {
+        setErreur(err instanceof Error ? err.message : "Erreur lors de la création de l'objectif");
+      }
+    });
+  };
+
+  const handleSupprimerObjectif = async (id: number) => {
+    if (!confirm("Voulez-vous vraiment supprimer cet objectif ?")) return;
+    setErreur(null);
+    startTransition(async () => {
+      try {
+        await supprimerObjectifSalarie(id, salarie.id);
         router.refresh();
       } catch (err) {
         setErreur(err instanceof Error ? err.message : "Erreur de suppression");
@@ -306,6 +359,136 @@ export default function CarriereClientPage({ salarie, promotions, sanctions }: P
 
             <button type="submit" disabled={isPending} className="btn btn-primary" style={{ marginTop: "8px", width: "100%", justifyContent: "center" }}>
               {isPending ? "Enregistrement..." : "Notifier la sanction"}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* SECTION 3 : OBJECTIFS & INDIFICATEURS (KPIs) */}
+      <div className="grid md:grid-cols-3 gap-6" style={{ marginTop: "var(--s4)" }}>
+        <div className="md:col-span-2 card">
+          <h3 style={{ marginBottom: "var(--s3)" }}>Objectifs Annuels &amp; KPIs de Performance</h3>
+          {objectifs.length === 0 ? (
+            <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>Aucun objectif de performance enregistré pour le moment.</p>
+          ) : (
+            <div className="table-wrap">
+              <table style={{ width: "100%", fontSize: "var(--txs)" }}>
+                <thead>
+                  <tr style={{ background: "var(--surface-2)" }}>
+                    <th>Année</th>
+                    <th>Intitulé de l'objectif</th>
+                    <th>Poids</th>
+                    <th>Cible</th>
+                    <th>Réalisé</th>
+                    <th>Taux de réussite</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {objectifs.map((o) => (
+                    <tr key={o.id} style={{ borderBottom: "1px solid var(--border-soft)" }}>
+                      <td style={{ fontWeight: "bold" }}>{o.annee}</td>
+                      <td>{o.titre}</td>
+                      <td>x{o.poids}</td>
+                      <td>{o.cible || "—"}</td>
+                      <td>{o.realise || "—"}</td>
+                      <td>
+                        <span className={`badge ${
+                          o.taux_reussite >= 80
+                            ? "badge-teal"
+                            : o.taux_reussite >= 50
+                            ? "badge-amber"
+                            : "badge-red"
+                        }`}>
+                          {o.taux_reussite}%
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => handleSupprimerObjectif(o.id)}
+                          style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer" }}
+                        >
+                          ✕
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="card">
+          <h3 style={{ marginBottom: "var(--s3)" }}>Ajouter un objectif</h3>
+          <form onSubmit={handleAjouterObjectif} style={{ display: "flex", flexDirection: "column", gap: "var(--s3)" }}>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Année</label>
+              <input
+                type="number"
+                value={objAnnee}
+                onChange={(e) => setObjAnnee(parseInt(e.target.value, 10) || new Date().getFullYear())}
+                required
+              />
+            </div>
+
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Intitulé de l'objectif (KPI)</label>
+              <input
+                type="text"
+                value={objTitre}
+                onChange={(e) => setObjTitre(e.target.value)}
+                placeholder="Ex: Clôture de paie sans erreurs"
+                required
+              />
+            </div>
+
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Poids / Importance (Coeff)</label>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={objPoids}
+                onChange={(e) => setObjPoids(parseInt(e.target.value, 10) || 1)}
+                required
+              />
+            </div>
+
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Cible attendue</label>
+              <input
+                type="text"
+                value={objCible}
+                onChange={(e) => setObjCible(e.target.value)}
+                placeholder="Ex: Avant le 28 du mois"
+              />
+            </div>
+
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Réalisation constatée</label>
+              <input
+                type="text"
+                value={objRealise}
+                onChange={(e) => setObjRealise(e.target.value)}
+                placeholder="Ex: Réalisé à 100%"
+              />
+            </div>
+
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Taux de réussite (%)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={objTauxReussite}
+                onChange={(e) => setObjTauxReussite(parseInt(e.target.value, 10) || 0)}
+                required
+              />
+            </div>
+
+            <button type="submit" disabled={isPending} className="btn btn-primary" style={{ marginTop: "8px", width: "100%", justifyContent: "center" }}>
+              {isPending ? "Création..." : "Ajouter l'objectif"}
             </button>
           </form>
         </div>
