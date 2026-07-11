@@ -63,6 +63,9 @@ export default async function PortailDashboard({ params }: Props) {
               <Link href={`/portail/${salarie.id}/bulletins`} className="btn btn-secondary" style={{ width: "100%", justifyContent: "center", textDecoration: "none" }}>
                 Mes Bulletins de Paie
               </Link>
+              <Link href={`/portail/${salarie.id}/avances`} className="btn btn-secondary" style={{ width: "100%", justifyContent: "center", textDecoration: "none" }}>
+                Mes Avances sur Salaire
+              </Link>
             </div>
           </div>
 

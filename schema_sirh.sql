@@ -114,3 +114,19 @@ CREATE TABLE IF NOT EXISTS formations_inscriptions (
     statut VARCHAR(50) DEFAULT 'Prévue', -- 'Prévue', 'En cours', 'Terminée', 'Annulée'
     cree_le TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ==================================================================
+-- MODULE 6 : AVANCES SUR SALAIRE (Demande ESS & Déduction Paie)
+-- ==================================================================
+
+-- Table des demandes d'avances sur salaire
+CREATE TABLE IF NOT EXISTS avances_salaire (
+    id SERIAL PRIMARY KEY,
+    salarie_id INT REFERENCES salaries(id) ON DELETE CASCADE,
+    montant NUMERIC(15, 2) NOT NULL,
+    mois INT NOT NULL,
+    annee INT NOT NULL,
+    statut VARCHAR(50) DEFAULT 'En attente', -- 'En attente', 'Approuvée', 'Rejetée'
+    motif TEXT,
+    cree_le TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

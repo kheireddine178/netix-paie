@@ -598,6 +598,17 @@ export async function chargerBulletinPourSaisie(
       }
     }
 
+    // Récupérer le montant total des avances approuvées pour ce mois et cette année
+    const { data: avances } = await supabase
+      .from("avances_salaire")
+      .select("montant")
+      .eq("salarie_id", salarieId)
+      .eq("mois", mois)
+      .eq("annee", annee)
+      .eq("statut", "Approuvée");
+
+    const totalAvances = (avances ?? []).reduce((sum, a) => sum + Number(a.montant), 0);
+
     const sal = await getSalarie(salarieId);
     const baseTheorique = sal ? sal.salaire_base_theorique : 0;
 
@@ -624,7 +635,7 @@ export async function chargerBulletinPourSaisie(
         panier_forfait_jour: 0,
         autre_prime_fixe: 0,
         cotis_mutuelle: 0,
-        autres_retenues: 0,
+        autres_retenues: totalAvances, // Injection de l'avance sur salaire
       },
       rubriques: [],
     };
@@ -1379,4 +1390,88 @@ export async function supprimerInscriptionFormation(inscriptionId: number, salar
 
   if (error) throw new Error(error.message);
   revalidatePath(`/salaries/${salarieId}/formations`);
+}
+
+// ------------------------------------------------------------------
+// MODULE 6 — AVANCES SUR SALAIRE (Demande ESS & Retenue Paie)
+// ------------------------------------------------------------------
+
+export interface AvanceSalaireRow {
+  id: number;
+  salarie_id: number;
+  montant: number;
+  mois: number;
+  annee: number;
+  statut: string;
+  motif: string | null;
+  cree_le: string;
+  salaries?: {
+    nom_prenom: string;
+  };
+}
+
+export async function listerAvancesSalarie(salarieId: number): Promise<AvanceSalaireRow[]> {
+  const { data, error } = await supabase
+    .from("avances_salaire")
+    .select("*")
+    .eq("salarie_id", salarieId)
+    .order("annee", { ascending: false })
+    .order("mois", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function listerToutesAvances(): Promise<AvanceSalaireRow[]> {
+  const { data, error } = await supabase
+    .from("avances_salaire")
+    .select("*, salaries(nom_prenom)")
+    .order("cree_le", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function creerAvanceSalarie(salarieId: number, formData: FormData): Promise<AvanceSalaireRow> {
+  const montant = parseFloat(formData.get("montant") as string);
+  const dateStr = formData.get("periode") as string; // Format YYYY-MM
+  const [annee, mois] = dateStr.split("-").map((v) => parseInt(v, 10));
+  const motif = (formData.get("motif") as string) || null;
+
+  const { data, error } = await supabase
+    .from("avances_salaire")
+    .insert({
+      salarie_id: salarieId,
+      montant,
+      mois,
+      annee,
+      motif,
+      statut: "En attente",
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/portail/${salarieId}`);
+  return data;
+}
+
+export async function changerStatutAvance(avanceId: number, statut: string): Promise<void> {
+  const { error } = await supabase
+    .from("avances_salaire")
+    .update({ statut })
+    .eq("id", avanceId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/saisie");
+}
+
+export async function supprimerAvanceSalarie(avanceId: number, salarieId: number): Promise<void> {
+  const { error } = await supabase
+    .from("avances_salaire")
+    .delete()
+    .eq("id", avanceId)
+    .eq("salarie_id", salarieId);
+
+  if (error) throw new Error(error.message);
 }
