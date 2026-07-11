@@ -3,13 +3,13 @@ import Link from "next/link";
 import FeatureSlides from "@/components/FeatureSlides";
 
 const SIRH_MODULES = [
-  { title: "🧮 Paie & Bulletins", desc: "Calcul conforme CIDTA / CNAS, abattement 40%, 402 rubriques du catalogue et édition de bulletins PDF." },
-  { title: "💼 Contrats & Core RH", desc: "Suivi des CDI, CDD, CTA, avenants. Impression du PV d'installation et de l'Attestation de travail." },
-  { title: "📅 Congés & Absences", desc: "Calculateur de solde légal (2.5j/mois), workflow de validation et liaison de déduction automatique sur la paie." },
-  { title: "✈️ Missions", desc: "Enregistrement des déplacements professionnels et édition instantanée de l'Ordre de Mission PDF réglementaire." },
-  { title: "📈 Promotions & Sanctions", desc: "Suivi d'évolution de carrière (mise à jour de salaire automatique) et dossier disciplinaire (lettre d'avertissement)." },
-  { title: "🎓 Formations & Talent", desc: "Catalogue de cours, suivi des inscriptions des salariés et génération de la Fiche d'Évaluation de Performance." },
-  { title: "🔑 Portail Salarié (ESS)", desc: "Espace self-service sécurisé permettant à chaque collaborateur de soumettre ses congés et de télécharger ses bulletins." },
+  { title: "Paie & Bulletins", desc: "Calcul conforme CIDTA / CNAS, abattement 40%, 402 rubriques du catalogue et édition de bulletins PDF." },
+  { title: "Contrats & Core RH", desc: "Suivi des CDI, CDD, CTA, avenants. Impression du PV d'installation et de l'Attestation de travail." },
+  { title: "Congés & Absences", desc: "Calculateur de solde légal (2.5j/mois), workflow de validation et liaison de déduction automatique sur la paie." },
+  { title: "Missions", desc: "Enregistrement des déplacements professionnels et édition instantanée de l'Ordre de Mission PDF réglementaire." },
+  { title: "Promotions & Sanctions", desc: "Suivi d'évolution de carrière (mise à jour de salaire automatique) et dossier disciplinaire (lettre d'avertissement)." },
+  { title: "Formations & Talent", desc: "Catalogue de cours, suivi des inscriptions des salariés et génération de la Fiche d'Évaluation de Performance." },
+  { title: "Portail Salarié (ESS)", desc: "Espace self-service sécurisé permettant à chaque collaborateur de soumettre ses congés et de télécharger ses bulletins." },
 ];
 
 const LEGAL_ITEMS = [
@@ -46,7 +46,7 @@ export default function LandingPage() {
               Entrer dans le SIRH
             </Link>
             <Link href="/portail" className="btn btn-ghost-light btn-lg">
-              Accès Portail Salarié 🔑
+              Accès Portail Salarié
             </Link>
           </div>
 

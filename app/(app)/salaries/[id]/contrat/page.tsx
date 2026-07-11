@@ -47,7 +47,7 @@ export default async function Page({ params }: Props) {
         </Link>
         <span style={{ color: "var(--border)" }}>|</span>
         <strong style={{ color: "var(--accent)", fontSize: "var(--tsm)" }}>
-          💼 Contrat & Documents
+          Contrat & Documents
         </strong>
       </div>
 

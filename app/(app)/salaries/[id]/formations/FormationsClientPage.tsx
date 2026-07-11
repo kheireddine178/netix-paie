@@ -218,7 +218,7 @@ export default function FormationsClientPage({ salarie, catalogue, inscriptions 
       <div className="grid md:grid-cols-3 gap-6">
         {/* Évaluation / Questionnaires */}
         <div className="md:col-span-2 card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>📝 Fiche d'Évaluation de Performance</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Fiche d'Évaluation de Performance</h3>
           <p style={{ color: "var(--text-muted)", fontSize: "var(--txs)", marginBottom: "var(--s4)" }}>
             Saisissez les résultats de l'entretien d'évaluation annuel pour générer le bilan PDF officiel.
           </p>
@@ -283,7 +283,7 @@ export default function FormationsClientPage({ salarie, catalogue, inscriptions 
 
         {/* Ajouter cours catalogue */}
         <div className="card">
-          <h3 style={{ marginBottom: "var(--s3)" }}>📚 Ajouter au catalogue</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Ajouter au catalogue</h3>
           <form onSubmit={handleCreerFormation} style={{ display: "flex", flexDirection: "column", gap: "var(--s3)" }}>
             <div className="field" style={{ marginBottom: 0 }}>
               <label>Intitulé du cours</label>

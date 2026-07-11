@@ -32,7 +32,7 @@ export default function SalarieRowActions({
   function handleSupprimer() {
     if (
       !confirm(
-        "⚠️ SUPPRESSION DÉFINITIVE\n\nCette action supprimera le salarié ET tout son historique de bulletins de paie.\n\nCette action est IRRÉVERSIBLE. Continuer ?"
+        "SUPPRESSION DEFINITIVE\n\nCette action supprimera le salarie ET tout son historique de bulletins de paie.\n\nCette action est IRREVERSIBLE. Continuer ?"
       )
     )
       return;

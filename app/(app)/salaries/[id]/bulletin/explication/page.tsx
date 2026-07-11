@@ -138,7 +138,7 @@ export default async function ExplicationPage({ params, searchParams }: PageProp
                   </tr>
                 ))}
                 <tr style={{ borderTop: "2px solid var(--navy)", background: "var(--bg-2)" }}>
-                  <td><strong>🟰 TOTAL BRUT</strong></td>
+                  <td><strong>TOTAL BRUT</strong></td>
                   <td></td>
                   <td style={{ textAlign: "right", fontWeight: "bold", color: "var(--navy)" }}>{fmtDa(d.totalGains)}</td>
                 </tr>
