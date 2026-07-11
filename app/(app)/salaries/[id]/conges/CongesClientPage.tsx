@@ -171,7 +171,15 @@ export default function CongesClientPage({ salarie, conges, contrats }: Props) {
                         <td>{c.date_fin.split("-").reverse().join("/")}</td>
                         <td style={{ fontWeight: "bold" }}>{c.jours_ouvrables} j</td>
                         <td>
-                          <span className={`badge ${c.statut === "Approuvé" ? "badge-teal" : c.statut === "Rejeté" ? "badge-red" : "badge-accent"}`}>
+                          <span className={`badge ${
+                            c.statut === "Approuvé"
+                              ? "badge-teal"
+                              : c.statut === "Rejeté"
+                              ? "badge-red"
+                              : c.statut === "En attente validation RH"
+                              ? "badge-amber"
+                              : "badge-accent"
+                          }`}>
                             {c.statut}
                           </span>
                         </td>
@@ -185,11 +193,32 @@ export default function CongesClientPage({ salarie, conges, contrats }: Props) {
                           )}
                         </td>
                         <td>
-                          <div style={{ display: "flex", gap: "6px" }}>
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                            {c.statut === "En attente N+1" && (
+                              <>
+                                <button onClick={() => handleChangerStatut(c.id, "En attente validation RH")} className="btn btn-teal btn-sm" style={{ padding: "2px 6px", fontSize: "10px" }}>
+                                  ✓ Valider N+1
+                                </button>
+                                <button onClick={() => handleChangerStatut(c.id, "Rejeté")} className="btn btn-red btn-sm" style={{ padding: "2px 6px", fontSize: "10px" }}>
+                                  ✕ Rejeter
+                                </button>
+                              </>
+                            )}
+                            {c.statut === "En attente validation RH" && (
+                              <>
+                                <button onClick={() => handleChangerStatut(c.id, "Approuvé")} className="btn btn-teal btn-sm" style={{ padding: "2px 6px", fontSize: "10px", background: "var(--teal)", color: "#fff" }}>
+                                  ✓ Approbation RH Finale
+                                </button>
+                                <button onClick={() => handleChangerStatut(c.id, "Rejeté")} className="btn btn-red btn-sm" style={{ padding: "2px 6px", fontSize: "10px" }}>
+                                  ✕ Rejeter
+                                </button>
+                              </>
+                            )}
+                            {/* Fallback temporaire pour les anciens statuts "En attente" */}
                             {c.statut === "En attente" && (
                               <>
-                                <button onClick={() => handleChangerStatut(c.id, "Approuvé")} className="btn btn-teal btn-sm" style={{ padding: "2px 6px", fontSize: "10px" }}>
-                                  ✓ Approuver
+                                <button onClick={() => handleChangerStatut(c.id, "En attente validation RH")} className="btn btn-teal btn-sm" style={{ padding: "2px 6px", fontSize: "10px" }}>
+                                  ✓ Valider N+1
                                 </button>
                                 <button onClick={() => handleChangerStatut(c.id, "Rejeté")} className="btn btn-red btn-sm" style={{ padding: "2px 6px", fontSize: "10px" }}>
                                   ✕ Rejeter

@@ -68,7 +68,7 @@ export default function EspaceCongesClient({ salarie, conges, contrats }: Props)
     formData.append("jours_ouvrables", String(joursOuvrables));
     formData.append("motif", motif);
     formData.append("justificatif_url", justificatifUrl);
-    formData.append("statut", "En attente");
+    formData.append("statut", "En attente N+1");
 
     startTransition(async () => {
       try {
@@ -144,7 +144,15 @@ export default function EspaceCongesClient({ salarie, conges, contrats }: Props)
                       <td>{c.date_fin.split("-").reverse().join("/")}</td>
                       <td style={{ fontWeight: "bold" }}>{c.jours_ouvrables} j</td>
                       <td>
-                        <span className={`badge ${c.statut === "Approuvé" ? "badge-teal" : c.statut === "Rejeté" ? "badge-red" : "badge-accent"}`}>
+                        <span className={`badge ${
+                          c.statut === "Approuvé"
+                            ? "badge-teal"
+                            : c.statut === "Rejeté"
+                            ? "badge-red"
+                            : c.statut === "En attente validation RH"
+                            ? "badge-amber"
+                            : "badge-accent"
+                        }`}>
                           {c.statut}
                         </span>
                       </td>
@@ -158,7 +166,7 @@ export default function EspaceCongesClient({ salarie, conges, contrats }: Props)
                         )}
                       </td>
                       <td>
-                        {c.statut === "En attente" && (
+                        {(c.statut === "En attente N+1" || c.statut === "En attente") && (
                           <button
                             onClick={() => handleSupprimer(c.id)}
                             style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer" }}
