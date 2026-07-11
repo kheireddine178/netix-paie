@@ -73,15 +73,15 @@ export default async function DashboardPage() {
     listerTousContrats(),
   ]);
 
-  const 📅 = new Date();
+  const dateAujourdhui = new Date();
   const limiteAlertes = new Date();
-  limiteAlertes.setDate(📅.getDate() + 30); // Alertes sous 30 jours
+  limiteAlertes.setDate(dateAujourdhui.getDate() + 30); // Alertes sous 30 jours
 
   // 1. Détecter les CDD se terminant sous 30 jours
   const cddExpirations = contrats.filter((c) => {
     if (c.type_contrat !== "CDD" || c.statut !== "En cours" || !c.date_fin) return false;
     const dateFin = new Date(c.date_fin);
-    return dateFin >= 📅 && dateFin <= limiteAlertes;
+    return dateFin >= dateAujourdhui && dateFin <= limiteAlertes;
   });
 
   // 2. Détecter les visites médicales expirant ou en retard (visite annuelle obligatoire)
