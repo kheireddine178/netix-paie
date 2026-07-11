@@ -53,7 +53,10 @@ export async function creerSalarie(formData: FormData) {
     date_visite_medicale,
   });
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("Erreur création salarié:", error);
+    return { error: error.message };
+  }
 
   revalidatePath("/salaries");
   redirect("/salaries");
@@ -78,7 +81,10 @@ export async function modifierSalarie(id: number, formData: FormData) {
     })
     .eq("id", id);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("Erreur modification salarié:", error);
+    return { error: error.message };
+  }
 
   revalidatePath("/salaries");
   redirect("/salaries");

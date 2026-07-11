@@ -12,7 +12,7 @@ interface SalarieFormProps {
     salaire_base_theorique: number;
     date_visite_medicale?: string | null;
   };
-  actionSubmit: (formData: FormData) => Promise<void>;
+  actionSubmit: (formData: FormData) => Promise<{ error?: string } | void>;
   buttonText: string;
 }
 
@@ -56,8 +56,12 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
     const formData = new FormData(e.currentTarget);
     startTransition(async () => {
       try {
-        await actionSubmit(formData);
-        router.refresh();
+        const result = await actionSubmit(formData);
+        if (result && result.error) {
+          setError(result.error);
+        } else {
+          router.refresh();
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Une erreur est survenue.");
       }
