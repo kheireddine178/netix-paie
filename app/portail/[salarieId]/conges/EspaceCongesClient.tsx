@@ -172,7 +172,7 @@ export default function EspaceCongesClient({ salarie, conges, contrats }: Props)
                             style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer" }}
                             title="Annuler la demande"
                           >
-                            ✕ Annuler
+                            Annuler
                           </button>
                         )}
                       </td>

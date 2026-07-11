@@ -210,7 +210,7 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--txs)" }}>
             <span style={{ color: "var(--text-muted)" }}>Salaire de base :</span>
             <span style={{ fontWeight: 650, color: "var(--accent)" }}>
-              {Number(salaireBase || 0).toLocaleString("fr-FR")} DA
+              {Number(salaireBase || 0).toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ')} DA
             </span>
           </div>
         </div>

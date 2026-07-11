@@ -72,7 +72,7 @@ const CHAMPS_TAUX_POURCENTAGE = new Set(CHAMPS_PRIMES_POURCENTAGE.map((c) => c.n
 const CHAMPS_TAUX_NOMS = CHAMPS_PRIMES_POURCENTAGE.map((c) => c.name);
 
 function formatDA(n: number) {
-  return n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DA";
+  return n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/[\u202F\u00A0]/g, ' ') + " DA";
 }
 
 interface LigneEtat {
@@ -679,7 +679,7 @@ export default function SaisieFormulaireConsolide({
                 style={{ height: "42px", fontWeight: "bold" }}
                 title="Copier les données saisies le mois précédent pour ce salarié"
               >
-                📋 Copier mois précédent
+                Copier mois précédent
               </button>
             )}
             
@@ -691,7 +691,7 @@ export default function SaisieFormulaireConsolide({
               style={{ height: "42px", fontWeight: "bold", border: "1px dashed var(--accent)" }}
               title="Copier en masse les bulletins de tous les salariés pour la période précédente"
             >
-              👥 Copier masse
+              Copier masse
             </button>
           </div>
         </div>
@@ -703,15 +703,15 @@ export default function SaisieFormulaireConsolide({
               {saveStatus === "saving" && <span style={{ color: "var(--text-muted)", animation: "pulse 1s infinite" }}>● Enregistrement automatique...</span>}
               {saveStatus === "saved" && <span style={{ color: "var(--teal)", fontWeight: "bold" }}>✓ Enregistré automatiquement</span>}
               {saveStatus === "modified" && <span style={{ color: "var(--amber-700)" }}>● Saisie modifiée...</span>}
-              {saveStatus === "error" && <span style={{ color: "var(--red)" }}>⚠️ Échec de sauvegarde</span>}
+              {saveStatus === "error" && <span style={{ color: "var(--red)" }}>Échec de sauvegarde</span>}
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "var(--s3)" }}>
               <button onClick={handleExportCSV} className="btn-link" style={{ fontSize: "var(--txs)", cursor: "pointer", background: "none", border: "none" }}>
-                📥 Exporter CSV
+                Exporter CSV
               </button>
               <label className="btn-link" style={{ fontSize: "var(--txs)", cursor: "pointer" }}>
-                📤 Importer CSV
+                Importer CSV
                 <input type="file" accept=".csv" onChange={handleImportCSV} style={{ display: "none" }} />
               </label>
             </div>
@@ -736,7 +736,7 @@ export default function SaisieFormulaireConsolide({
         <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
           {validationWarnings.map((w, idx) => (
             <div key={idx} style={{ background: "#fffbeb", borderLeft: "3px solid #d97706", color: "#b45309", padding: "8px 12px", borderRadius: "4px", fontSize: "var(--txs)", fontWeight: 600 }}>
-              ⚠️ {w}
+              {w}
             </div>
           ))}
         </div>
@@ -764,7 +764,7 @@ export default function SaisieFormulaireConsolide({
               marginBottom: "-20px",
               zIndex: 2
             }}>
-              📄 BULLETIN DE PAIE
+              BULLETIN DE PAIE
             </div>
 
             <form key={formKey} ref={formRef} onSubmit={onSubmit} onKeyDown={handleKeyDown} onChange={debouncedCalcul} className="card" style={{ display: "flex", flexDirection: "column", gap: "var(--s5)", paddingTop: "var(--s8)" }}>
@@ -775,7 +775,7 @@ export default function SaisieFormulaireConsolide({
               <div style={{ borderBottom: "var(--hairline)", paddingBottom: "var(--s4)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s3)" }}>
                   <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
-                    🔔 SALAIRE DE BASE
+                    SALAIRE DE BASE
                   </h4>
                 </div>
                 <div className="field" style={{ marginBottom: 0 }}>
@@ -800,7 +800,7 @@ export default function SaisieFormulaireConsolide({
               <div style={{ borderBottom: "var(--hairline)", paddingBottom: "var(--s4)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s4)" }}>
                   <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
-                    🛑 ABSENCES (HEURES)
+                    ABSENCES (HEURES)
                   </h4>
                   <span className="badge badge-red" style={{ fontSize: "9px", padding: "2px 8px" }}>RÉDUISENT LE SALAIRE</span>
                 </div>
@@ -830,7 +830,7 @@ export default function SaisieFormulaireConsolide({
               <div style={{ borderBottom: "var(--hairline)", paddingBottom: "var(--s4)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s4)" }}>
                   <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
-                    ⚡ HEURES SUPPLÉMENTAIRES
+                    HEURES SUPPLÉMENTAIRES
                   </h4>
                   <span className="badge badge-accent" style={{ fontSize: "9px", padding: "2px 8px" }}>MAJORATIONS PARAMÉTRABLES</span>
                 </div>
@@ -871,7 +871,7 @@ export default function SaisieFormulaireConsolide({
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s4)" }}>
                   <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
-                    💵 RUBRIQUES DU CATALOGUE
+                    RUBRIQUES DU CATALOGUE
                   </h4>
                   <span className="badge badge-teal" style={{ fontSize: "9px", padding: "2px 8px" }}>PERSONNALISÉES PAR SALARIÉ</span>
                 </div>
@@ -1061,7 +1061,7 @@ export default function SaisieFormulaireConsolide({
                               padding: "4px"
                             }}
                           >
-                            ✕
+                            ×
                           </button>
                         </div>
                       </div>
@@ -1084,7 +1084,7 @@ export default function SaisieFormulaireConsolide({
                   className="btn btn-primary"
                   style={{ background: "#0f233c", border: "none", display: "flex", alignItems: "center", gap: "8px" }}
                 >
-                  💾 Enregistrer le bulletin
+                  Enregistrer le bulletin
                 </button>
 
                 {initialBulletin?.bulletin_id && (
@@ -1095,7 +1095,7 @@ export default function SaisieFormulaireConsolide({
                     className="btn"
                     style={{ color: "var(--red-600)", background: "transparent", border: "none", fontSize: "var(--tsm)", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}
                   >
-                    🗑️ Supprimer ce bulletin
+                    Supprimer ce bulletin
                   </button>
                 )}
               </div>
@@ -1121,7 +1121,7 @@ export default function SaisieFormulaireConsolide({
               marginBottom: "-20px",
               zIndex: 2
             }}>
-              🧮 RÉSULTAT DU CALCUL
+              RÉSULTAT DU CALCUL
             </div>
 
             <div className="card" style={{ display: "flex", flexDirection: "column", gap: "var(--s4)", paddingTop: "var(--s8)" }}>
@@ -1199,7 +1199,7 @@ export default function SaisieFormulaireConsolide({
                     className="btn btn-secondary"
                     style={{ width: "100%", justifyContent: "center", border: "1px solid var(--accent)" }}
                   >
-                    🔍 Inspecter le détail du calcul
+                    Inspecter le détail du calcul
                   </button>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "var(--s2)", marginTop: "var(--s2)" }}>
@@ -1212,7 +1212,7 @@ export default function SaisieFormulaireConsolide({
                           className="btn btn-secondary"
                           style={{ width: "100%", justifyContent: "center" }}
                         >
-                          👁️ Voir bulletin salarié
+                          Voir bulletin salarié
                         </a>
                         <a
                           href={`/salaries/${salarieActive.id}/bulletin/pdf?annee=${resultat.annee}&mois=${resultat.mois}&variante=employeur`}
@@ -1221,26 +1221,26 @@ export default function SaisieFormulaireConsolide({
                           className="btn btn-secondary"
                           style={{ width: "100%", justifyContent: "center" }}
                         >
-                          👁️ Voir bulletin employeur
+                          Voir bulletin employeur
                         </a>
                         <Link
                           href={`/salaries/${salarieActive.id}/bulletin/explication?annee=${resultat.annee}&mois=${resultat.mois}`}
                           className="btn btn-secondary"
                           style={{ width: "100%", textAlign: "center", justifyContent: "center" }}
                         >
-                          🔍 Voir l&apos;explication détaillée du calcul
+                          Voir l&apos;explication détaillée du calcul
                         </Link>
                       </>
                     ) : (
                       <>
                         <button disabled className="btn btn-secondary" style={{ width: "100%", opacity: 0.5, cursor: "not-allowed" }}>
-                          👁️ Voir bulletin salarié
+                          Voir bulletin salarié
                         </button>
                         <button disabled className="btn btn-secondary" style={{ width: "100%", opacity: 0.5, cursor: "not-allowed" }}>
-                          👁️ Voir bulletin employeur
+                          Voir bulletin employeur
                         </button>
                         <button disabled className="btn btn-secondary" style={{ width: "100%", opacity: 0.5, cursor: "not-allowed" }}>
-                          🔍 Voir l&apos;explication détaillée du calcul
+                          Voir l&apos;explication détaillée du calcul
                         </button>
                         <p style={{ fontSize: "11px", color: "var(--text-muted)", textAlign: "center" }}>
                           Enregistrez d&apos;abord le bulletin.
@@ -1261,7 +1261,7 @@ export default function SaisieFormulaireConsolide({
         </div>
       ) : (
         <div className="card" style={{ textAlign: "center", padding: "var(--s6)", color: "var(--text-muted)" }}>
-          👈 Sélectionnez un salarié ci-dessus pour afficher et saisir ses données mensuelles de paie.
+          Sélectionnez un salarié ci-dessus pour afficher et saisir ses données mensuelles de paie.
         </div>
       )}
 
@@ -1299,12 +1299,12 @@ export default function SaisieFormulaireConsolide({
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid var(--border-soft)", paddingBottom: "var(--s3)" }}>
-              <h3 style={{ fontSize: "var(--tlg)" }}>🔍 Détails du calcul (Live)</h3>
+              <h3 style={{ fontSize: "var(--tlg)" }}>Détails du calcul (Live)</h3>
               <button
                 onClick={() => setIsDrawerOpen(false)}
                 style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--text)" }}
               >
-                ✕
+                ×
               </button>
             </div>
 

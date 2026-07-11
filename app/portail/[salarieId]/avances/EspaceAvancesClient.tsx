@@ -88,7 +88,7 @@ export default function EspaceAvancesClient({ salarie, avances }: Props) {
                       {String(a.mois).padStart(2, "0")}/{a.annee}
                     </td>
                     <td style={{ fontWeight: "bold" }}>
-                      {a.montant.toLocaleString("fr-FR")} DA
+                      {a.montant.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ')} DA
                     </td>
                     <td>
                       <span className={`badge ${
@@ -108,7 +108,7 @@ export default function EspaceAvancesClient({ salarie, avances }: Props) {
                           onClick={() => handleAnnulerAvance(a.id)}
                           style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", fontSize: "11px" }}
                         >
-                          ✕ Annuler
+                          Annuler
                         </button>
                       )}
                     </td>

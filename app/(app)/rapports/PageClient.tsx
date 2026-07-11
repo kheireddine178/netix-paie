@@ -47,7 +47,7 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
   const [erreur, setErreur] = useState<string | null>(null);
 
   const formatDA = (val: number) => {
-    return val.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DA";
+    return val.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/[\u202F\u00A0]/g, ' ') + " DA";
   };
 
   const handleGenerer = () => {
@@ -82,7 +82,7 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
     <div className="space-y-6 print-container">
       {/* Contrôles et Filtres (Masqués à l'impression) */}
       <div className="card no-print">
-        <h2 style={{ marginBottom: "var(--s4)" }}>📊 États de Paie & Centralisation</h2>
+        <h2 style={{ marginBottom: "var(--s4)" }}>États de Paie & Centralisation</h2>
         
         <div className="grid md:grid-cols-4 gap-4 items-end">
           <div className="field" style={{ marginBottom: 0 }}>
@@ -161,7 +161,7 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
 
       {erreur && (
         <div className="card" style={{ borderLeft: "4px solid var(--red)", color: "var(--red)" }}>
-          ⚠️ {erreur}
+          {erreur}
         </div>
       )}
 
@@ -169,7 +169,7 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
       {(recap || nominatifList.length > 0) && (
         <div className="no-print" style={{ display: "flex", justifyContent: "flex-end" }}>
           <button onClick={printReport} className="btn btn-secondary">
-            🖨️ Imprimer le rapport
+            Imprimer le rapport
           </button>
         </div>
       )}

@@ -74,7 +74,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
 
       <form action={handleSubmit}>
         <div className="card" style={{ marginBottom: "var(--s5)" }}>
-          <h3 style={{ marginBottom: "var(--s3)" }}>🏢 Informations employeur</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Informations employeur</h3>
           <p style={{ color: "var(--text-muted)", marginBottom: "var(--s4)" }}>
             Ces données figurent sur les bulletins PDF.
           </p>
@@ -117,7 +117,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
         </div>
 
         <div className="card" style={{ marginBottom: "var(--s5)" }}>
-          <h3 style={{ marginBottom: "var(--s3)" }}>📊 SNMG, durée légale et cotisations</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>SNMG, durée légale et cotisations</h3>
           <p style={{ color: "var(--text-muted)", marginBottom: "var(--s4)" }}>
             Valeurs définies par la loi de finances.
           </p>
@@ -162,7 +162,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
         </div>
 
         <div className="card" style={{ marginBottom: "var(--s5)" }}>
-          <h3 style={{ marginBottom: "var(--s3)" }}>⏱️ Majorations heures supplémentaires</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Majorations heures supplémentaires</h3>
           <p style={{ color: "var(--text-muted)", marginBottom: "var(--s4)" }}>
             Coefficients multiplicateurs par palier.
           </p>
@@ -201,7 +201,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
         </div>
 
         <div className="card" style={{ marginBottom: "var(--s5)" }}>
-          <h3 style={{ marginBottom: "var(--s3)" }}>📈 Barème IRG — Art. 104 CIDTA</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Barème IRG — Art. 104 CIDTA</h3>
           <p style={{ color: "var(--text-muted)", marginBottom: "var(--s4)" }}>Tranches mensuelles en DA.</p>
           <div className="table-wrap">
             <table>
@@ -248,7 +248,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
         </div>
 
         <div className="card" style={{ marginBottom: "var(--s5)" }}>
-          <h3 style={{ marginBottom: "var(--s3)" }}>🧮 Exonération et abattement IRG</h3>
+          <h3 style={{ marginBottom: "var(--s3)" }}>Exonération et abattement IRG</h3>
           <p style={{ color: "var(--text-muted)", marginBottom: "var(--s4)" }}>Plafonds légaux mensuels.</p>
           <div className="field-row" style={{ display: "flex", gap: "var(--s3)" }}>
             <div className="field" style={{ flex: 1 }}>
@@ -297,7 +297,7 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
         </div>
 
         <button type="submit" className="btn btn-primary" disabled={isPending}>
-          💾 Enregistrer les paramètres
+          Enregistrer les paramètres
         </button>
       </form>
     </>

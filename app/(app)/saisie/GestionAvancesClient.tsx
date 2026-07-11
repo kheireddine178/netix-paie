@@ -64,7 +64,7 @@ export default function GestionAvancesClient() {
                   <tr key={a.id} style={{ borderBottom: "1px solid var(--border-soft)" }}>
                     <td style={{ fontWeight: "bold" }}>{a.salaries?.nom_prenom}</td>
                     <td>{String(a.mois).padStart(2, "0")}/{a.annee}</td>
-                    <td style={{ fontWeight: "bold", color: "var(--accent)" }}>{a.montant.toLocaleString("fr-FR")} DA</td>
+                    <td style={{ fontWeight: "bold", color: "var(--accent)" }}>{a.montant.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ')} DA</td>
                     <td>{a.motif || "—"}</td>
                     <td style={{ fontSize: "var(--t2xs)", color: "var(--text-muted)" }}>
                       {new Date(a.cree_le).toLocaleDateString("fr-FR")}
@@ -89,7 +89,7 @@ export default function GestionAvancesClient() {
                             className="btn btn-teal btn-sm"
                             style={{ padding: "4px 8px", fontSize: "10px" }}
                           >
-                            ✓ Approuver
+                            Approuver
                           </button>
                           <button
                             disabled={isPending}
@@ -97,7 +97,7 @@ export default function GestionAvancesClient() {
                             className="btn btn-red btn-sm"
                             style={{ padding: "4px 8px", fontSize: "10px" }}
                           >
-                            ✕ Rejeter
+                            Rejeter
                           </button>
                         </div>
                       )}

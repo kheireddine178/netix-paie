@@ -78,7 +78,7 @@ export default async function PortailDashboard({ params }: Props) {
                 <p><strong>Début :</strong> {contratActif.date_debut.split("-").reverse().join("/")}</p>
                 {contratActif.date_fin && <p><strong>Fin :</strong> {contratActif.date_fin.split("-").reverse().join("/")}</p>}
                 <p><strong>Statut :</strong> <span className="badge badge-teal">{contratActif.statut}</span></p>
-                <p><strong>Salaire contractuel :</strong> {contratActif.salaire_base_contrat.toLocaleString("fr-FR")} DA</p>
+                <p><strong>Salaire contractuel :</strong> {contratActif.salaire_base_contrat.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ')} DA</p>
               </div>
             ) : (
               <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>Aucun contrat actif enregistré.</p>

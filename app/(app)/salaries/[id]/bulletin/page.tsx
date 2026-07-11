@@ -31,7 +31,7 @@ export default async function BulletinPage({
           <h1>Bulletin de paie — {salarie.nom_prenom}</h1>
           <p>
             {salarie.fonction ?? "—"} · Salaire de base théorique :{" "}
-            {salarie.salaire_base_theorique.toLocaleString("fr-FR")} DA
+            {salarie.salaire_base_theorique.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ')} DA
           </p>
         </div>
         <Link href={`/salaries/${salarie.id}/rubriques`} className="btn btn-secondary btn-sm">

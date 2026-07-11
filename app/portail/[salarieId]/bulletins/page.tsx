@@ -60,7 +60,7 @@ export default async function Page({ params }: Props) {
                     <td style={{ fontWeight: "bold" }}>{MOIS_NOMS[b.mois - 1]}</td>
                     <td>{b.annee}</td>
                     <td style={{ fontWeight: "bold" }}>
-                      {b.net_a_payer.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} DA
+                      {b.net_a_payer.toLocaleString("fr-FR", { minimumFractionDigits: 2 }).replace(/[\u202F\u00A0]/g, ' ')} DA
                     </td>
                     <td>{b.modifie_le ? new Date(b.modifie_le).toLocaleDateString("fr-FR") : "—"}</td>
                     <td>

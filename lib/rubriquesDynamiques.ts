@@ -90,6 +90,8 @@ export function resoudreLigneRubrique(
   }
 
   if (!montant) return null;
+  
+  montant = Math.abs(montant);
 
   return {
     code: catalogue.code,

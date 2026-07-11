@@ -186,7 +186,7 @@ export default function CongesClientPage({ salarie, conges, contrats }: Props) {
                         <td>
                           {c.justificatif_url ? (
                             <a href={c.justificatif_url} target="_blank" rel="noopener noreferrer" className="btn-link">
-                              Ouvrir 🔗
+                              Ouvrir
                             </a>
                           ) : (
                             <span style={{ color: "var(--text-muted)" }}>—</span>
@@ -197,20 +197,20 @@ export default function CongesClientPage({ salarie, conges, contrats }: Props) {
                             {c.statut === "En attente N+1" && (
                               <>
                                 <button onClick={() => handleChangerStatut(c.id, "En attente validation RH")} className="btn btn-teal btn-sm" style={{ padding: "2px 6px", fontSize: "10px" }}>
-                                  ✓ Valider N+1
+                                  Valider N+1
                                 </button>
                                 <button onClick={() => handleChangerStatut(c.id, "Rejeté")} className="btn btn-red btn-sm" style={{ padding: "2px 6px", fontSize: "10px" }}>
-                                  ✕ Rejeter
+                                  Rejeter
                                 </button>
                               </>
                             )}
                             {c.statut === "En attente validation RH" && (
                               <>
                                 <button onClick={() => handleChangerStatut(c.id, "Approuvé")} className="btn btn-teal btn-sm" style={{ padding: "2px 6px", fontSize: "10px", background: "var(--teal)", color: "#fff" }}>
-                                  ✓ Approbation RH Finale
+                                  Approbation RH Finale
                                 </button>
                                 <button onClick={() => handleChangerStatut(c.id, "Rejeté")} className="btn btn-red btn-sm" style={{ padding: "2px 6px", fontSize: "10px" }}>
-                                  ✕ Rejeter
+                                  Rejeter
                                 </button>
                               </>
                             )}
@@ -218,10 +218,10 @@ export default function CongesClientPage({ salarie, conges, contrats }: Props) {
                             {c.statut === "En attente" && (
                               <>
                                 <button onClick={() => handleChangerStatut(c.id, "En attente validation RH")} className="btn btn-teal btn-sm" style={{ padding: "2px 6px", fontSize: "10px" }}>
-                                  ✓ Valider N+1
+                                  Valider N+1
                                 </button>
                                 <button onClick={() => handleChangerStatut(c.id, "Rejeté")} className="btn btn-red btn-sm" style={{ padding: "2px 6px", fontSize: "10px" }}>
-                                  ✕ Rejeter
+                                  Rejeter
                                 </button>
                               </>
                             )}
@@ -230,7 +230,7 @@ export default function CongesClientPage({ salarie, conges, contrats }: Props) {
                               style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", marginLeft: 4 }}
                               title="Supprimer la demande"
                             >
-                              🗑️
+                              Suppr.
                             </button>
                           </div>
                         </td>

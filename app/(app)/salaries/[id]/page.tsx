@@ -128,7 +128,7 @@ export default async function SalarieHubPage({ params }: Props) {
         <div className="card" style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <strong style={{ fontSize: "var(--t2xs)", color: "var(--text-muted)", textTransform: "uppercase" }}>Rémunération de base</strong>
           <p style={{ fontSize: "var(--tmd)", fontWeight: "bold", margin: "4px 0" }}>
-            {salarie.salaire_base_theorique.toLocaleString("fr-FR")} DA
+            {salarie.salaire_base_theorique.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ')} DA
           </p>
           <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>Mensuel brut réglementaire</span>
         </div>

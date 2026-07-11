@@ -83,6 +83,13 @@ export const MOIS_FR = [
   "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
 ];
 
+/** Remplace les espaces insécables (U+202F, U+00A0) générés par toLocaleString("fr-FR")
+ *  par des espaces normaux. Sans cela, certains navigateurs ou moteurs PDF affichent
+ *  ces caractères comme "/" ou les remplacent par un glyphe de substitution. */
+function norm(s: string): string {
+  return s.replace(/[\u202F\u00A0]/g, " ");
+}
+
 export function fmtDa(v: number): string {
   if (v === undefined || v === null) return "—";
   const formatted = Math.abs(v).toLocaleString("fr-FR", {
@@ -90,7 +97,7 @@ export function fmtDa(v: number): string {
     maximumFractionDigits: 2,
   });
   const sign = v < 0 ? "− " : "";
-  return `${sign}${formatted} DA`;
+  return `${sign}${norm(formatted)} DA`;
 }
 
 export function fmtPct(v: number): string {
@@ -98,10 +105,10 @@ export function fmtPct(v: number): string {
 }
 
 export function fmtH(v: number): string {
-  return `${v.toLocaleString("fr-FR", {
+  return `${norm(v.toLocaleString("fr-FR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })} h`;
+  }))} h`;
 }
 
 export function genererExplicationDonnees(
@@ -240,7 +247,7 @@ export function genererExplicationDonnees(
     for (const [de, a, taux] of params.bareme_irg) {
       if (taux === 0 && a !== null && baseImposableIrg <= a) {
         tranchesIrg.push({
-          tranche: `De ${de.toLocaleString("fr-FR")} à ${a.toLocaleString("fr-FR")} DA`,
+          tranche: `De ${norm(de.toLocaleString("fr-FR"))} à ${norm(a.toLocaleString("fr-FR"))} DA`,
           taux: "0 %",
           montantTranche: baseImposableIrg - de,
           impotPartiel: 0,
@@ -248,8 +255,8 @@ export function genererExplicationDonnees(
         });
         break;
       }
-      const aDisplay = a === null ? "illimité" : `${a.toLocaleString("fr-FR")} DA`;
-      const deDisplay = `${de.toLocaleString("fr-FR")} DA`;
+      const aDisplay = a === null ? "illimité" : `${norm(a.toLocaleString("fr-FR"))} DA`;
+      const deDisplay = `${norm(de.toLocaleString("fr-FR"))} DA`;
       const deVal = de;
       const aVal = a;
       

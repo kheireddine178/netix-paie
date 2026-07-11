@@ -69,7 +69,7 @@ const CHAMPS_RETENUES = [
 ];
 
 function formatDA(n: number) {
-  return n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }) + " DA";
+  return n.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/[\u202F\u00A0]/g, ' ') + " DA";
 }
 
 interface LigneEtat {
@@ -404,7 +404,7 @@ export default function BulletinForm({
               className="btn btn-secondary btn-sm"
               style={{ flex: 1 }}
             >
-              📂 Charger ce mois
+              Charger ce mois
             </button>
             <button
               type="button"
@@ -414,7 +414,7 @@ export default function BulletinForm({
               style={{ flex: 1 }}
               title="Copier les données saisies le mois précédent"
             >
-              📋 Copier mois précédent
+              Copier mois précédent
             </button>
           </div>
           {messageCharge && (
@@ -552,7 +552,7 @@ export default function BulletinForm({
         )}
 
         <button type="submit" disabled={isPending} className="btn btn-primary">
-          {isPending ? "Enregistrement..." : "💾 Enregistrer le bulletin"}
+          {isPending ? "Enregistrement..." : "Enregistrer le bulletin"}
         </button>
       </form>
 
@@ -619,7 +619,7 @@ export default function BulletinForm({
                     rel="noopener noreferrer"
                     className="btn btn-primary"
                   >
-                    📄 Télécharger le PDF (bulletin salarié)
+                    Télécharger le PDF (bulletin salarié)
                   </a>
                   <a
                     href={`/salaries/${salarie.id}/bulletin/pdf?annee=${resultat.annee}&mois=${resultat.mois}&variante=employeur`}
@@ -634,7 +634,7 @@ export default function BulletinForm({
                     className="btn btn-secondary"
                     style={{ textAlign: "center" }}
                   >
-                    🔍 Voir l&apos;explication détaillée du calcul
+                    Voir l&apos;explication détaillée du calcul
                   </Link>
                 </>
               ) : (
@@ -650,7 +650,7 @@ export default function BulletinForm({
                     padding: "var(--s3)",
                   }}
                 >
-                  ⚠️ Modifié. Cliquez sur le bouton "Enregistrer le bulletin" pour activer l'export PDF et les explications.
+                  Modifié. Cliquez sur le bouton "Enregistrer le bulletin" pour activer l'export PDF et les explications.
                 </div>
               )}
             </div>
@@ -721,7 +721,7 @@ function ChampRubriqueDynamique({ ligne, onRetirer }: { ligne: LigneEtat; onReti
         padding: "0 4px",
       }}
     >
-      ✕
+      ×
     </button>
   );
 
@@ -830,7 +830,7 @@ function Ligne({
       }}
     >
       <dt style={{ color: gras ? "var(--text)" : "var(--text-2)" }}>{label}</dt>
-      <dd>{unite === " DA" ? formatDA(valeur) : valeur.toLocaleString("fr-FR", { maximumFractionDigits: 2 })}</dd>
+      <dd>{unite === " DA" ? formatDA(valeur) : valeur.toLocaleString("fr-FR", { maximumFractionDigits: 2 }).replace(/[\u202F\u00A0]/g, ' ')}</dd>
     </div>
   );
 }

@@ -65,9 +65,9 @@ export default async function HistoriquePage({
                   <td>
                     {NOMS_MOIS[b.mois - 1] ?? b.mois} {b.annee}
                   </td>
-                  <td>{b.net_a_payer.toLocaleString("fr-FR")} DA</td>
+                  <td>{b.net_a_payer.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ')} DA</td>
                   <td style={{ color: "var(--text-muted)" }}>
-                    {b.modifie_le ? new Date(b.modifie_le).toLocaleString("fr-FR") : "—"}
+                    {b.modifie_le ? new Date(b.modifie_le).toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ') : "—"}
                   </td>
                   <td>
                     <BulletinRowActions salarieId={salarie.id} bulletinId={b.id} annee={b.annee} mois={b.mois} />

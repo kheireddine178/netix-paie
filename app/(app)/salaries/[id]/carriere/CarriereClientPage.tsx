@@ -48,7 +48,7 @@ export default function CarriereClientPage({ salarie, promotions, sanctions, obj
   const [objTauxReussite, setObjTauxReussite] = useState(0);
 
   const formatDA = (val: number) => {
-    return val.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DA";
+    return val.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/[\u202F\u00A0]/g, ' ') + " DA";
   };
 
   const handleAjouterPromotion = async (e: React.FormEvent) => {
@@ -214,7 +214,7 @@ export default function CarriereClientPage({ salarie, promotions, sanctions, obj
                           onClick={() => handleSupprimerPromotion(p.id)}
                           style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer" }}
                         >
-                          ✕
+                          ×
                         </button>
                       </td>
                     </tr>
@@ -304,7 +304,7 @@ export default function CarriereClientPage({ salarie, promotions, sanctions, obj
                           onClick={() => handleSupprimerSanction(s.id)}
                           style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer" }}
                         >
-                          ✕
+                          ×
                         </button>
                       </td>
                     </tr>
@@ -408,7 +408,7 @@ export default function CarriereClientPage({ salarie, promotions, sanctions, obj
                           onClick={() => handleSupprimerObjectif(o.id)}
                           style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer" }}
                         >
-                          ✕
+                          ×
                         </button>
                       </td>
                     </tr>

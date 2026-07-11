@@ -29,7 +29,7 @@ export default function ContratClientPage({ salarie, contrats, documents }: Prop
   const [docUrl, setDocUrl] = useState("");
 
   const formatDA = (val: number) => {
-    return val.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " DA";
+    return val.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/[\u202F\u00A0]/g, ' ') + " DA";
   };
 
   const handleAjouterContrat = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -135,7 +135,7 @@ export default function ContratClientPage({ salarie, contrats, documents }: Prop
                           onClick={() => handleSupprimerContrat(c.id)}
                           style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer" }}
                         >
-                          ✕
+                          ×
                         </button>
                       </td>
                     </tr>
@@ -200,13 +200,13 @@ export default function ContratClientPage({ salarie, contrats, documents }: Prop
                   </div>
                   <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                     <a href={d.fichier_url} target="_blank" rel="noopener noreferrer" className="btn-link" style={{ fontSize: "var(--txs)" }}>
-                      👁️ Ouvrir
+                      Ouvrir
                     </a>
                     <button
                       onClick={() => handleSupprimerDocument(d.id)}
                       style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer" }}
                     >
-                      ✕
+                      ×
                     </button>
                   </div>
                 </div>

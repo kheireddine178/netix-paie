@@ -148,7 +148,7 @@ export default function MissionsClientPage({ salarie, missions }: Props) {
                             onClick={() => handleSupprimer(m.id)}
                             style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", marginLeft: 4 }}
                           >
-                            🗑️
+                            Suppr.
                           </button>
                         </div>
                       </td>

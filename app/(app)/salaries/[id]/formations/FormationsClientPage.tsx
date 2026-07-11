@@ -159,7 +159,7 @@ export default function FormationsClientPage({ salarie, catalogue, inscriptions 
                           onClick={() => handleSupprimerInscription(i.id)}
                           style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer" }}
                         >
-                          ✕
+                          ×
                         </button>
                       </td>
                     </tr>

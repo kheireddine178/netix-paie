@@ -58,7 +58,7 @@ export default async function SaisiePage({ searchParams }: Props) {
           <p>Absences, heures supplémentaires, rubriques — le résultat se calcule en temps réel.</p>
         </div>
         <Link href="/saisie/avances" className="btn btn-secondary btn-sm" style={{ textDecoration: "none" }}>
-          💳 Valider les avances
+          Valider les avances
         </Link>
       </div>
 
