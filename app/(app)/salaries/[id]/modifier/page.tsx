@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getSalarie, modifierSalarie } from "../../actions";
-import SalarieForm from "../../SalarieForm";
+import SalarieForm from "../../salarie-form";
 
 export default async function ModifierSalariePage({
   params,

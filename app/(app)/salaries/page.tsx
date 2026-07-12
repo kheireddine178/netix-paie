@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { listerSalariesPaginated } from "./actions";
-import SalarieRowActions from "./SalarieRowActions";
-import SalarieFilters from "./SalarieFilters";
+import SalarieRowActions from "./salarie-row-actions";
+import SalarieFilters from "./salarie-filters";
 
 export const dynamic = "force-dynamic";
 

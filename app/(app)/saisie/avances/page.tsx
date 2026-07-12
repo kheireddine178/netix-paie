@@ -1,4 +1,4 @@
-import GestionAvancesClient from "../GestionAvancesClient";
+import GestionAvancesClient from "../gestion-avances-client";
 
 export const dynamic = "force-dynamic";
 

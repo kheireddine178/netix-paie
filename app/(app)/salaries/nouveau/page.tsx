@@ -1,5 +1,5 @@
 import { creerSalarie } from "../actions";
-import SalarieForm from "../SalarieForm";
+import SalarieForm from "../salarie-form";
 
 export default function NouveauSalariePage() {
   return (

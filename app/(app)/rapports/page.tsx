@@ -1,5 +1,5 @@
 import React from "react";
-import PageClient from "./PageClient";
+import PageClient from "./page-client";
 import { listerCatalogueRubriques } from "../salaries/actions";
 
 export const dynamic = "force-dynamic";

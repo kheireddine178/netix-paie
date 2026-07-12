@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSalarie, listerContratsSalarie, listerDocumentsSalarie } from "../../actions";
-import ContratClientPage from "./ContratClientPage";
+import ContratClientPage from "./contrat-client-page";
 
 export const dynamic = "force-dynamic";
 

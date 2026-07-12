@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { listerSalaries, listerBulletinsPourPeriode } from "../../salaries/actions";
-import SaisieCollectiveClient from "./SaisieCollectiveClient";
+import SaisieCollectiveClient from "./saisie-collective-client";
 
 export const dynamic = "force-dynamic";
 

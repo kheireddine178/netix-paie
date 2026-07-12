@@ -7,7 +7,7 @@ import {
   getParametres,
   chargerBulletinPourSaisie,
 } from "../salaries/actions";
-import SaisieFormulaireConsolide from "./SaisieFormulaireConsolide";
+import SaisieFormulaireConsolide from "./saisie-formulaire-consolide";
 
 export const dynamic = "force-dynamic";
 

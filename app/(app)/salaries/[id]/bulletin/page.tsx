@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSalarie, listerRubriquesSalarie, listerCatalogueRubriques, getParametres } from "../../actions";
 import { checkAdminAccess } from "@/lib/authHelper";
-import BulletinForm from "./BulletinForm";
+import BulletinForm from "./bulletin-form";
 
 export const dynamic = "force-dynamic";
 
