@@ -87,6 +87,55 @@ export async function listerSalaries(): Promise<Salarie[]> {
   return data ?? [];
 }
 
+export interface ListerSalariesParams {
+  search?: string;
+  actifOnly?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+export interface ListerSalariesResult {
+  salaries: Salarie[];
+  totalCount: number;
+}
+
+/**
+ * Récupère la liste des salariés avec pagination, recherche et filtres de statut.
+ */
+export async function listerSalariesPaginated({
+  search = "",
+  actifOnly = false,
+  page = 1,
+  limit = 15,
+}: ListerSalariesParams = {}): Promise<ListerSalariesResult> {
+  const { supabase } = await enforceSession();
+
+  let query = supabase
+    .from("salaries")
+    .select("*", { count: "exact" });
+
+  if (actifOnly) {
+    query = query.eq("actif", true);
+  }
+
+  if (search.trim()) {
+    query = query.or(`nom_prenom.ilike.%${search}%,matricule.ilike.%${search}%,fonction.ilike.%${search}%`);
+  }
+
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, error, count } = await query
+    .order("nom_prenom")
+    .range(from, to);
+
+  if (error) throw new Error(error.message);
+  return {
+    salaries: data ?? [],
+    totalCount: count ?? 0,
+  };
+}
+
 export async function creerSalarie(formData: FormData) {
   const { supabase, user, email } = await enforceRHAccess();
 
