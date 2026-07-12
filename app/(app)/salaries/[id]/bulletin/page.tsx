@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSalarie, listerRubriquesSalarie, listerCatalogueRubriques, getParametres } from "../../actions";
+import { checkAdminAccess } from "@/lib/authHelper";
 import BulletinForm from "./BulletinForm";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,9 @@ export default async function BulletinPage({
   const salarie = await getSalarie(parseInt(id, 10));
 
   if (!salarie) notFound();
+
+  // Contrôle d'accès et récupération du rôle
+  const { profile } = await checkAdminAccess();
 
   const [rubriquesAssignees, catalogueRubriques, parametres] = await Promise.all([
     listerRubriquesSalarie(salarie.id),
@@ -44,6 +48,7 @@ export default async function BulletinPage({
         rubriquesAssignees={rubriquesAssignees}
         catalogueRubriques={catalogueRubriques}
         parametres={parametres}
+        userRole={profile.role}
       />
     </>
   );

@@ -8,6 +8,8 @@ import {
   listerBulletinsSalarie,
 } from "../../(app)/salaries/actions";
 
+import { checkPortalAccess } from "@/lib/authHelper";
+
 export const dynamic = "force-dynamic";
 
 interface Props {
@@ -18,6 +20,9 @@ export default async function PortailDashboard({ params }: Props) {
   const { salarieId } = await params;
   const id = parseInt(salarieId, 10);
   if (isNaN(id)) notFound();
+
+  // Contrôle d'accès strict (bloque les salariés tentant de consulter un autre matricule)
+  const { profile } = await checkPortalAccess(id);
 
   const salarie = await getSalarie(id);
   if (!salarie) notFound();
@@ -42,12 +47,16 @@ export default async function PortailDashboard({ params }: Props) {
           <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>{salarie.fonction || "Collaborateur"} · Matricule {salarie.matricule || "—"}</p>
         </div>
         <div style={{ display: "flex", gap: 12 }}>
-          <Link href="/portail" className="btn btn-secondary btn-sm">
-            Changer de Salarié
-          </Link>
-          <Link href="/dashboard" className="btn btn-primary btn-sm">
-            RH Admin
-          </Link>
+          {profile.role !== "Salarie" && (
+            <Link href="/portail" className="btn btn-secondary btn-sm">
+              Changer de Salarié
+            </Link>
+          )}
+          {["Directeur", "Responsable RH", "Gestionnaire RH"].includes(profile.role) && (
+            <Link href="/dashboard" className="btn btn-primary btn-sm">
+              RH Admin
+            </Link>
+          )}
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import {
   chargerBulletinPourSaisie,
   ajouterRubriqueSalarie,
   retirerRubriqueSalarie,
+  cloturerBulletin,
 } from "../../actions";
 import type {
   ResultatBulletin,
@@ -99,11 +100,13 @@ export default function BulletinForm({
   rubriquesAssignees,
   catalogueRubriques,
   parametres,
+  userRole,
 }: {
   salarie: Salarie;
   rubriquesAssignees: RubriqueAssignee[];
   catalogueRubriques: RubriqueCatalogue[];
   parametres: Parametres;
+  userRole: string;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [resultat, setResultat] = useState<ResultatBulletin | null>(null);
@@ -114,6 +117,9 @@ export default function BulletinForm({
   const now = new Date();
   const [annee, setAnnee] = useState(now.getFullYear());
   const [mois, setMois] = useState(now.getMonth() + 1);
+  const [statut, setStatut] = useState("Brouillon");
+
+  const isReadOnly = statut === "Clôturé" || userRole === "Directeur";
 
   const [formKey, setFormKey] = useState(0);
   const [initialValues, setInitialValues] = useState<Record<string, number>>({});
@@ -127,7 +133,7 @@ export default function BulletinForm({
   const [estEnregistre, setEstEnregistre] = useState(false);
   const [flashActive, setFlashActive] = useState(false);
 
-  const codesDejaAjoutes = useMemo(() => new Set(lignes.map((l) => l.code)), [lignes]);
+  const codesDejaAjoutes = useMemo(() => new Set(lignes.map((l: any) => l.code)), [lignes]);
   const resultatsRecherche = useMemo(() => {
     const q = recherche.trim().toLowerCase();
     if (!q) return [];
@@ -247,6 +253,7 @@ export default function BulletinForm({
         const donnees = await chargerBulletinPourSaisie(salarie.id, annee, mois);
         if (!donnees) {
           setInitialValues({});
+          setStatut("Brouillon");
           setLignes((prev) => prev.map((l) => ({ ...l, valeur_1: 0, valeur_2: 0 })));
           setResultat(null);
           setFormKey((k) => k + 1);
@@ -276,6 +283,7 @@ export default function BulletinForm({
           .map((l) => ({ ...l, valeur_1: 0, valeur_2: 0 }));
 
         setInitialValues(champs);
+        setStatut(donnees.statut || "Brouillon");
         setLignes([...lignesChargees, ...lignesConservees]);
         setFormKey((k) => k + 1);
         setEstEnregistre(true);
@@ -362,6 +370,20 @@ export default function BulletinForm({
     });
   }
 
+  const handleCloturer = async () => {
+    if (!resultat?.bulletin_id) return;
+    setErreur(null);
+    startTransition(async () => {
+      try {
+        await cloturerBulletin(salarie.id, annee, mois);
+        setStatut("Clôturé");
+        setMessageCharge("Le bulletin a été validé et clôturé définitivement.");
+      } catch (e) {
+        setErreur(e instanceof Error ? e.message : "Erreur lors de la clôture");
+      }
+    });
+  };
+
   return (
     <div className="grid md:grid-cols-2 gap-8">
       <form key={formKey} onSubmit={onSubmit} onChange={debouncedCalcul} ref={formRef} className="space-y-5">
@@ -409,7 +431,7 @@ export default function BulletinForm({
             <button
               type="button"
               onClick={handleCopierMoisPrecedent}
-              disabled={isPending}
+              disabled={isPending || isReadOnly}
               className="btn btn-secondary btn-sm"
               style={{ flex: 1 }}
               title="Copier les données saisies le mois précédent"
@@ -434,19 +456,20 @@ export default function BulletinForm({
               step="0.01"
               defaultValue={initialValues["salaire_base_theorique"] ?? salarie.salaire_base_theorique}
               style={{ fontWeight: "bold" }}
+              disabled={isReadOnly}
             />
           </div>
         </Section>
 
         <Section titre="Absences (heures) — réduisent le salaire">
           {CHAMPS_ABSENCES.map((c) => (
-            <Champ key={c.name} {...c} defaultValue={initialValues[c.name] ?? 0} />
+            <Champ key={c.name} {...c} defaultValue={initialValues[c.name] ?? 0} disabled={isReadOnly} />
           ))}
         </Section>
 
         <Section titre="Heures supplémentaires">
           {CHAMPS_HEURES_SUP.map((c) => (
-            <Champ key={c.name} {...c} defaultValue={initialValues[c.name] ?? 0} />
+            <Champ key={c.name} {...c} defaultValue={initialValues[c.name] ?? 0} disabled={isReadOnly} />
           ))}
         </Section>
 
@@ -475,7 +498,8 @@ export default function BulletinForm({
               type="text"
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
-              placeholder="+ Ajouter une rubrique — rechercher par code ou libellé..."
+              placeholder={isReadOnly ? "Dossier verrouillé — modification interdite" : "+ Ajouter une rubrique — rechercher par code ou libellé..."}
+              disabled={isReadOnly}
             />
             {resultatsRecherche.length > 0 && (
               <div
@@ -535,7 +559,7 @@ export default function BulletinForm({
           {lignes.length > 0 ? (
             <div className="grid grid-cols-2 gap-3">
               {lignes.map((l) => (
-                <ChampRubriqueDynamique key={l.code} ligne={l} onRetirer={() => retirerRubrique(l.code)} />
+                <ChampRubriqueDynamique key={l.code} ligne={l} onRetirer={() => retirerRubrique(l.code)} disabled={isReadOnly} />
               ))}
             </div>
           ) : (
@@ -551,9 +575,31 @@ export default function BulletinForm({
           </p>
         )}
 
-        <button type="submit" disabled={isPending} className="btn btn-primary">
-          {isPending ? "Enregistrement..." : "Enregistrer le bulletin"}
-        </button>
+        {statut === "Clôturé" ? (
+          <div className="badge badge-teal" style={{ display: "block", width: "fit-content", padding: "8px 12px", fontSize: "12px", marginTop: "var(--s2)" }}>
+            ✓ Ce bulletin est validé et clôturé (lecture seule)
+          </div>
+        ) : userRole === "Directeur" ? (
+          <div className="badge badge-secondary" style={{ display: "block", width: "fit-content", padding: "8px 12px", fontSize: "12px", marginTop: "var(--s2)" }}>
+            Accès Directeur (lecture seule)
+          </div>
+        ) : (
+          <button type="submit" disabled={isPending} className="btn btn-primary">
+            {isPending ? "Enregistrement..." : "Enregistrer le bulletin"}
+          </button>
+        )}
+
+        {userRole === "Responsable RH" && statut === "Brouillon" && estEnregistre && (
+          <button
+            type="button"
+            onClick={handleCloturer}
+            disabled={isPending}
+            className="btn"
+            style={{ display: "block", width: "100%", marginTop: "var(--s2)", background: "var(--teal-700)", color: "white", borderColor: "var(--teal-700)", fontWeight: "bold" }}
+          >
+            {isPending ? "Clôture..." : "✓ Valider & Clôturer la paie du mois"}
+          </button>
+        )}
       </form>
 
       {/* Right side: Live Calculation Results Panel */}
@@ -682,11 +728,13 @@ function Champ({
   label,
   placeholder,
   defaultValue = 0,
+  disabled = false,
 }: {
   name: string;
   label: string;
   placeholder?: string;
   defaultValue?: number;
+  disabled?: boolean;
 }) {
   return (
     <div className="field" style={{ marginBottom: 0 }}>
@@ -698,15 +746,16 @@ function Champ({
         step="0.01"
         defaultValue={defaultValue}
         placeholder={placeholder}
+        disabled={disabled}
       />
     </div>
   );
 }
 
-function ChampRubriqueDynamique({ ligne, onRetirer }: { ligne: LigneEtat; onRetirer: () => void }) {
+function ChampRubriqueDynamique({ ligne, onRetirer, disabled = false }: { ligne: LigneEtat; onRetirer: () => void; disabled?: boolean }) {
   const libelle = `${ligne.code} — ${ligne.libelle ?? ""}`;
 
-  const boutonRetirer = (
+  const boutonRetirer = !disabled && (
     <button
       type="button"
       onClick={onRetirer}
@@ -754,6 +803,7 @@ function ChampRubriqueDynamique({ ligne, onRetirer }: { ligne: LigneEtat; onReti
             step="0.01"
             defaultValue={ligne.valeur_1}
             placeholder="Nombre"
+            disabled={disabled}
           />
         </div>
         <div className="field" style={{ marginBottom: 0 }}>
@@ -763,6 +813,7 @@ function ChampRubriqueDynamique({ ligne, onRetirer }: { ligne: LigneEtat; onReti
             step="0.01"
             defaultValue={ligne.valeur_2}
             placeholder="Taux / forfait unitaire"
+            disabled={disabled}
           />
         </div>
       </div>
@@ -792,6 +843,7 @@ function ChampRubriqueDynamique({ ligne, onRetirer }: { ligne: LigneEtat; onReti
         step="0.01"
         defaultValue={ligne.valeur_1}
         placeholder={placeholder}
+        disabled={disabled}
       />
     </div>
   );

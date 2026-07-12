@@ -1,11 +1,14 @@
 import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
+import { checkAdminAccess } from "@/lib/authHelper";
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await checkAdminAccess();
+
   return (
     <div className="app-shell">
       <Sidebar />

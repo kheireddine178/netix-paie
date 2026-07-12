@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getSalarie, listerAvancesSalarie } from "../../../(app)/salaries/actions";
 import EspaceAvancesClient from "./EspaceAvancesClient";
 
+import { checkPortalAccess } from "@/lib/authHelper";
+
 export const dynamic = "force-dynamic";
 
 interface Props {
@@ -13,6 +15,9 @@ export default async function EspaceAvancesPage({ params }: Props) {
   const { salarieId } = await params;
   const id = parseInt(salarieId, 10);
   if (isNaN(id)) notFound();
+
+  // Contrôle d'accès strict
+  await checkPortalAccess(id);
 
   const salarie = await getSalarie(id);
   if (!salarie) notFound();

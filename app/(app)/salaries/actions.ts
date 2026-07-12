@@ -1,6 +1,9 @@
 "use server";
 
-import { supabase } from "@/lib/supabaseClient";
+import { createClient as createServerClient } from "@/lib/supabaseServer";
+import { supabase as supabaseClient } from "@/lib/supabaseClient";
+
+const supabase = supabaseClient;
 import {
   calculerPaie,
   calculerBaseAvantRubriques,
@@ -18,6 +21,42 @@ import { resoudreLigneRubrique, type RubriqueCatalogueRow } from "@/lib/rubrique
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+// ------------------------------------------------------------------
+// Helpers d'authentification et d'autorisation de la Phase 1
+// ------------------------------------------------------------------
+
+async function enforceSession() {
+  const supabase = await createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Accès non autorisé : Non authentifié");
+  
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, email, salarie_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile) throw new Error("Profil utilisateur inexistant");
+
+  return { supabase, user, role: profile.role, email: profile.email, salarieId: profile.salarie_id };
+}
+
+async function enforceRHAccess() {
+  const ctx = await enforceSession();
+  if (!["Responsable RH", "Gestionnaire RH"].includes(ctx.role)) {
+    throw new Error("Accès non autorisé : Privilèges RH requis");
+  }
+  return ctx;
+}
+
+async function enforceResponsableRHAccess() {
+  const ctx = await enforceSession();
+  if (ctx.role !== "Responsable RH") {
+    throw new Error("Accès non autorisé : Réservé au Responsable RH");
+  }
+  return ctx;
+}
+
 export interface Salarie {
   id: number;
   matricule: string | null;
@@ -29,6 +68,7 @@ export interface Salarie {
 }
 
 export async function listerSalaries(): Promise<Salarie[]> {
+  const { supabase } = await enforceSession();
   const { data, error } = await supabase
     .from("salaries")
     .select("*")
@@ -39,24 +79,41 @@ export async function listerSalaries(): Promise<Salarie[]> {
 }
 
 export async function creerSalarie(formData: FormData) {
+  const { supabase, user, email } = await enforceRHAccess();
+
   const nom_prenom = formData.get("nom_prenom") as string;
   const matricule = (formData.get("matricule") as string) || null;
   const fonction = (formData.get("fonction") as string) || null;
   const salaire_base_theorique = parseFloat(formData.get("salaire_base_theorique") as string) || 0;
   const date_visite_medicale = (formData.get("date_visite_medicale") as string) || null;
 
-  const { error } = await supabase.from("salaries").insert({
-    nom_prenom,
-    matricule,
-    fonction,
-    salaire_base_theorique,
-    date_visite_medicale,
-  });
+  // Création du salarié
+  const { data: salarie, error } = await supabase
+    .from("salaries")
+    .insert({
+      nom_prenom,
+      matricule,
+      fonction,
+      salaire_base_theorique,
+      date_visite_medicale,
+    })
+    .select()
+    .single();
 
   if (error) {
     console.error("Erreur création salarié:", error);
     return { error: error.message };
   }
+
+  // Journalisation d'audit (Audit Trail)
+  await supabase.from("audit_logs").insert({
+    auteur_id: user.id,
+    auteur_email: email,
+    table_cible: "salaries",
+    type_action: "INSERT",
+    enregistrement_id: salarie.id,
+    valeurs_apres: { nom_prenom, matricule, fonction, salaire_base_theorique, date_visite_medicale }
+  });
 
   revalidatePath("/salaries");
   redirect("/salaries");
@@ -64,11 +121,16 @@ export async function creerSalarie(formData: FormData) {
 
 /** Met à jour les informations de base d'un salarié existant. */
 export async function modifierSalarie(id: number, formData: FormData) {
+  const { supabase, user, email } = await enforceRHAccess();
+
   const nom_prenom = formData.get("nom_prenom") as string;
   const matricule = (formData.get("matricule") as string) || null;
   const fonction = (formData.get("fonction") as string) || null;
   const salaire_base_theorique = parseFloat(formData.get("salaire_base_theorique") as string) || 0;
   const date_visite_medicale = (formData.get("date_visite_medicale") as string) || null;
+
+  // Récupérer l'état avant pour l'audit
+  const { data: avant } = await supabase.from("salaries").select("*").eq("id", id).single();
 
   const { error } = await supabase
     .from("salaries")
@@ -86,30 +148,67 @@ export async function modifierSalarie(id: number, formData: FormData) {
     return { error: error.message };
   }
 
+  // Journalisation d'audit (Audit Trail)
+  await supabase.from("audit_logs").insert({
+    auteur_id: user.id,
+    auteur_email: email,
+    table_cible: "salaries",
+    type_action: "UPDATE",
+    enregistrement_id: id,
+    valeurs_avant: avant,
+    valeurs_apres: { nom_prenom, matricule, fonction, salaire_base_theorique, date_visite_medicale }
+  });
+
   revalidatePath("/salaries");
   redirect("/salaries");
 }
 
 /** Désactive un salarié (soft delete) : son historique de bulletins est conservé. */
 export async function desactiverSalarie(id: number) {
+  const { supabase, user, email } = await enforceRHAccess();
+  
   const { error } = await supabase.from("salaries").update({ actif: false }).eq("id", id);
   if (error) throw new Error(error.message);
+
+  await supabase.from("audit_logs").insert({
+    auteur_id: user.id,
+    auteur_email: email,
+    table_cible: "salaries",
+    type_action: "UPDATE",
+    enregistrement_id: id,
+    valeurs_apres: { actif: false }
+  });
+
   revalidatePath("/salaries");
 }
 
 /** Réactive un salarié précédemment désactivé. */
 export async function reactiverSalarie(id: number) {
+  const { supabase, user, email } = await enforceRHAccess();
+
   const { error } = await supabase.from("salaries").update({ actif: true }).eq("id", id);
   if (error) throw new Error(error.message);
+
+  await supabase.from("audit_logs").insert({
+    auteur_id: user.id,
+    auteur_email: email,
+    table_cible: "salaries",
+    type_action: "UPDATE",
+    enregistrement_id: id,
+    valeurs_apres: { actif: true }
+  });
+
   revalidatePath("/salaries");
 }
 
 /**
- * Supprime définitivement un salarié et tout son historique
- * (bulletins, rubriques de bulletins, rubriques assignées).
- * Action irréversible — la confirmation doit être faite côté client.
+ * Supprime définitivement un salarié et tout son historique.
  */
 export async function supprimerSalarieDefinitif(id: number) {
+  const { supabase, user, email } = await enforceResponsableRHAccess();
+
+  const { data: avant } = await supabase.from("salaries").select("*").eq("id", id).single();
+
   const { data: bulletins, error: bulletinsError } = await supabase
     .from("bulletins")
     .select("id")
@@ -184,8 +283,8 @@ export async function listerCatalogueRubriques(): Promise<RubriqueCatalogue[]> {
   if (error) throw new Error(error.message);
 
   return (data ?? [])
-    .filter((r) => !CODES_GERES_NATIVEMENT.has(r.code))
-    .map((r) => ({ ...r, categorie: categorieRubrique(r.code) }));
+    .filter((r: any) => !CODES_GERES_NATIVEMENT.has(r.code))
+    .map((r: any) => ({ ...r, categorie: categorieRubrique(r.code) }));
 }
 
 /** Rubriques du catalogue actuellement cochées/assignées à un salarié donné. */
@@ -198,7 +297,7 @@ export async function listerRubriquesSalarie(salarieId: number): Promise<Rubriqu
   if (error) throw new Error(error.message);
 
   return (data ?? [])
-    .map((r) => {
+    .map((r: any) => {
       const cat = Array.isArray(r.rubriques_catalogue) ? r.rubriques_catalogue[0] : r.rubriques_catalogue;
       if (!cat) return null;
       return {
@@ -212,7 +311,7 @@ export async function listerRubriquesSalarie(salarieId: number): Promise<Rubriqu
       };
     })
     .filter((r): r is RubriqueAssignee => r !== null)
-    .sort((a, b) => a.code.localeCompare(b.code));
+    .sort((a: any, b: any) => a.code.localeCompare(b.code));
 }
 
 /**
@@ -314,10 +413,25 @@ export interface ResultatBulletin extends ResultatPaie {
  * (table `bulletin_rubriques`).
  */
 export async function creerBulletin(salarieId: number, formData: FormData): Promise<ResultatBulletin> {
+  const { supabase, user, email } = await enforceRHAccess();
+
   const num = (name: string) => parseFloat(formData.get(name) as string) || 0;
 
   const annee = parseInt(formData.get("annee") as string, 10);
   const mois = parseInt(formData.get("mois") as string, 10);
+
+  // Vérification de verrouillage (bulletin déjà clôturé)
+  const { data: existing } = await supabase
+    .from("bulletins")
+    .select("statut")
+    .eq("salarie_id", salarieId)
+    .eq("annee", annee)
+    .eq("mois", mois)
+    .maybeSingle();
+
+  if (existing && existing.statut === "Clôturé") {
+    throw new Error("Ce bulletin est clôturé et ne peut plus être modifié.");
+  }
 
   const salarie = await getSalarie(salarieId);
   if (!salarie) throw new Error("Salarié introuvable");
@@ -334,10 +448,6 @@ export async function creerBulletin(salarieId: number, formData: FormData): Prom
   };
   const { salaire_base_reel } = calculerBaseAvantRubriques(champsAbsences, params);
 
-  // Résolution des rubriques dynamiques présentes dans le formulaire, à partir des
-  // champs dyn_<code>_v1 (et _v2 pour la catégorie "nombre_x_taux"). On ne se limite
-  // plus aux rubriques préassignées au salarié : n'importe quel code du catalogue peut
-  // avoir été ajouté à la volée depuis la recherche dans le formulaire de saisie.
   const codesPostes = new Set<string>();
   for (const key of formData.keys()) {
     const m = key.match(/^dyn_(.+)_v1$/);
@@ -358,7 +468,7 @@ export async function creerBulletin(salarieId: number, formData: FormData): Prom
   const rubriques_dynamiques: LigneRubriqueDynamique[] = [];
   for (const code of codesPostes) {
     const cat = catalogueMap.get(code);
-    if (!cat) continue; // code inconnu du catalogue : ignoré par sécurité
+    if (!cat) continue;
     const categorie = categorieRubrique(code);
     const v1 = num(`dyn_${code}_v1`);
     const v2 = categorie === "nombre_x_taux" ? num(`dyn_${code}_v2`) : 0;
@@ -418,6 +528,7 @@ export async function creerBulletin(salarieId: number, formData: FormData): Prom
         autre_prime_fixe: saisie.autre_prime_fixe,
         cotis_mutuelle: saisie.cotis_mutuelle,
         autres_retenues: saisie.autres_retenues,
+        statut: existing?.statut || "Brouillon",
         modifie_le: new Date().toISOString(),
       },
       { onConflict: "salarie_id,annee,mois" },
@@ -448,6 +559,16 @@ export async function creerBulletin(salarieId: number, formData: FormData): Prom
     );
     if (insRubError) throw new Error(insRubError.message);
   }
+
+  // Journalisation d'audit (Audit Trail)
+  await supabase.from("audit_logs").insert({
+    auteur_id: user.id,
+    auteur_email: email,
+    table_cible: "bulletins",
+    type_action: existing ? "UPDATE" : "INSERT",
+    enregistrement_id: bulletinId,
+    valeurs_apres: { salarie_id: salarieId, annee, mois, net_a_payer: resultat.net_a_payer }
+  });
 
   revalidatePath(`/salaries/${salarieId}/bulletin`);
   return { ...resultat, bulletin_id: bulletinId, annee, mois };
@@ -553,6 +674,7 @@ export interface LigneRubriqueSaisie {
 
 export interface BulletinPourSaisie {
   bulletin_id: number;
+  statut: string;
   champs: Record<string, number>;
   rubriques: LigneRubriqueSaisie[];
 }
@@ -618,13 +740,14 @@ export async function chargerBulletinPourSaisie(
       .eq("annee", annee)
       .eq("statut", "Approuvée");
 
-    const totalAvances = (avances ?? []).reduce((sum, a) => sum + Number(a.montant), 0);
+    const totalAvances = (avances ?? []).reduce((sum: number, a: any) => sum + Number(a.montant), 0);
 
     const sal = await getSalarie(salarieId);
     const baseTheorique = sal ? sal.salaire_base_theorique : 0;
 
     return {
       bulletin_id: 0,
+      statut: "Brouillon",
       champs: {
         salaire_base_theorique: baseTheorique,
         maladie_h: maladieHrs,
@@ -657,7 +780,7 @@ export async function chargerBulletinPourSaisie(
     .select("rubrique_code, valeur_1, valeur_2, rubriques_catalogue(code, libelle)")
     .eq("bulletin_id", bulletin.id);
 
-  const rubriques: LigneRubriqueSaisie[] = (bulletinRubriques ?? []).map((br) => {
+  const rubriques: LigneRubriqueSaisie[] = (bulletinRubriques ?? []).map((br: any) => {
     const cat = Array.isArray(br.rubriques_catalogue) ? br.rubriques_catalogue[0] : br.rubriques_catalogue;
     const code = cat?.code ?? br.rubrique_code;
     return {
@@ -671,6 +794,7 @@ export async function chargerBulletinPourSaisie(
 
   return {
     bulletin_id: bulletin.id,
+    statut: bulletin.statut || "Brouillon",
     champs: {
       salaire_base_theorique: bulletin.salaire_base_theorique,
       maladie_h: bulletin.maladie_h,
@@ -731,7 +855,7 @@ export async function listerBulletinsSalarie(salarieId: number): Promise<Bulleti
   if (error) throw new Error(error.message);
   if (!bulletins || bulletins.length === 0) return [];
 
-  const bulletinIds = bulletins.map((b) => b.id);
+  const bulletinIds = bulletins.map((b: any) => b.id);
 
   const { data: toutesRubriques, error: rubError } = await supabase
     .from("bulletin_rubriques")
@@ -749,7 +873,7 @@ export async function listerBulletinsSalarie(salarieId: number): Promise<Bulleti
     rubriquesParBulletin.set(r.bulletin_id, liste);
   }
 
-  return bulletins.map((bulletin) => {
+  return bulletins.map((bulletin: any) => {
     const champsAbsences = {
       salaire_base_theorique: bulletin.salaire_base_theorique,
       maladie_h: bulletin.maladie_h,
@@ -806,6 +930,14 @@ export async function listerBulletinsSalarie(salarieId: number): Promise<Bulleti
  * Action irréversible — la confirmation doit être faite côté client.
  */
 export async function supprimerBulletin(salarieId: number, bulletinId: number) {
+  const { supabase, user, email } = await enforceResponsableRHAccess();
+
+  // Vérifier si déjà clôturé
+  const { data: b } = await supabase.from("bulletins").select("statut").eq("id", bulletinId).single();
+  if (b && b.statut === "Clôturé") {
+    throw new Error("Ce bulletin est clôturé et ne peut pas être supprimé.");
+  }
+
   const { error: brError } = await supabase
     .from("bulletin_rubriques")
     .delete()
@@ -819,14 +951,56 @@ export async function supprimerBulletin(salarieId: number, bulletinId: number) {
     .eq("salarie_id", salarieId);
   if (error) throw new Error(error.message);
 
+  // Journalisation d'audit (Audit Trail)
+  await supabase.from("audit_logs").insert({
+    auteur_id: user.id,
+    auteur_email: email,
+    table_cible: "bulletins",
+    type_action: "DELETE",
+    enregistrement_id: bulletinId,
+    valeurs_avant: b
+  });
+
   revalidatePath(`/salaries/${salarieId}/historique`);
   revalidatePath("/historique");
+}
+
+/**
+ * Clôture définitivement un bulletin de paie pour un mois donné.
+ * Action réservée au Responsable RH.
+ */
+export async function cloturerBulletin(salarieId: number, annee: number, mois: number) {
+  const { supabase, user, email } = await enforceResponsableRHAccess();
+
+  const { error } = await supabase
+    .from("bulletins")
+    .update({ statut: "Clôturé" })
+    .eq("salarie_id", salarieId)
+    .eq("annee", annee)
+    .eq("mois", mois);
+
+  if (error) throw new Error(error.message);
+
+  // Journalisation d'audit (Audit Trail)
+  await supabase.from("audit_logs").insert({
+    auteur_id: user.id,
+    auteur_email: email,
+    table_cible: "bulletins",
+    type_action: "UPDATE",
+    enregistrement_id: salarieId,
+    valeurs_apres: { statut: "Clôturé", annee, mois }
+  });
+
+  revalidatePath(`/salaries/${salarieId}/bulletin`);
+  revalidatePath(`/salaries/${salarieId}/historique`);
 }
 
 /**
  * Copie en masse les bulletins du mois précédent pour le mois cible.
  */
 export async function copierMoisPrecedentMasse(anneeCible: number, moisCible: number): Promise<{ copies: number }> {
+  const { supabase, user, email } = await enforceResponsableRHAccess();
+
   const prevMois = moisCible === 1 ? 12 : moisCible - 1;
   const prevAnnee = moisCible === 1 ? anneeCible - 1 : anneeCible;
 
@@ -847,10 +1021,10 @@ export async function copierMoisPrecedentMasse(anneeCible: number, moisCible: nu
     .eq("annee", anneeCible)
     .eq("mois", moisCible);
 
-  const salariesExistent = new Set((bulletinsExistent ?? []).map((b) => b.salarie_id));
+  const salariesExistent = new Set((bulletinsExistent ?? []).map((b: any) => b.salarie_id));
   let count = 0;
 
-  for (const b of bulletinsPrev) {
+  for (const b of bulletinsPrev as any[]) {
     if (salariesExistent.has(b.salarie_id)) continue;
 
     const { data: rubriquesSource } = await supabase
@@ -885,6 +1059,7 @@ export async function copierMoisPrecedentMasse(anneeCible: number, moisCible: nu
         autre_prime_fixe: b.autre_prime_fixe,
         cotis_mutuelle: b.cotis_mutuelle,
         autres_retenues: b.autres_retenues,
+        statut: "Brouillon",
       })
       .select()
       .single();
@@ -893,7 +1068,7 @@ export async function copierMoisPrecedentMasse(anneeCible: number, moisCible: nu
 
     if (rubriquesSource && rubriquesSource.length > 0 && nouveauB) {
       await supabase.from("bulletin_rubriques").insert(
-        rubriquesSource.map((r) => ({
+        rubriquesSource.map((r: any) => ({
           bulletin_id: nouveauB.id,
           rubrique_code: r.rubrique_code,
           valeur_1: r.valeur_1,
@@ -903,6 +1078,15 @@ export async function copierMoisPrecedentMasse(anneeCible: number, moisCible: nu
     }
     count++;
   }
+
+  // Journalisation d'audit (Audit Trail)
+  await supabase.from("audit_logs").insert({
+    auteur_id: user.id,
+    auteur_email: email,
+    table_cible: "bulletins",
+    type_action: "INSERT",
+    valeurs_apres: { copies: count, anneeCible, moisCible }
+  });
 
   revalidatePath("/saisie");
   return { copies: count };

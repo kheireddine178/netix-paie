@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSalarie, listerBulletinsSalarie } from "../../../(app)/salaries/actions";
 
+import { checkPortalAccess } from "@/lib/authHelper";
+
 export const dynamic = "force-dynamic";
 
 interface Props {
@@ -17,6 +19,9 @@ export default async function Page({ params }: Props) {
   const { salarieId } = await params;
   const id = parseInt(salarieId, 10);
   if (isNaN(id)) notFound();
+
+  // Contrôle d'accès strict
+  await checkPortalAccess(id);
 
   const salarie = await getSalarie(id);
   if (!salarie) notFound();
