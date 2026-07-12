@@ -1808,3 +1808,129 @@ export async function supprimerObjectifSalarie(objectifId: number, salarieId: nu
   if (error) throw new Error(error.message);
   revalidatePath(`/salaries/${salarieId}/carriere`);
 }
+
+export interface VariableBulletinCollective {
+  salarie_id: number;
+  maladie_h: number;
+  absence_irreguliere_h: number;
+  retard_h: number;
+  heures_sup_1: number;
+  heures_sup_2: number;
+  heures_sup_3: number;
+  panier_jours: number;
+  autre_prime_fixe: number;
+}
+
+/**
+ * Récupère tous les bulletins saisis pour un mois et une année donnés.
+ */
+export async function listerBulletinsPourPeriode(annee: number, mois: number) {
+  const { supabase } = await enforceRHAccess();
+  const { data, error } = await supabase
+    .from("bulletins")
+    .select("*")
+    .eq("annee", annee)
+    .eq("mois", mois);
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+/**
+ * Enregistre et recalcule en masse les bulletins pour un mois et une année donnés.
+ */
+export async function enregistrerBulletinsCollectifs(
+  annee: number,
+  mois: number,
+  variables: VariableBulletinCollective[]
+) {
+  const { supabase, user, email } = await enforceRHAccess();
+
+  // 1. Charger les bulletins existants pour vérifier le verrouillage
+  const { data: existants } = await supabase
+    .from("bulletins")
+    .select("salarie_id, statut")
+    .eq("annee", annee)
+    .eq("mois", mois);
+
+  const lockedSalaries = new Set(
+    (existants ?? []).filter((b) => b.statut === "Clôturé").map((b) => b.salarie_id)
+  );
+
+  // Vérifier si on tente de modifier un bulletin verrouillé
+  for (const v of variables) {
+    if (lockedSalaries.has(v.salarie_id)) {
+      throw new Error(
+        "Certains bulletins sélectionnés sont déjà clôturés et ne peuvent plus être modifiés."
+      );
+    }
+  }
+
+  // 2. Charger les salariés et paramètres pour le calcul de paie
+  const salaries = await listerSalaries();
+  const salariesMap = new Map(salaries.map((s) => [s.id, s]));
+  const params = await getParametres();
+
+  // 3. Boucler et enregistrer chaque bulletin
+  for (const v of variables) {
+    const salarie = salariesMap.get(v.salarie_id);
+    if (!salarie) continue;
+
+    const champsAbsences = {
+      salaire_base_theorique: salarie.salaire_base_theorique,
+      maladie_h: v.maladie_h,
+      absence_irreguliere_h: v.absence_irreguliere_h,
+      retard_h: v.retard_h,
+      heures_sup_1: v.heures_sup_1,
+      heures_sup_2: v.heures_sup_2,
+      heures_sup_3: v.heures_sup_3,
+      panier_jours: v.panier_jours,
+      autre_prime_fixe: v.autre_prime_fixe,
+    };
+
+    // Calculer le bulletin (indispensable pour l'intégrité de la paie)
+    const res = calculerPaie(champsAbsences, params);
+
+    // Enregistrer le bulletin
+    const { data: bulletinRow, error: upsertError } = await supabase
+      .from("bulletins")
+      .upsert(
+        {
+          salarie_id: v.salarie_id,
+          annee,
+          mois,
+          salaire_base_theorique: salarie.salaire_base_theorique,
+          maladie_h: v.maladie_h,
+          mise_a_pied_h: 0,
+          accident_travail_h: 0,
+          retard_h: v.retard_h,
+          absence_irreguliere_h: v.absence_irreguliere_h,
+          heures_sup_1: v.heures_sup_1,
+          heures_sup_2: v.heures_sup_2,
+          heures_sup_3: v.heures_sup_3,
+          panier_jours: v.panier_jours,
+          autre_prime_fixe: v.autre_prime_fixe,
+          statut: "Brouillon",
+          modifie_le: new Date().toISOString(),
+        },
+        { onConflict: "salarie_id,annee,mois" }
+      )
+      .select("id")
+      .single();
+
+    if (upsertError) throw new Error(upsertError.message);
+
+    // Journalisation d'audit (Audit Trail)
+    await supabase.from("audit_logs").insert({
+      auteur_id: user.id,
+      auteur_email: email,
+      table_cible: "bulletins",
+      type_action: existants?.some((b) => b.salarie_id === v.salarie_id) ? "UPDATE" : "INSERT",
+      enregistrement_id: bulletinRow.id,
+      valeurs_apres: { ...v, total_net: res.net_a_payer },
+    });
+  }
+
+  revalidatePath("/saisie");
+  revalidatePath("/saisie/collective");
+}

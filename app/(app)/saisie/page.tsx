@@ -57,9 +57,14 @@ export default async function SaisiePage({ searchParams }: Props) {
           <h1>Saisie mensuelle</h1>
           <p>Absences, heures supplémentaires, rubriques — le résultat se calcule en temps réel.</p>
         </div>
-        <Link href="/saisie/avances" className="btn btn-secondary btn-sm" style={{ textDecoration: "none" }}>
-          Valider les avances
-        </Link>
+        <div style={{ display: "flex", gap: "var(--s3)" }}>
+          <Link href="/saisie/collective" className="btn btn-primary btn-sm" style={{ textDecoration: "none" }}>
+            Saisie collective de masse ➔
+          </Link>
+          <Link href="/saisie/avances" className="btn btn-secondary btn-sm" style={{ textDecoration: "none" }}>
+            Valider les avances
+          </Link>
+        </div>
       </div>
 
       <SaisieFormulaireConsolide
