@@ -1876,7 +1876,8 @@ export async function enregistrerBulletinsCollectifs(
     const salarie = salariesMap.get(v.salarie_id);
     if (!salarie) continue;
 
-    const champsAbsences = {
+    const saisie = {
+      ...SAISIE_VIDE,
       salaire_base_theorique: salarie.salaire_base_theorique,
       maladie_h: v.maladie_h,
       absence_irreguliere_h: v.absence_irreguliere_h,
@@ -1889,7 +1890,7 @@ export async function enregistrerBulletinsCollectifs(
     };
 
     // Calculer le bulletin (indispensable pour l'intégrité de la paie)
-    const res = calculerPaie(champsAbsences, params);
+    const res = calculerPaie(saisie, params);
 
     // Enregistrer le bulletin
     const { data: bulletinRow, error: upsertError } = await supabase
