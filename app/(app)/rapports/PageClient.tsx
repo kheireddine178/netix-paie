@@ -37,7 +37,7 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
   const now = new Date();
   const [annee, setAnnee] = useState(now.getFullYear());
   const [mois, setMois] = useState(now.getMonth() + 1);
-  const [onglet, setOnglet] = useState<"centralisateur" | "nominatif">("centralisateur");
+  const [onglet, setOnglet] = useState<"centralisateur" | "nominatif" | "g50">("centralisateur");
   const [selectedRubrique, setSelectedRubrique] = useState("R030");
 
   const [recap, setRecap] = useState<RecapCentralisateur | null>(null);
@@ -54,7 +54,7 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
     setErreur(null);
     startTransition(async () => {
       try {
-        if (onglet === "centralisateur") {
+        if (onglet === "centralisateur" || onglet === "g50") {
           const res = await getCentralisateur(annee, mois);
           setRecap(res);
         } else {
@@ -123,6 +123,7 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
             >
               <option value="centralisateur">Centralisateur Général (Mois)</option>
               <option value="nominatif">État nominatif par rubrique</option>
+              <option value="g50">Synthèse G50 (IRG Salariés)</option>
             </select>
           </div>
 
@@ -328,6 +329,89 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
               </tr>
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* 3. SYNTHÈSE G50 */}
+      {onglet === "g50" && recap && (
+        (() => {
+          const irgStandardLine = recap.lignes.find(l => l.code === "R980");
+          const irgContractLine = recap.lignes.find(l => l.code === "R985");
+          
+          const assietteIrgStandard = irgStandardLine?.n_base ?? 0;
+          const montantIrgStandard = irgStandardLine?.retenue ?? 0;
+          
+          const assietteIrgContract = irgContractLine?.n_base ?? 0;
+          const montantIrgContract = irgContractLine?.retenue ?? 0;
+          
+          const totalAssietteG50 = assietteIrgStandard + assietteIrgContract;
+          const totalImpotsRetenusG50 = montantIrgStandard + montantIrgContract;
+
+          return (
+            <div className="card print-report-box" style={{ border: "1px solid var(--border)", padding: "var(--s5)" }}>
+              <div style={{ borderBottom: "2px solid var(--text)", paddingBottom: "var(--s3)", marginBottom: "var(--s4)" }}>
+                <h3 style={{ fontSize: "var(--tlg)", textAlign: "center", fontWeight: "bold" }}>RÉPUBLIQUE ALGÉRIENNE DÉMOCRATIQUE ET POPULAIRE</h3>
+                <h4 style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "var(--tsm)", marginTop: 4 }}>MINISTÈRE DES FINANCES — DIRECTION GÉNÉRALE DES IMPÔTS</h4>
+                <h3 style={{ fontSize: "var(--tlg)", textAlign: "center", marginTop: "var(--s3)", color: "var(--accent)", fontWeight: "bold" }}>SYNTHÈSE DECLARATION G50 — IRG SALARIÉS</h3>
+                <p style={{ textAlign: "center", fontSize: "var(--tsm)", color: "var(--text-muted)", marginTop: 4 }}>
+                  Période d'imposition : <strong>{MOIS[mois - 1].toUpperCase()} {annee}</strong>
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6" style={{ marginBottom: "var(--s4)", marginTop: "var(--s4)" }}>
+                <div className="card" style={{ background: "var(--surface-2)" }}>
+                  <span style={{ fontSize: "var(--t2xs)", color: "var(--text-muted)", textTransform: "uppercase" }}>Nombre total de bénéficiaires</span>
+                  <p style={{ fontSize: "var(--txl)", fontWeight: "bold" }}>{recap.nombreSalaries}</p>
+                </div>
+                <div className="card" style={{ background: "var(--surface-2)" }}>
+                  <span style={{ fontSize: "var(--t2xs)", color: "var(--text-muted)", textTransform: "uppercase" }}>Total Droits à Verser (IRG)</span>
+                  <p style={{ fontSize: "var(--txl)", fontWeight: "bold", color: "var(--red)" }}>{formatDA(totalImpotsRetenusG50)}</p>
+                </div>
+              </div>
+
+              <table className="table" style={{ width: "100%", fontSize: "var(--txs)" }}>
+                <thead>
+                  <tr style={{ background: "var(--surface-2)" }}>
+                    <th style={{ padding: "10px", textAlign: "left" }}>NATURE DES IMPOSITIONS / VERSEMENTS</th>
+                    <th style={{ padding: "10px", textAlign: "center" }}>NOMBRE DE BÉNÉFICIAIRES</th>
+                    <th style={{ padding: "10px", textAlign: "right" }}>BASE D'IMPOSITION (ASSIETTE)</th>
+                    <th style={{ padding: "10px", textAlign: "right" }}>MONTANT DES RETENUES (DROITS DUS)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: "10px", fontWeight: "bold" }}>IRG / Salariés Réguliers (Barème Standard)</td>
+                    <td style={{ padding: "10px", textAlign: "center" }}>{irgStandardLine?.eff ?? 0}</td>
+                    <td style={{ padding: "10px", textAlign: "right" }}>{assietteIrgStandard > 0 ? formatDA(assietteIrgStandard) : "0,00 DA"}</td>
+                    <td style={{ padding: "10px", textAlign: "right", fontWeight: "bold" }}>{montantIrgStandard > 0 ? formatDA(montantIrgStandard) : "0,00 DA"}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: "10px", fontWeight: "bold" }}>IRG / Contrats Temporaires (Retenue Forfaitaire 10%)</td>
+                    <td style={{ padding: "10px", textAlign: "center" }}>{irgContractLine?.eff ?? 0}</td>
+                    <td style={{ padding: "10px", textAlign: "right" }}>{assietteIrgContract > 0 ? formatDA(assietteIrgContract) : "0,00 DA"}</td>
+                    <td style={{ padding: "10px", textAlign: "right", fontWeight: "bold" }}>{montantIrgContract > 0 ? formatDA(montantIrgContract) : "0,00 DA"}</td>
+                  </tr>
+                  <tr style={{ background: "var(--surface-2)", fontWeight: "bold", borderTop: "2px solid var(--text)" }}>
+                    <td style={{ padding: "12px" }}>TOTAL SECTION IRG (À reporter sur la G50 papier/numérique)</td>
+                    <td style={{ padding: "12px", textAlign: "center" }}>{recap.nombreSalaries}</td>
+                    <td style={{ padding: "12px", textAlign: "right" }}>{formatDA(totalAssietteG50)}</td>
+                    <td style={{ padding: "12px", textAlign: "right", color: "var(--red)", fontSize: "var(--tsm)" }}>{formatDA(totalImpotsRetenusG50)}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div style={{ marginTop: "var(--s4)", padding: "var(--s3)", background: "var(--blue-50)", borderLeft: "4px solid var(--blue-500)", borderRadius: "var(--radius-sm)", color: "var(--blue-900)" }} className="no-print">
+                <p style={{ fontSize: "var(--txs)", margin: 0 }}>
+                  💡 <strong>Note de déclaration :</strong> Les montants ci-dessus correspondent aux retenues à la source effectuées au titre du mois de {MOIS[mois - 1]} {annee} et doivent être déclarés et acquittés auprès de la recette des impôts avant le 20 du mois suivant.
+                </p>
+              </div>
+            </div>
+          );
+        })()
+      )}
+
+      {onglet === "g50" && !recap && !isPending && (
+        <div className="card" style={{ textAlign: "center", color: "var(--text-muted)" }}>
+          Aucune donnée chargée. Cliquez sur "Obtenir l'état" pour générer la synthèse G50 de ce mois.
         </div>
       )}
 

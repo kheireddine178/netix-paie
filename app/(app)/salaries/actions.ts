@@ -25,7 +25,7 @@ import { redirect } from "next/navigation";
 // Helpers d'authentification et d'autorisation de la Phase 1
 // ------------------------------------------------------------------
 
-async function enforceSession() {
+export async function enforceSession() {
   const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Accès non autorisé : Non authentifié");
@@ -41,7 +41,7 @@ async function enforceSession() {
   return { supabase, user, role: profile.role, email: profile.email, salarieId: profile.salarie_id };
 }
 
-async function enforceRHAccess() {
+export async function enforceRHAccess() {
   const ctx = await enforceSession();
   if (!["Responsable RH", "Gestionnaire RH"].includes(ctx.role)) {
     throw new Error("Accès non autorisé : Privilèges RH requis");
@@ -49,10 +49,18 @@ async function enforceRHAccess() {
   return ctx;
 }
 
-async function enforceResponsableRHAccess() {
+export async function enforceResponsableRHAccess() {
   const ctx = await enforceSession();
   if (ctx.role !== "Responsable RH") {
     throw new Error("Accès non autorisé : Réservé au Responsable RH");
+  }
+  return ctx;
+}
+
+export async function enforceRapportAccess() {
+  const ctx = await enforceSession();
+  if (!["Responsable RH", "Gestionnaire RH", "Directeur"].includes(ctx.role)) {
+    throw new Error("Accès non autorisé : Privilèges requis");
   }
   return ctx;
 }

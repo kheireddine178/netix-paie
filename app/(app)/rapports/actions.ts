@@ -1,7 +1,6 @@
 "use server";
 
-import { supabase } from "@/lib/supabaseClient";
-import { getParametres, Salarie } from "../salaries/actions";
+import { getParametres, Salarie, enforceRapportAccess } from "../salaries/actions";
 import {
   calculerPaie,
   calculerBaseAvantRubriques,
@@ -51,6 +50,8 @@ export interface LigneNominative {
  * et agrège les résultats par code de rubrique.
  */
 export async function getCentralisateur(annee: number, mois: number): Promise<RecapCentralisateur> {
+  const { supabase } = await enforceRapportAccess();
+
   const { data: bulletins, error: bError } = await supabase
     .from("bulletins")
     .select("*, salaries(*)")
@@ -70,7 +71,7 @@ export async function getCentralisateur(annee: number, mois: number): Promise<Re
     };
   }
 
-  const bulletinIds = bulletins.map((b) => b.id);
+  const bulletinIds = bulletins.map((b: any) => b.id);
   const { data: allBulletinRubriques } = await supabase
     .from("bulletin_rubriques")
     .select("bulletin_id, rubrique_code, valeur_1, valeur_2, rubriques_catalogue(code, libelle, type_valeur, cotisable, imposable)")
@@ -296,6 +297,8 @@ export async function getEtatNominatifRubrique(
   mois: number,
   rubriqueCode: string,
 ): Promise<LigneNominative[]> {
+  const { supabase } = await enforceRapportAccess();
+
   const { data: bulletins, error: bError } = await supabase
     .from("bulletins")
     .select("*, salaries(*)")
@@ -305,7 +308,7 @@ export async function getEtatNominatifRubrique(
   if (bError) throw new Error(bError.message);
   if (!bulletins || bulletins.length === 0) return [];
 
-  const bulletinIds = bulletins.map((b) => b.id);
+  const bulletinIds = bulletins.map((b: any) => b.id);
   const { data: allBulletinRubriques } = await supabase
     .from("bulletin_rubriques")
     .select("bulletin_id, rubrique_code, valeur_1, valeur_2, rubriques_catalogue(code, libelle, type_valeur, cotisable, imposable)")
