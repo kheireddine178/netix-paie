@@ -11,6 +11,7 @@ interface SalarieFormProps {
     fonction: string | null;
     salaire_base_theorique: number;
     date_visite_medicale?: string | null;
+    ccp_rib?: string | null;
   };
   actionSubmit: (formData: FormData) => Promise<{ error?: string } | void>;
   buttonText: string;
@@ -27,6 +28,7 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
   const [fonction, setFonction] = useState(initialData?.fonction ?? "");
   const [salaireBase, setSalaireBase] = useState<number | string>(initialData?.salaire_base_theorique ?? 0);
   const [dateVisiteMedicale, setDateVisiteMedicale] = useState(initialData?.date_visite_medicale ?? "");
+  const [ccpRib, setCcpRib] = useState(initialData?.ccp_rib ?? "");
 
   // Format Nom & Prénom on blur (capitalize first letters)
   function handleNameBlur() {
@@ -132,6 +134,17 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
             />
           </div>
 
+          <div className="field">
+            <label htmlFor="ccp_rib">Coordonnées bancaires (RIB ou CCP)</label>
+            <input
+              id="ccp_rib"
+              name="ccp_rib"
+              value={ccpRib}
+              onChange={(e) => setCcpRib(e.target.value)}
+              placeholder="Ex: 00799999000000123456 (20 chiffres)"
+            />
+          </div>
+
           {error && (
             <p className="badge badge-red" style={{ display: "block", marginBottom: "var(--s4)" }}>
               {error}
@@ -215,6 +228,12 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
             <span style={{ color: "var(--text-muted)" }}>Salaire de base :</span>
             <span style={{ fontWeight: 650, color: "var(--accent)" }}>
               {Number(salaireBase || 0).toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ')} DA
+            </span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--txs)" }}>
+            <span style={{ color: "var(--text-muted)" }}>Compte bancaire :</span>
+            <span style={{ fontWeight: 600, fontFamily: "var(--mono)" }}>
+              {ccpRib.trim() ? ccpRib : "—"}
             </span>
           </div>
         </div>

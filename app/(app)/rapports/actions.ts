@@ -402,3 +402,97 @@ export async function getEtatNominatifRubrique(
   lignesNominatives.sort((a, b) => a.nom_prenom.localeCompare(b.nom_prenom));
   return lignesNominatives;
 }
+
+export interface LigneVirement {
+  salarie_id: number;
+  matricule: string | null;
+  nom_prenom: string;
+  ccp_rib: string | null;
+  net_a_payer: number;
+}
+
+/**
+ * Récupère les données nécessaires pour générer les fichiers de virements bancaires (RIB / CCP)
+ * pour un mois et une année donnés.
+ */
+export async function getVirementData(annee: number, mois: number): Promise<LigneVirement[]> {
+  const { supabase } = await enforceRapportAccess();
+
+  const { data: bulletins, error: bError } = await supabase
+    .from("bulletins")
+    .select("*, salaries(*)")
+    .eq("annee", annee)
+    .eq("mois", mois);
+
+  if (bError) throw new Error(bError.message);
+  if (!bulletins || bulletins.length === 0) return [];
+
+  const params = await getParametres();
+  const list: LigneVirement[] = [];
+
+  // Charger toutes les rubriques en une fois pour la performance
+  const bulletinIds = bulletins.map((b) => b.id);
+  const { data: allBulletinRubriques } = await supabase
+    .from("bulletin_rubriques")
+    .select("bulletin_id, rubrique_code, valeur_1, valeur_2, rubriques_catalogue(code, libelle, type_valeur, cotisable, imposable)")
+    .in("bulletin_id", bulletinIds);
+
+  for (const b of bulletins) {
+    const salarie = b.salaries;
+    if (!salarie) continue;
+
+    const champsAbsences = {
+      salaire_base_theorique: b.salaire_base_theorique,
+      maladie_h: b.maladie_h,
+      mise_a_pied_h: b.mise_a_pied_h,
+      accident_travail_h: b.accident_travail_h,
+      retard_h: b.retard_h,
+      absence_irreguliere_h: b.absence_irreguliere_h,
+    };
+    const { salaire_base_reel } = calculerBaseAvantRubriques(champsAbsences, params);
+
+    // Dynamic rubrics from loaded list
+    const bRubriques = (allBulletinRubriques ?? []).filter((br) => br.bulletin_id === b.id);
+    const rubriques_dynamiques: LigneRubriqueDynamique[] = [];
+    for (const br of bRubriques) {
+      const cat = Array.isArray(br.rubriques_catalogue) ? br.rubriques_catalogue[0] : br.rubriques_catalogue;
+      if (!cat) continue;
+      const ligne = resoudreLigneRubrique(cat, br.valeur_1 ?? 0, br.valeur_2 ?? 0, salaire_base_reel);
+      if (ligne) rubriques_dynamiques.push(ligne);
+    }
+
+    const saisie = {
+      ...SAISIE_VIDE,
+      ...champsAbsences,
+      heures_sup_1: b.heures_sup_1,
+      heures_sup_2: b.heures_sup_2,
+      heures_sup_3: b.heures_sup_3,
+      icr: b.icr,
+      taux_iep: b.taux_iep,
+      taux_nuisance: b.taux_nuisance,
+      taux_responsabilite: b.taux_responsabilite,
+      taux_disponibilite: b.taux_disponibilite,
+      taux_pri: b.taux_pri,
+      taux_prc: b.taux_prc,
+      panier_jours: b.panier_jours,
+      panier_forfait_jour: b.panier_forfait_jour,
+      autre_prime_fixe: b.autre_prime_fixe,
+      cotis_mutuelle: b.cotis_mutuelle,
+      autres_retenues: b.autres_retenues,
+      rubriques_dynamiques,
+    };
+
+    const res = calculerPaie(saisie, params);
+    list.push({
+      salarie_id: salarie.id,
+      matricule: salarie.matricule,
+      nom_prenom: salarie.nom_prenom,
+      ccp_rib: salarie.ccp_rib || null,
+      net_a_payer: res.net_a_payer,
+    });
+  }
+
+  // Sort by employee name
+  list.sort((a, b) => a.nom_prenom.localeCompare(b.nom_prenom));
+  return list;
+}

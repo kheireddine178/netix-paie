@@ -4,8 +4,10 @@ import React, { useState, useTransition } from "react";
 import {
   getCentralisateur,
   getEtatNominatifRubrique,
+  getVirementData,
   type RecapCentralisateur,
   type LigneNominative,
+  type LigneVirement,
 } from "./actions";
 import { type RubriqueCatalogue } from "../salaries/actions";
 
@@ -37,17 +39,75 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
   const now = new Date();
   const [annee, setAnnee] = useState(now.getFullYear());
   const [mois, setMois] = useState(now.getMonth() + 1);
-  const [onglet, setOnglet] = useState<"centralisateur" | "nominatif" | "g50">("centralisateur");
+  const [onglet, setOnglet] = useState<"centralisateur" | "nominatif" | "g50" | "virement">("centralisateur");
   const [selectedRubrique, setSelectedRubrique] = useState("R030");
 
   const [recap, setRecap] = useState<RecapCentralisateur | null>(null);
   const [nominatifList, setNominatifList] = useState<LigneNominative[]>([]);
+  const [virementList, setVirementList] = useState<LigneVirement[]>([]);
   
+  const [empCcpRib, setEmpCcpRib] = useState("");
+  const [empRaisonSociale, setEmpRaisonSociale] = useState("NETIX SIRH");
+  const [virementDate, setVirementDate] = useState(() => {
+    const d = new Date();
+    return d.toISOString().split("T")[0];
+  });
+  const [virementFormat, setVirementFormat] = useState<"ccp" | "rib" | "csv">("ccp");
+
   const [isPending, startTransition] = useTransition();
   const [erreur, setErreur] = useState<string | null>(null);
 
   const formatDA = (val: number) => {
     return val.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/[\u202F\u00A0]/g, ' ') + " DA";
+  };
+
+  const generateFileContent = () => {
+    let content = "";
+    const totalAmount = virementList.reduce((acc, l) => acc + l.net_a_payer, 0);
+    const dateStr = virementDate.replace(/-/g, ""); // YYYYMMDD
+    
+    if (virementFormat === "ccp") {
+      // Header CCP: DEBIT_CCP;RAISON_SOCIALE;DATE;MONTANT_TOTAL;NOMBRE_VIREMENTS
+      content += `${empCcpRib};${empRaisonSociale};${virementDate};${totalAmount.toFixed(2)};${virementList.length}\r\n`;
+      for (const v of virementList) {
+        // Detail CCP: CCP_SALARIE;NOM_PRENOM;MONTANT;MATRICULE
+        content += `${v.ccp_rib || ""};${v.nom_prenom};${v.net_a_payer.toFixed(2)};${v.matricule || ""}\r\n`;
+      }
+    } else if (virementFormat === "rib") {
+      // Header RIB (Fixed Width): Company RIB (20) + Company Name (30) + Date YYYYMMDD (8) + Total Amount (12, padded zeros)
+      const cleanName = empRaisonSociale.slice(0, 30).padEnd(30, " ");
+      const cleanRib = empCcpRib.slice(0, 20).padEnd(20, " ");
+      const formattedTotal = totalAmount.toFixed(2).replace(".", "").padStart(12, "0");
+      content += `${cleanRib}${cleanName}${dateStr}${formattedTotal}\r\n`;
+      
+      for (const v of virementList) {
+        // Detail RIB: RIB_SALARIE (20) + NOM_PRENOM (30) + MONTANT (12, padded zeros without dot) + MATRICULE (10)
+        const salName = v.nom_prenom.slice(0, 30).padEnd(30, " ");
+        const salRib = (v.ccp_rib || "").slice(0, 20).padEnd(20, " ");
+        const formattedAmount = v.net_a_payer.toFixed(2).replace(".", "").padStart(12, "0");
+        const salMatricule = (v.matricule || "").slice(0, 10).padEnd(10, " ");
+        content += `${salRib}${salName}${formattedAmount}${salMatricule}\r\n`;
+      }
+    } else {
+      // CSV Format
+      content += `Matricule;Nom Prenom;Compte Bancaire (RIB/CCP);Net A Payer\r\n`;
+      for (const v of virementList) {
+        content += `"${v.matricule || ""}";"${v.nom_prenom}";"${v.ccp_rib || ""}";"${v.net_a_payer.toFixed(2)}"\r\n`;
+      }
+    }
+    return content;
+  };
+
+  const handleDownload = () => {
+    const content = generateFileContent();
+    const extension = virementFormat === "csv" ? "csv" : "txt";
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `virement_masse_${MOIS[mois - 1].toLowerCase()}_${annee}.${extension}`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleGenerer = () => {
@@ -57,6 +117,9 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
         if (onglet === "centralisateur" || onglet === "g50") {
           const res = await getCentralisateur(annee, mois);
           setRecap(res);
+        } else if (onglet === "virement") {
+          const res = await getVirementData(annee, mois);
+          setVirementList(res);
         } else {
           const res = await getEtatNominatifRubrique(annee, mois, selectedRubrique);
           setNominatifList(res);
@@ -119,11 +182,13 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
                 setOnglet(e.target.value as any);
                 setRecap(null);
                 setNominatifList([]);
+                setVirementList([]);
               }}
             >
               <option value="centralisateur">Centralisateur Général (Mois)</option>
               <option value="nominatif">État nominatif par rubrique</option>
               <option value="g50">Synthèse G50 (IRG Salariés)</option>
+              <option value="virement">Ordres de Virement de Masse</option>
             </select>
           </div>
 
@@ -412,6 +477,142 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
       {onglet === "g50" && !recap && !isPending && (
         <div className="card" style={{ textAlign: "center", color: "var(--text-muted)" }}>
           Aucune donnée chargée. Cliquez sur "Obtenir l'état" pour générer la synthèse G50 de ce mois.
+        </div>
+      )}
+
+      {/* 4. VIREMENT DE MASSE */}
+      {onglet === "virement" && virementList.length > 0 && (
+        <div className="space-y-6">
+          <div className="card no-print" style={{ border: "1px solid var(--border)", padding: "var(--s4)" }}>
+            <h3>Configuration de l'ordre de virement</h3>
+            <div className="grid md:grid-cols-4 gap-4" style={{ marginTop: "var(--s3)" }}>
+              <div className="field" style={{ marginBottom: 0 }}>
+                <label>Compte Débit (CCP / RIB Employeur)</label>
+                <input
+                  type="text"
+                  value={empCcpRib}
+                  onChange={(e) => setEmpCcpRib(e.target.value)}
+                  placeholder="Ex: 00799999000012345678"
+                />
+              </div>
+              <div className="field" style={{ marginBottom: 0 }}>
+                <label>Raison Sociale Employeur</label>
+                <input
+                  type="text"
+                  value={empRaisonSociale}
+                  onChange={(e) => setEmpRaisonSociale(e.target.value)}
+                  placeholder="Nom de l'entreprise"
+                />
+              </div>
+              <div className="field" style={{ marginBottom: 0 }}>
+                <label>Date d'exécution</label>
+                <input
+                  type="date"
+                  value={virementDate}
+                  onChange={(e) => setVirementDate(e.target.value)}
+                />
+              </div>
+              <div className="field" style={{ marginBottom: 0 }}>
+                <label>Format de fichier</label>
+                <select
+                  value={virementFormat}
+                  onChange={(e) => setVirementFormat(e.target.value as any)}
+                >
+                  <option value="ccp">Algérie Poste (CCP - CSV)</option>
+                  <option value="rib">RIB Bancaire (Largeur Fixe)</option>
+                  <option value="csv">Standard CSV</option>
+                </select>
+              </div>
+            </div>
+            
+            <button
+              onClick={handleDownload}
+              className="btn btn-primary"
+              style={{ marginTop: "var(--s4)", width: "fit-content" }}
+            >
+              ⬇ Télécharger le fichier de virement de masse
+            </button>
+          </div>
+
+          <div className="card print-report-box" style={{ border: "1px solid var(--border)", padding: "var(--s5)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--s4)" }}>
+              <div>
+                <h3 style={{ fontSize: "var(--tlg)" }}>ORDRE DE VIREMENT COLLECTIF DE LA PAIE</h3>
+                <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)", marginTop: 4 }}>
+                  Période : {MOIS[mois - 1].toUpperCase()} {annee} — Compte expéditeur : {empCcpRib || "Non configuré"} ({empRaisonSociale})
+                </p>
+              </div>
+              <div style={{ textAlign: "right", fontSize: "var(--txs)", color: "var(--text-muted)" }}>
+                <span>Nombre de virements : {virementList.length}</span>
+              </div>
+            </div>
+
+            <table className="table" style={{ width: "100%", fontSize: "var(--txs)" }}>
+              <thead>
+                <tr style={{ background: "var(--surface-2)" }}>
+                  <th style={{ padding: "8px", textAlign: "left" }}>N°</th>
+                  <th style={{ padding: "8px", textAlign: "left" }}>MATRICULE</th>
+                  <th style={{ padding: "8px", textAlign: "left" }}>NOM & PRENOM</th>
+                  <th style={{ padding: "8px", textAlign: "left" }}>COMPTE DESTINATAIRE (RIB / CCP)</th>
+                  <th style={{ padding: "8px", textAlign: "right" }}>MONTANT À VIRER</th>
+                </tr>
+              </thead>
+              <tbody>
+                {virementList.map((v, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid var(--border)" }}>
+                    <td style={{ padding: "8px", color: "var(--text-muted)" }}>{i + 1}</td>
+                    <td style={{ padding: "8px", fontWeight: "bold" }}>{v.matricule || "-"}</td>
+                    <td style={{ padding: "8px" }}>{v.nom_prenom}</td>
+                    <td style={{ padding: "8px" }}>
+                      {v.ccp_rib ? (
+                        <span style={{ fontFamily: "var(--mono)" }}>{v.ccp_rib}</span>
+                      ) : (
+                        <span className="badge badge-red" style={{ fontSize: "10px", padding: "2px 6px" }}>⚠️ Aucun compte renseigné</span>
+                      )}
+                    </td>
+                    <td style={{ padding: "8px", textAlign: "right", fontWeight: "bold", color: "var(--teal)" }}>
+                      {formatDA(v.net_a_payer)}
+                    </td>
+                  </tr>
+                ))}
+                <tr style={{ background: "var(--surface-2)", fontWeight: "bold", borderTop: "2px solid var(--text)" }}>
+                  <td colSpan={4} style={{ padding: "10px", textAlign: "right" }}>
+                    TOTAL GLOBAL À DÉBITER
+                  </td>
+                  <td style={{ padding: "10px", textAlign: "right", color: "var(--teal)", fontSize: "var(--tsm)" }}>
+                    {formatDA(virementList.reduce((acc, l) => acc + l.net_a_payer, 0))}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Fichier de prévisualisation brute */}
+          <div className="card no-print" style={{ border: "1px solid var(--border)", padding: "var(--s4)" }}>
+            <h3>Prévisualisation brute du fichier</h3>
+            <pre
+              style={{
+                background: "var(--surface-2)",
+                padding: "var(--s3)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "var(--txs)",
+                overflowX: "auto",
+                fontFamily: "var(--mono)",
+                marginTop: "var(--s2)",
+                maxHeight: "200px",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-all"
+              }}
+            >
+              {generateFileContent()}
+            </pre>
+          </div>
+        </div>
+      )}
+
+      {onglet === "virement" && virementList.length === 0 && !isPending && (
+        <div className="card" style={{ textAlign: "center", color: "var(--text-muted)" }}>
+          Aucune donnée disponible pour ce mois. Cliquez sur "Obtenir l'état" pour générer la liste.
         </div>
       )}
 

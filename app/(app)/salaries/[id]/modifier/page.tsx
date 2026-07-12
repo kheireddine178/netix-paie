@@ -28,6 +28,7 @@ export default async function ModifierSalariePage({
           matricule: salarie.matricule,
           fonction: salarie.fonction,
           salaire_base_theorique: salarie.salaire_base_theorique,
+          ccp_rib: salarie.ccp_rib,
         }}
         actionSubmit={modifierAvecId}
         buttonText="Enregistrer les modifications"

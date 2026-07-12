@@ -73,6 +73,7 @@ export interface Salarie {
   salaire_base_theorique: number;
   actif: boolean;
   date_visite_medicale?: string | null;
+  ccp_rib?: string | null;
 }
 
 export async function listerSalaries(): Promise<Salarie[]> {
@@ -94,6 +95,7 @@ export async function creerSalarie(formData: FormData) {
   const fonction = (formData.get("fonction") as string) || null;
   const salaire_base_theorique = parseFloat(formData.get("salaire_base_theorique") as string) || 0;
   const date_visite_medicale = (formData.get("date_visite_medicale") as string) || null;
+  const ccp_rib = (formData.get("ccp_rib") as string) || null;
 
   // Création du salarié
   const { data: salarie, error } = await supabase
@@ -104,6 +106,7 @@ export async function creerSalarie(formData: FormData) {
       fonction,
       salaire_base_theorique,
       date_visite_medicale,
+      ccp_rib,
     })
     .select()
     .single();
@@ -120,7 +123,7 @@ export async function creerSalarie(formData: FormData) {
     table_cible: "salaries",
     type_action: "INSERT",
     enregistrement_id: salarie.id,
-    valeurs_apres: { nom_prenom, matricule, fonction, salaire_base_theorique, date_visite_medicale }
+    valeurs_apres: { nom_prenom, matricule, fonction, salaire_base_theorique, date_visite_medicale, ccp_rib }
   });
 
   revalidatePath("/salaries");
@@ -136,6 +139,7 @@ export async function modifierSalarie(id: number, formData: FormData) {
   const fonction = (formData.get("fonction") as string) || null;
   const salaire_base_theorique = parseFloat(formData.get("salaire_base_theorique") as string) || 0;
   const date_visite_medicale = (formData.get("date_visite_medicale") as string) || null;
+  const ccp_rib = (formData.get("ccp_rib") as string) || null;
 
   // Récupérer l'état avant pour l'audit
   const { data: avant } = await supabase.from("salaries").select("*").eq("id", id).single();
@@ -148,6 +152,7 @@ export async function modifierSalarie(id: number, formData: FormData) {
       fonction,
       salaire_base_theorique,
       date_visite_medicale,
+      ccp_rib,
     })
     .eq("id", id);
 
@@ -164,7 +169,7 @@ export async function modifierSalarie(id: number, formData: FormData) {
     type_action: "UPDATE",
     enregistrement_id: id,
     valeurs_avant: avant,
-    valeurs_apres: { nom_prenom, matricule, fonction, salaire_base_theorique, date_visite_medicale }
+    valeurs_apres: { nom_prenom, matricule, fonction, salaire_base_theorique, date_visite_medicale, ccp_rib }
   });
 
   revalidatePath("/salaries");
