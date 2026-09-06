@@ -46,7 +46,7 @@ Application web full-stack destinee aux entreprises et gestionnaires RH algerien
 
 ## Initialisation de la Base de Donnees (Supabase)
 
-Pour configurer votre base de donnees en ligne ou locale, executez le script SQL contenu dans le fichier [schema_sirh.sql](schema_sirh.sql) directement dans l'editeur de requetes SQL (SQL Editor) de votre console **Supabase**.
+Pour configurer votre base de donnees en ligne ou locale, executez le script SQL contenu dans le fichier [db/schema_sirh.sql](db/schema_sirh.sql) directement dans l'editeur de requetes SQL (SQL Editor) de votre console **Supabase**.
 
 Ce script va creer et configurer automatiquement les tables de donnees suivantes :
 - `contrats` (Contrats de travail)
