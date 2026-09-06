@@ -18,9 +18,17 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Netix SIRH — Gestion RH & Paie Algérienne",
   description: "SIRH complet pour la gestion RH et la paie conforme CIDTA / LF 2024 / Loi n°90-11 en Algérie.",
+  manifest: "/manifest.json",
+  themeColor: "#1B5EAB",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Netix SIRH",
+  },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
+    apple: "/logo-icon.svg",
   },
 };
 
@@ -34,6 +42,11 @@ const themeInitScript = `
       document.documentElement.setAttribute("data-theme", "dark");
     }
   } catch (e) {}
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js');
+    });
+  }
 })();
 `;
 
@@ -45,9 +58,14 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`h-full antialiased ${plusJakartaSans.variable} ${geistMono.variable}`}>
       <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1B5EAB" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-full">{children}</body>
     </html>
   );
 }
+
