@@ -1,6 +1,7 @@
 {
-  "name": "Netix SIRH & Paie Algérie",
-  "short_name": "Netix SIRH",
+  "id": "/?source=pwa",
+  "name": "Netix SIRH & Paie",
+  "short_name": "Netix",
   "description": "Solution complète de gestion des ressources humaines et paie conforme CIDTA / CNAS.",
   "start_url": "/dashboard",
   "scope": "/",
@@ -9,12 +10,6 @@
   "theme_color": "#1B5EAB",
   "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "/logo-icon.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
