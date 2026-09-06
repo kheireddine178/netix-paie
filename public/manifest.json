@@ -6,6 +6,7 @@
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#0a0e1a",
   "theme_color": "#1B5EAB",
   "orientation": "portrait-primary",
@@ -32,6 +33,13 @@
       "type": "image/png",
       "form_factor": "wide",
       "label": "Tableau de bord Netix SIRH"
+    },
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Netix SIRH Mobile"
     }
   ]
 }
