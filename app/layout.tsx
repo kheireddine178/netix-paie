@@ -1,17 +1,24 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { Lexend, DM_Sans, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const lexend = Lexend({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-jakarta",
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-lexend",
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-geist-mono",
+  weight: ["400", "500", "700"],
+  variable: "--font-dmsans",
+  display: "swap",
+});
+
+const robotoMono = Roboto_Mono({
+  subsets: ["latin"],
+  variable: "--font-roboto-mono",
   display: "swap",
 });
 
@@ -19,7 +26,7 @@ export const metadata: Metadata = {
   title: "Netix SIRH — Gestion RH & Paie Algérienne",
   description: "SIRH complet pour la gestion RH et la paie conforme CIDTA / LF 2024 / Loi n°90-11 en Algérie.",
   manifest: "/manifest.json",
-  themeColor: "#1B5EAB",
+  themeColor: "#7C3AED", // HRFlow Primary
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -32,37 +39,18 @@ export const metadata: Metadata = {
   },
 };
 
-// Appliqué avant l'hydration React pour éviter un flash clair -> sombre
-// au chargement quand l'utilisateur a déjà choisi le mode sombre.
-const themeInitScript = `
-(function () {
-  try {
-    var saved = window.localStorage.getItem("netix-theme");
-    if (saved === "dark") {
-      document.documentElement.setAttribute("data-theme", "dark");
-    }
-  } catch (e) {}
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js');
-    });
-  }
-})();
-`;
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`h-full antialiased ${plusJakartaSans.variable} ${geistMono.variable}`}>
+    <html lang="fr" className={`h-full antialiased ${lexend.variable} ${dmSans.variable} ${robotoMono.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1B5EAB" />
+        <meta name="theme-color" content="#7C3AED" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-full">{children}</body>
     </html>
