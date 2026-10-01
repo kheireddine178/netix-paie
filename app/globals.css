@@ -40,9 +40,9 @@
   --green-100: #ECFDF5;
 
   /* Typographie HRFlow */
-  --font: "DM Sans", "Segoe UI", sans-serif;
-  --font-display: "Lexend", "DM Sans", sans-serif;
-  --mono: "Roboto Mono", monospace;
+  --font: var(--font-dmsans), "Segoe UI", sans-serif;
+  --font-display: var(--font-lexend), "DM Sans", sans-serif;
+  --mono: var(--font-roboto-mono), monospace;
 
   --t2xs: 12px;
   --txs:  13px;
