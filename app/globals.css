@@ -398,9 +398,9 @@ tr:last-child td { border-bottom: none; }
 .bulletin-total {
   display: flex; justify-content: space-between; align-items: baseline;
   padding-top: var(--s4); margin-top: var(--s4);
-  border-top: 2px solid var(--marine-900);
+  border-top: 2px solid var(--border);
 }
-.bulletin-total strong { font-size: 24px; color: var(--marine-900); }
+.bulletin-total strong { font-size: 24px; color: var(--accent); }
 
 /* ============================================================
    Landing page (vitrine)
@@ -412,7 +412,7 @@ tr:last-child td { border-bottom: none; }
 }
 
 .landing-hero {
-  background: radial-gradient(circle at top right, var(--marine-900) 0%, var(--marine-950) 100%);
+  background: radial-gradient(circle at top right, var(--accent) 0%, var(--accent-ink) 100%);
   color: #fff;
   padding: var(--s12) var(--s6) 96px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -452,7 +452,7 @@ tr:last-child td { border-bottom: none; }
   margin: 0 auto var(--s4);
 }
 
-.landing-hero-inner h1 .accent { color: #34D399; }
+.landing-hero-inner h1 .accent { color: var(--teal-bg); }
 
 .landing-hero-inner p {
   font-size: var(--tmd);
