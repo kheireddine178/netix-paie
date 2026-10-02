@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { getSalarie, listerContratsSalarie, listerDocumentsSalarie } from "../../actions";
 import ContratClientPage from "./contrat-client-page";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -21,35 +21,25 @@ export default async function Page({ params }: Props) {
   const documents = await listerDocumentsSalarie(salarieId);
 
   return (
-    <div className="space-y-6">
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h1>Contrats & Documents — {salarie.nom_prenom}</h1>
-          <p>Gérez les contrats de travail, téléversez les justificatifs et générez les documents officiels.</p>
-        </div>
-        <Link href={`/salaries/${salarie.id}`} className="btn btn-secondary btn-sm">
-          ← Retour au Profil
-        </Link>
-      </div>
-
-      {/* Barre de navigation interne du salarié */}
-      <div style={{ display: "flex", gap: "var(--s3)", borderBottom: "var(--hairline)", paddingBottom: "var(--s3)" }}>
-        <Link href={`/salaries/${salarie.id}/bulletin`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Calcul Bulletin
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <Link href={`/salaries/${salarie.id}/rubriques`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Rubriques
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <Link href={`/salaries/${salarie.id}/historique`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Historique Paies
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <strong style={{ color: "var(--accent)", fontSize: "var(--tsm)" }}>
-          Contrat & Documents
-        </strong>
-      </div>
+    <div className="flex flex-col gap-4">
+      <OdooControlPanel
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
+          { label: "Contrats & Documents" },
+        ]}
+        primaryAction={{
+          label: "💰 Calculer la paie",
+          href: `/saisie?salarieId=${salarie.id}`,
+        }}
+        secondaryActions={[
+          { label: "← Fiche Salarié", href: `/salaries/${salarie.id}` },
+          { label: "Congés", href: `/salaries/${salarie.id}/conges` },
+          { label: "Missions", href: `/salaries/${salarie.id}/missions` },
+          { label: "Carrière", href: `/salaries/${salarie.id}/carriere` },
+          { label: "Formations", href: `/salaries/${salarie.id}/formations` },
+        ]}
+      />
 
       <ContratClientPage salarie={salarie} contrats={contrats} documents={documents} />
     </div>

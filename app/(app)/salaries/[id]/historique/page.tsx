@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSalarie, listerBulletinsSalarie } from "../../actions";
 import BulletinRowActions from "./BulletinRowActions";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -24,29 +25,32 @@ export default async function HistoriquePage({
   const bulletins = await listerBulletinsSalarie(salarieId);
 
   return (
-    <>
-      <div
-        className="page-header"
-        style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}
-      >
-        <div>
-          <h1>Historique des bulletins — {salarie.nom_prenom}</h1>
-          <p>
-            {salarie.fonction ?? "—"} · {bulletins.length} bulletin
-            {bulletins.length > 1 ? "s" : ""} enregistré{bulletins.length > 1 ? "s" : ""}
-          </p>
-        </div>
-        <Link href={`/salaries/${salarie.id}`} className="btn btn-secondary btn-sm">
-          ← Retour au Profil
-        </Link>
-      </div>
+    <div className="flex flex-col gap-4">
+      <OdooControlPanel
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
+          { label: "Historique des bulletins" },
+        ]}
+        primaryAction={{
+          label: "💰 Calculer la paie",
+          href: `/saisie?salarieId=${salarie.id}`,
+        }}
+        secondaryActions={[
+          { label: "← Fiche Salarié", href: `/salaries/${salarie.id}` },
+          { label: "Journal de paie global", href: "/historique" },
+        ]}
+      />
 
       {bulletins.length === 0 ? (
-        <div className="card">
-          <p style={{ color: "var(--text-muted)" }}>
-            Aucun bulletin enregistré pour l&apos;instant. Rendez-vous dans{" "}
-            <Link href={`/salaries/${salarie.id}/bulletin`}>Saisie mensuelle</Link> pour en créer un.
-          </p>
+        <div
+          className="p-12 text-center rounded-lg border border-dashed text-muted-foreground"
+          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+        >
+          Aucun bulletin enregistré pour l&apos;instant.{" "}
+          <Link href={`/saisie?salarieId=${salarie.id}`} className="font-semibold text-indigo-600 hover:underline">
+            Calculer un premier bulletin
+          </Link>
         </div>
       ) : (
         <div className="table-wrap">
@@ -63,14 +67,20 @@ export default async function HistoriquePage({
               {bulletins.map((b) => (
                 <tr key={b.id}>
                   <td>
-                    {NOMS_MOIS[b.mois - 1] ?? b.mois} {b.annee}
-                  </td>
-                  <td>{b.net_a_payer.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ')} DA</td>
-                  <td style={{ color: "var(--text-muted)" }}>
-                    {b.modifie_le ? new Date(b.modifie_le).toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ') : "—"}
+                    <strong>
+                      {NOMS_MOIS[b.mois - 1]} {b.annee}
+                    </strong>
                   </td>
                   <td>
-                    <BulletinRowActions salarieId={salarie.id} bulletinId={b.id} annee={b.annee} mois={b.mois} />
+                    <span className="badge badge-success">
+                      {b.net_a_payer.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ')} DA
+                    </span>
+                  </td>
+                  <td style={{ color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
+                    {new Date(b.modifie_le).toLocaleString("fr-FR")}
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    <BulletinRowActions bulletinId={b.id} />
                   </td>
                 </tr>
               ))}
@@ -78,6 +88,6 @@ export default async function HistoriquePage({
           </table>
         </div>
       )}
-    </>
+    </div>
   );
 }

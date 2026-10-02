@@ -1,5 +1,6 @@
-import Link from "next/link";
 import { listerSalaries, listerCongesSalarie } from "../salaries/actions";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
+import OdooKanbanCard from "@/components/odoo/OdooKanbanCard";
 
 export const dynamic = "force-dynamic";
 
@@ -21,80 +22,55 @@ export default async function CongesPage() {
   const statMap = Object.fromEntries(stats.map((s) => [s.salarieId, s]));
 
   return (
-    <div className="space-y-6">
-      <div className="page-header">
-        <h1>Congés &amp; Absences</h1>
-        <p>Sélectionnez un collaborateur pour gérer ses demandes de congés, valider ou rejeter.</p>
-      </div>
+    <div className="flex flex-col gap-4">
+      {/* 1. ODOO CONTROL PANEL */}
+      <OdooControlPanel
+        breadcrumbs={[{ label: "Congés & Absences" }]}
+        secondaryActions={[
+          {
+            label: "Collaborateurs",
+            href: "/salaries",
+          },
+        ]}
+      />
 
       {salaries.length === 0 ? (
-        <div className="card">
-          <p style={{ color: "var(--text-muted)" }}>Aucun salarié enregistré.</p>
+        <div
+          className="p-12 text-center rounded-lg border border-dashed text-muted-foreground"
+          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+        >
+          Aucun salarié enregistré dans la base de données.
         </div>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-            gap: "var(--s4)",
-          }}
-        >
+        <div className="odoo-kanban-grid">
           {salaries.map((s) => {
             const stat = statMap[s.id];
+            const hasPending = (stat?.enAttente || 0) > 0;
+
             return (
-              <Link
+              <OdooKanbanCard
                 key={s.id}
+                title={s.nom_prenom}
+                subtitle={s.fonction || "Poste non renseigné"}
+                badge={
+                  hasPending
+                    ? { text: `${stat?.enAttente} à valider`, variant: "warning" }
+                    : { text: "À jour", variant: "success" }
+                }
+                metrics={[
+                  { label: "Jours pris", value: `${stat?.pris || 0} j` },
+                  { label: "En attente", value: `${stat?.enAttente || 0}` },
+                ]}
                 href={`/salaries/${s.id}/conges`}
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                <div
-                  className="card hover-card"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--s4)",
-                    padding: "var(--s4)",
-                    cursor: "pointer",
-                    borderLeft: "4px solid var(--amber)",
-                    transition: "transform 0.15s, box-shadow 0.15s",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: "50%",
-                      background: "var(--amber, #f59e0b)",
-                      color: "#fff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: "bold",
-                      fontSize: 18,
-                      flexShrink: 0,
-                    }}
+                actions={
+                  <span
+                    className="text-xs font-bold hover:underline"
+                    style={{ color: "var(--amber)" }}
                   >
-                    {s.nom_prenom.charAt(0).toUpperCase()}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontWeight: "bold", margin: 0 }}>{s.nom_prenom}</p>
-                    <p style={{ fontSize: "var(--tsm)", color: "var(--text-muted)", margin: "2px 0 4px" }}>
-                      {s.fonction || "Pas de fonction"}
-                    </p>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <span className="badge badge-teal" style={{ fontSize: 10 }}>
-                        {stat?.pris || 0} jours pris
-                      </span>
-                      {stat?.enAttente > 0 && (
-                        <span className="badge badge-accent" style={{ fontSize: 10 }}>
-                          {stat.enAttente} en attente
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <span style={{ color: "var(--amber, #f59e0b)", fontWeight: "bold", fontSize: 18 }}>→</span>
-                </div>
-              </Link>
+                    Gérer les congés →
+                  </span>
+                }
+              />
             );
           })}
         </div>

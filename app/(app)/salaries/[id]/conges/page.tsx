@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { getSalarie, listerCongesSalarie, listerContratsSalarie } from "../../actions";
 import CongesClientPage from "./CongesClientPage";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -21,39 +21,25 @@ export default async function Page({ params }: Props) {
   const contrats = await listerContratsSalarie(salarieId);
 
   return (
-    <div className="space-y-6">
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h1>Absences & Congés — {salarie.nom_prenom}</h1>
-          <p>Suivez les congés annuels, maladies, maternités et calculez les soldes en temps réel.</p>
-        </div>
-        <Link href={`/salaries/${salarie.id}`} className="btn btn-secondary btn-sm">
-          ← Retour au Profil
-        </Link>
-      </div>
-
-      {/* Barre de navigation interne du salarié */}
-      <div style={{ display: "flex", gap: "var(--s3)", borderBottom: "var(--hairline)", paddingBottom: "var(--s3)" }}>
-        <Link href={`/salaries/${salarie.id}/bulletin`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Calcul Bulletin
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <Link href={`/salaries/${salarie.id}/rubriques`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Rubriques
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <Link href={`/salaries/${salarie.id}/historique`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Historique Paies
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <Link href={`/salaries/${salarie.id}/contrat`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Contrat & Documents
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <strong style={{ color: "var(--accent)", fontSize: "var(--tsm)" }}>
-          Absences & Congés
-        </strong>
-      </div>
+    <div className="flex flex-col gap-4">
+      <OdooControlPanel
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
+          { label: "Absences & Congés" },
+        ]}
+        primaryAction={{
+          label: "💰 Calculer la paie",
+          href: `/saisie?salarieId=${salarie.id}`,
+        }}
+        secondaryActions={[
+          { label: "← Fiche Salarié", href: `/salaries/${salarie.id}` },
+          { label: "Contrats", href: `/salaries/${salarie.id}/contrat` },
+          { label: "Missions", href: `/salaries/${salarie.id}/missions` },
+          { label: "Carrière", href: `/salaries/${salarie.id}/carriere` },
+          { label: "Formations", href: `/salaries/${salarie.id}/formations` },
+        ]}
+      />
 
       <CongesClientPage salarie={salarie} conges={conges} contrats={contrats} />
     </div>

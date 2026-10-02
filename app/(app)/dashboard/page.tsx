@@ -5,6 +5,7 @@ import {
   IconAlertTriangle,
 } from "@/components/Icons";
 import { listerSalaries, listerTousContrats } from "../salaries/actions";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 const MODULES = [
   {
@@ -84,46 +85,68 @@ export default async function DashboardPage() {
     return dateFin >= dateAujourdhui && dateFin <= limiteAlertes;
   });
 
-  // 2. Détecter les visites médicales expirant ou en retard (visite annuelle obligatoire)
+  // 2. Détecter les visites médicales expirant ou en retard
   const visitesMedicalesExpirations = salaries.filter((s) => {
     if (!s.actif) return false;
-    if (!s.date_visite_medicale) return true; // Pas de visite renseignée = alerte
+    if (!s.date_visite_medicale) return true;
     const derniereVisite = new Date(s.date_visite_medicale);
     const dateEcheance = new Date(derniereVisite);
-    dateEcheance.setFullYear(dateEcheance.getFullYear() + 1); // Visite valable 1 an
+    dateEcheance.setFullYear(dateEcheance.getFullYear() + 1);
     return dateEcheance <= limiteAlertes;
   });
 
   const totalAlertes = cddExpirations.length + visitesMedicalesExpirations.length;
 
   return (
-    <div className="space-y-6">
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h1>Plateforme Netix SIRH</h1>
-          <p>Gérez l'intégralité de vos ressources humaines et votre paie en toute conformité réglementaire.</p>
-        </div>
-      </div>
+    <div className="flex flex-col gap-4">
+      {/* 1. ODOO CONTROL PANEL */}
+      <OdooControlPanel
+        breadcrumbs={[{ label: "Tableau de Bord SIRH" }]}
+        primaryAction={{
+          label: "💰 Saisie de paie",
+          href: "/saisie",
+        }}
+        secondaryActions={[
+          {
+            label: "+ Nouveau collaborateur",
+            href: "/salaries/nouveau",
+          },
+          {
+            label: "États de paie",
+            href: "/rapports",
+          },
+        ]}
+        extraRight={
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded bg-slate-100 text-slate-800">
+              👥 {salaries.length} salariés
+            </span>
+            {totalAlertes > 0 && (
+              <span className="text-xs font-bold px-2.5 py-1 rounded bg-amber-100 text-amber-800">
+                ⚠️ {totalAlertes} alerte(s)
+              </span>
+            )}
+          </div>
+        }
+      />
 
       {/* SECTION ALERTES & VIGILANCE RH */}
       {totalAlertes > 0 && (
-        <div className="card" style={{ borderLeft: "4px solid var(--red)", background: "rgba(239, 68, 68, 0.05)", padding: "var(--s4)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--red)", marginBottom: "var(--s3)" }}>
-            <IconAlertTriangle size={20} />
-            <h3 style={{ margin: 0, fontSize: "var(--tmd)", fontWeight: "bold" }}>Alertes &amp; Vigilance RH ({totalAlertes})</h3>
+        <div className="p-4 rounded-lg border border-red-200 bg-red-50/60 text-xs">
+          <div className="flex items-center gap-2 text-red-700 font-bold mb-3">
+            <IconAlertTriangle size={18} />
+            <h3 className="m-0 text-sm font-bold">Vigilance RH & Échéances ({totalAlertes})</h3>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "var(--s4)" }}>
+          <div className="grid sm:grid-cols-2 gap-4">
             {cddExpirations.length > 0 && (
               <div>
-                <h4 style={{ fontSize: "var(--tsm)", fontWeight: "bold", marginBottom: "8px" }}>Échéances de Contrats (CDD) :</h4>
-                <ul style={{ paddingLeft: "16px", margin: 0, fontSize: "var(--txs)", display: "flex", flexDirection: "column", gap: "4px" }}>
+                <strong className="text-red-900 block mb-1">Fin de Contrat CDD sous 30 jours :</strong>
+                <ul className="pl-4 m-0 space-y-1 text-red-800">
                   {cddExpirations.map((c) => (
                     <li key={c.id}>
-                      <span style={{ fontWeight: "bold" }}>{c.salaries?.nom_prenom}</span> : contrat CDD se termine le{" "}
-                      <span style={{ color: "var(--red)", fontWeight: "bold" }}>
-                        {c.date_fin?.split("-").reverse().join("/")}
-                      </span>
+                      <span className="font-semibold">{c.salaries?.nom_prenom}</span> : échéance au{" "}
+                      <strong>{c.date_fin?.split("-").reverse().join("/")}</strong>
                     </li>
                   ))}
                 </ul>
@@ -132,89 +155,78 @@ export default async function DashboardPage() {
 
             {visitesMedicalesExpirations.length > 0 && (
               <div>
-                <h4 style={{ fontSize: "var(--tsm)", fontWeight: "bold", marginBottom: "8px" }}>Médecine du travail (Visites médicales) :</h4>
-                <ul style={{ paddingLeft: "16px", margin: 0, fontSize: "var(--txs)", display: "flex", flexDirection: "column", gap: "4px" }}>
-                  {visitesMedicalesExpirations.map((s) => (
-                    <li key={s.id}>
-                      <span style={{ fontWeight: "bold" }}>{s.nom_prenom}</span> :{" "}
-                      {s.date_visite_medicale ? (
-                        <>
-                          dernière visite le {s.date_visite_medicale.split("-").reverse().join("/")}{" "}
-                          <span style={{ color: "var(--red)", fontWeight: "bold" }}>(Échue ou expire bientôt)</span>
-                        </>
-                      ) : (
-                        <span style={{ color: "var(--red)", fontWeight: "bold" }}>Aucune visite médicale enregistrée</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+                <strong className="text-amber-900 block mb-1">Visites médicales à renouveler :</strong>
+                <span className="text-amber-800">
+                  {visitesMedicalesExpirations.length} collaborateur(s) nécessitent une visite médicale de travail.
+                </span>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* MODULES GRID */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: "var(--s4)",
-          marginBottom: "var(--s6)",
-        }}
-      >
+      {/* GRILLE DES MODULES EN KANBAN ODOO */}
+      <div className="odoo-kanban-grid">
         {MODULES.map((m) => (
           <div
             key={m.title}
-            className="card"
+            className="p-5 rounded-lg border transition-all hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between"
             style={{
+              background: "var(--surface)",
+              borderColor: "var(--border)",
               borderTop: `4px solid ${m.color}`,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              padding: "var(--s4)",
             }}
           >
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s2)", color: m.color }}>
+              <div className="flex items-center gap-2 mb-2" style={{ color: m.color }}>
                 {m.icon}
-                <h2 style={{ fontSize: "var(--tmd)", color: "var(--text)" }}>{m.title}</h2>
+                <h2 className="text-base font-bold m-0" style={{ color: "var(--text)" }}>
+                  {m.title}
+                </h2>
               </div>
-              <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)", marginBottom: "var(--s4)", lineHeight: 1.5 }}>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-4">
                 {m.desc}
               </p>
             </div>
-            <Link href={m.href} className="btn btn-secondary btn-sm" style={{ width: "100%", justifyContent: "center" }}>
+            <Link
+              href={m.href}
+              className="btn btn-secondary btn-sm text-xs font-semibold w-full text-center justify-center py-2"
+            >
               {m.btn} →
             </Link>
           </div>
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "var(--s4)" }}>
-        <div className="card">
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s2)", color: "var(--teal)" }}>
-            <IconBook size={18} />
-            <h3>Guide Juridique &amp; RH</h3>
+      {/* FOOTER WIDGETS */}
+      <div className="grid sm:grid-cols-2 gap-4 mt-2">
+        <div className="p-4 rounded-lg border text-xs flex flex-col justify-between" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+          <div>
+            <div className="flex items-center gap-2 mb-2 font-bold text-sm" style={{ color: "var(--teal)" }}>
+              <IconBook size={18} />
+              <span>Guide Réglementaire & Droit du Travail</span>
+            </div>
+            <p className="text-muted-foreground leading-relaxed mb-3">
+              Consultez les articles clés de la loi n°90-11, du code des impôts (CIDTA) et des barèmes officiels.
+            </p>
           </div>
-          <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)", marginBottom: "var(--s4)" }}>
-            Accédez aux articles clés de la loi n°90-11, du CIDTA et de la loi n°83-11 pour vos calculs.
-          </p>
-          <Link href="/guide" className="btn btn-ghost">
-            Consulter le guide
+          <Link href="/guide" className="btn btn-secondary btn-sm text-xs w-fit">
+            Consulter le guide RH →
           </Link>
         </div>
 
-        <div className="card">
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s2)", color: "var(--text-muted)" }}>
-            <IconSettings size={18} />
-            <h3>Paramètres Légaux</h3>
+        <div className="p-4 rounded-lg border text-xs flex flex-col justify-between" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+          <div>
+            <div className="flex items-center gap-2 mb-2 font-bold text-sm" style={{ color: "var(--text-muted)" }}>
+              <IconSettings size={18} />
+              <span>Paramètres & Barèmes de Paie</span>
+            </div>
+            <p className="text-muted-foreground leading-relaxed mb-3">
+              Configurez le SNMG (20 000 DA), les taux CNAS (9% / 26%) et les règles de calcul de l&apos;IRG.
+            </p>
           </div>
-          <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)", marginBottom: "var(--s4)" }}>
-            Configurer le taux de CNAS patronal/salarial, le SNMG et le barème IRG.
-          </p>
-          <Link href="/parametres" className="btn btn-ghost">
-            Configurer
+          <Link href="/parametres" className="btn btn-secondary btn-sm text-xs w-fit">
+            Configurer les paramètres →
           </Link>
         </div>
       </div>

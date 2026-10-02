@@ -21,6 +21,12 @@ import type { Parametres, LigneRubriqueDynamique } from "@/lib/paieCalcul";
 import { calculerPaie, calculerBaseAvantRubriques, SAISIE_VIDE } from "@/lib/paieCalcul";
 import { resoudreLigneRubrique } from "@/lib/rubriquesDynamiques";
 
+// Odoo UI Toolkit
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
+import OdooSheet from "@/components/odoo/OdooSheet";
+import OdooStatusbar from "@/components/odoo/OdooStatusbar";
+import OdooNotebook from "@/components/odoo/OdooNotebook";
+
 const MOIS = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
   "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
@@ -34,17 +40,17 @@ const LABELS_CATEGORIE: Record<string, string> = {
 };
 
 const CHAMPS_ABSENCES = [
-  { name: "maladie_h", label: "MALADIE" },
-  { name: "mise_a_pied_h", label: "MISE À PIED" },
-  { name: "accident_travail_h", label: "ACCIDENT TRAVAIL" },
-  { name: "retard_h", label: "RETARD" },
-  { name: "absence_irreguliere_h", label: "ABS. IRRÉGULIÈRE" },
+  { name: "maladie_h", label: "Maladie (h)" },
+  { name: "mise_a_pied_h", label: "Mise à pied (h)" },
+  { name: "accident_travail_h", label: "Accident travail (h)" },
+  { name: "retard_h", label: "Retard (h)" },
+  { name: "absence_irreguliere_h", label: "Abs. irrégulière (h)" },
 ];
 
 const CHAMPS_HEURES_SUP = [
-  { name: "heures_sup_1", label: "PALIER 1 (H)" },
-  { name: "heures_sup_2", label: "PALIER 2 (H)" },
-  { name: "heures_sup_3", label: "PALIER 3 (H)" },
+  { name: "heures_sup_1", label: "Palier 1 (+50%)" },
+  { name: "heures_sup_2", label: "Palier 2 (+75%)" },
+  { name: "heures_sup_3", label: "Palier 3 (+100%)" },
 ];
 
 const CHAMPS_PRIMES_MONTANT = [
@@ -106,6 +112,23 @@ function ligneVide(r: RubriqueCatalogue): LigneEtat {
   };
 }
 
+export interface SaisieFormulaireConsolideProps {
+  salaries: Salarie[];
+  salarieActive?: Salarie | null;
+  anneeActive: number;
+  moisActive: number;
+  rubriquesAssignees: RubriqueAssignee[];
+  catalogueRubriques: RubriqueCatalogue[];
+  parametres: Parametres;
+  initialBulletin: BulletinPourSaisie | null;
+  pagerInfo?: {
+    current: number;
+    total: number;
+    prevId: number | null;
+    nextId: number | null;
+  };
+}
+
 export default function SaisieFormulaireConsolide({
   salaries,
   salarieActive,
@@ -115,16 +138,8 @@ export default function SaisieFormulaireConsolide({
   catalogueRubriques,
   parametres,
   initialBulletin,
-}: {
-  salaries: Salarie[];
-  salarieActive?: Salarie | null;
-  anneeActive: number;
-  moisActive: number;
-  rubriquesAssignees: RubriqueAssignee[];
-  catalogueRubriques: RubriqueCatalogue[];
-  parametres: Parametres;
-  initialBulletin: BulletinPourSaisie | null;
-}) {
+  pagerInfo,
+}: SaisieFormulaireConsolideProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const calculTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -143,6 +158,7 @@ export default function SaisieFormulaireConsolide({
   const [initialValues, setInitialValues] = useState<Record<string, number>>({});
   const [lignes, setLignes] = useState<LigneEtat[]>([]);
   const [recherche, setRecherche] = useState("");
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [estEnregistre, setEstEnregistre] = useState(false);
 
   // Nouveaux états UX
@@ -230,11 +246,11 @@ export default function SaisieFormulaireConsolide({
 
   const resultatsRecherche = useMemo(() => {
     const q = recherche.trim().toLowerCase();
-    if (!q) return [];
+    if (!q) return catalogueRubriques.filter((r) => !codesDejaAjoutes.has(r.code)).slice(0, 10);
     return catalogueRubriques
       .filter((r) => !codesDejaAjoutes.has(r.code))
       .filter((r) => r.code.toLowerCase().includes(q) || (r.libelle ?? "").toLowerCase().includes(q))
-      .slice(0, 8);
+      .slice(0, 10);
   }, [recherche, catalogueRubriques, codesDejaAjoutes]);
 
   // Execute live calculation from DOM form values & Trigger auto-save
@@ -312,120 +328,60 @@ export default function SaisieFormulaireConsolide({
     const res = calculerPaie(saisie, parametres);
     setResultat({
       ...res,
-      bulletin_id: initialBulletin?.bulletin_id ?? 0,
-      annee,
+      nom_prenom: salarieActive.nom_prenom,
+      matricule: salarieActive.matricule,
+      fonction: salarieActive.fonction,
       mois,
+      annee,
     });
-    setEstEnregistre(false);
-    
-    // Déclencher la sauvegarde automatique après 1.5s
-    setSaveStatus("modified");
-    triggerAutoSave();
   };
 
   const debouncedCalcul = () => {
     if (calculTimeoutRef.current) clearTimeout(calculTimeoutRef.current);
     calculTimeoutRef.current = setTimeout(() => {
       executerCalculLive();
-    }, 350);
-  };
-
-  const triggerAutoSave = () => {
-    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    saveTimeoutRef.current = setTimeout(async () => {
-      if (!formRef.current || !salarieActive) return;
-      setSaveStatus("saving");
-      const formData = new FormData(formRef.current);
-
-      // Convert percentage values back to fractional values (0-1 scale)
-      for (const nom of CHAMPS_TAUX_POURCENTAGE) {
-        const brut = formData.get(nom);
-        if (brut !== null) {
-          const valeur = parseFloat(brut.toString().replace(",", "."));
-          formData.set(nom, isNaN(valeur) ? "0" : String(valeur / 100));
-        }
-      }
-      for (const ligne of lignes) {
-        if (ligne.categorie !== "pourcentage") continue;
-        const champ = `dyn_${ligne.code}_v1`;
-        const brut = formData.get(champ);
-        if (brut !== null) {
-          const valeur = parseFloat(brut.toString().replace(",", "."));
-          formData.set(champ, isNaN(valeur) ? "0" : String(valeur / 100));
-        }
-      }
-
-      try {
-        const r = await creerBulletin(salarieActive.id, formData);
-        setResultat(r);
-        setEstEnregistre(true);
-        setSaveStatus("saved");
-      } catch (err) {
-        setSaveStatus("error");
-      }
-    }, 1500);
+      setSaveStatus("modified");
+    }, 150);
   };
 
   useEffect(() => {
-    executerCalculLive();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formKey, lignes.length]);
-
-  // Keyboard navigation vertical focus
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
-    if (e.key === "Enter" || e.key === "ArrowDown" || e.key === "ArrowUp") {
-      // Ignorer Enter dans la recherche de rubriques
-      if (document.activeElement === formRef.current?.querySelector("input[placeholder='Rechercher par code ou libellé...']")) {
-        return;
-      }
-      
-      const elements = Array.from(
-        formRef.current?.querySelectorAll("input:not([type=hidden]):not([disabled]), select") || []
-      ) as HTMLElement[];
-      const currentIndex = elements.indexOf(document.activeElement as HTMLElement);
-      
-      if (currentIndex > -1) {
-        e.preventDefault();
-        let nextIndex = currentIndex;
-        if (e.key === "ArrowUp") {
-          nextIndex = currentIndex > 0 ? currentIndex - 1 : elements.length - 1;
-        } else {
-          nextIndex = currentIndex < elements.length - 1 ? currentIndex + 1 : 0;
-        }
-        elements[nextIndex]?.focus();
-      }
+    if (salarieActive) {
+      executerCalculLive();
     }
-  };
-
-  function naviguerVersSaisie(nouveauSalarieId: number | string, nouvelleAnnee: number, nouveauMois: number) {
-    if (!nouveauSalarieId) return;
-    setErreur(null);
-    setMessageCharge(null);
-    router.push(`/saisie?salarieId=${nouveauSalarieId}&annee=${nouvelleAnnee}&mois=${nouveauMois}`);
-  }
+  }, [formKey, lignes, salarieActive?.id, parametres]);
 
   function handleChangerSalarie(e: React.ChangeEvent<HTMLSelectElement>) {
-    const val = e.target.value;
-    setSalarieId(val);
-    naviguerVersSaisie(val, annee, mois);
+    const id = e.target.value;
+    setSalarieId(id);
+    if (id) {
+      router.push(`/saisie?salarieId=${id}&annee=${annee}&mois=${mois}`);
+    } else {
+      router.push(`/saisie?annee=${annee}&mois=${mois}`);
+    }
   }
 
   function handleChangerMois(e: React.ChangeEvent<HTMLSelectElement>) {
-    const val = parseInt(e.target.value, 10);
-    setMois(val);
-    naviguerVersSaisie(salarieId, annee, val);
+    const m = parseInt(e.target.value, 10);
+    setMois(m);
+    if (salarieId) {
+      router.push(`/saisie?salarieId=${salarieId}&annee=${annee}&mois=${m}`);
+    } else {
+      router.push(`/saisie?annee=${annee}&mois=${m}`);
+    }
   }
 
   function handleChangerAnnee(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = parseInt(e.target.value, 10) || anneeActive;
-    setAnnee(val);
-    naviguerVersSaisie(salarieId, val, mois);
+    const a = parseInt(e.target.value, 10) || new Date().getFullYear();
+    setAnnee(a);
+    if (salarieId) {
+      router.push(`/saisie?salarieId=${salarieId}&annee=${a}&mois=${mois}`);
+    } else {
+      router.push(`/saisie?annee=${a}&mois=${mois}`);
+    }
   }
 
   function handleCopierMoisPrecedent() {
     if (!salarieActive) return;
-    setErreur(null);
-    setMessageCharge(null);
     const prevMois = mois === 1 ? 12 : mois - 1;
     const prevAnnee = mois === 1 ? annee - 1 : annee;
 
@@ -433,7 +389,7 @@ export default function SaisieFormulaireConsolide({
       try {
         const donnees = await chargerBulletinPourSaisie(salarieActive.id, prevAnnee, prevMois);
         if (!donnees) {
-          setErreur(`Aucun bulletin trouvé pour le mois précédent (${MOIS[prevMois - 1]} ${prevAnnee}).`);
+          setErreur(`Aucun bulletin trouvé pour ${MOIS[prevMois - 1]} ${prevAnnee}.`);
           return;
         }
 
@@ -449,74 +405,92 @@ export default function SaisieFormulaireConsolide({
           type_valeur: catalogueRubriques.find((cr) => cr.code === r.code)?.type_valeur || null,
           valeur_1: r.categorie === "pourcentage" ? r.valeur_1 * 100 : r.valeur_1,
           valeur_2: r.valeur_2,
-        })).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
+        })).sort((a: LigneEtat, b: LigneEtat) => a.code.localeCompare(b.code, undefined, { numeric: true }));
 
         setInitialValues(champs);
         setLignes(lignesChargees);
         setFormKey((k) => k + 1);
-        setEstEnregistre(false);
         setMessageCharge(`Données copiées depuis ${MOIS[prevMois - 1]} ${prevAnnee}.`);
+        setErreur(null);
+        setEstEnregistre(false);
       } catch (e) {
-        setErreur(e instanceof Error ? e.message : "Erreur lors de la copie");
+        setErreur(e instanceof Error ? e.message : "Erreur de copie");
       }
     });
   }
 
-  // Copier le mois précédent en masse
-  const handleCopierMasse = () => {
-    if (!confirm(`Voulez-vous copier toutes les saisies du mois précédent pour la période ${MOIS[mois - 1]} ${annee} ?`)) {
-      return;
-    }
-    setErreur(null);
-    setMessageCharge(null);
+  async function handleCopierMasse() {
+    if (!confirm(`Voulez-vous copier les bulletins de TOUS les salariés du mois précédent vers ${MOIS[mois - 1]} ${annee} ?`)) return;
     startTransition(async () => {
       try {
         const res = await copierMoisPrecedentMasse(annee, mois);
-        setMessageCharge(`Copie de masse effectuée : ${res.copies} bulletins créés.`);
+        setMessageCharge(`${res.nbCopies} bulletins ont été copiés en masse avec succès.`);
         router.refresh();
       } catch (e) {
-        setErreur(e instanceof Error ? e.message : "Erreur lors de la copie globale");
+        setErreur(e instanceof Error ? e.message : "Erreur lors de la copie de masse");
       }
     });
-  };
+  }
 
   function ajouterRubrique(r: RubriqueCatalogue) {
-    if (!salarieActive) return;
-    setLignes((prev) => {
-      const next = [...prev, ligneVide(r)];
-      return next.sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
-    });
+    if (codesDejaAjoutes.has(r.code)) return;
+    const nouvelleLigne = ligneVide(r);
+    setLignes((prev) => [...prev, nouvelleLigne].sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true })));
     setRecherche("");
-    ajouterRubriqueSalarie(salarieActive.id, r.code).catch((e) => {
-      setErreur(e instanceof Error ? e.message : "Erreur lors de l'ajout de la rubrique");
-    });
+    setIsAddMenuOpen(false);
+
+    if (salarieActive) {
+      startTransition(async () => {
+        try {
+          await ajouterRubriqueSalarie(salarieActive.id, r.code);
+        } catch {
+          // Échec silencieux
+        }
+      });
+    }
   }
 
   function retirerRubrique(code: string) {
-    if (!salarieActive) return;
     setLignes((prev) => prev.filter((l) => l.code !== code));
-    retirerRubriqueSalarie(salarieActive.id, code).catch((e) => {
-      setErreur(e instanceof Error ? e.message : "Erreur lors du retrait de la rubrique");
-    });
+    if (salarieActive) {
+      startTransition(async () => {
+        try {
+          await retirerRubriqueSalarie(salarieActive.id, code);
+        } catch {
+          // Échec silencieux
+        }
+      });
+    }
   }
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!salarieActive) return;
-    setErreur(null);
-    setMessageCharge(null);
-
-    const formData = new FormData(e.currentTarget);
-    for (const nom of CHAMPS_TAUX_POURCENTAGE) {
-      const brut = formData.get(nom);
-      if (brut !== null) {
-        const valeur = parseFloat(brut.toString().replace(",", "."));
-        formData.set(nom, isNaN(valeur) ? "0" : String(valeur / 100));
+  function handleKeyDown(e: React.KeyboardEvent<HTMLFormElement>) {
+    if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") {
+      e.preventDefault();
+      const form = formRef.current;
+      if (!form) return;
+      const inputs = Array.from(
+        form.querySelectorAll<HTMLInputElement>('input:not([type="hidden"]):not([disabled])')
+      );
+      const idx = inputs.indexOf(e.target as HTMLInputElement);
+      if (idx > -1 && idx < inputs.length - 1) {
+        inputs[idx + 1].focus();
+        inputs[idx + 1].select();
+      } else {
+        inputs[0]?.focus();
       }
     }
-    for (const ligne of lignes) {
-      if (ligne.categorie !== "pourcentage") continue;
-      const champ = `dyn_${ligne.code}_v1`;
+  }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!salarieActive) return;
+
+    setErreur(null);
+    setMessageCharge(null);
+    setSaveStatus("saving");
+
+    const formData = new FormData(e.currentTarget);
+    for (const champ of CHAMPS_TAUX_POURCENTAGE) {
       const brut = formData.get(champ);
       if (brut !== null) {
         const valeur = parseFloat(brut.toString().replace(",", "."));
@@ -530,10 +504,11 @@ export default function SaisieFormulaireConsolide({
         setResultat(r);
         setEstEnregistre(true);
         setSaveStatus("saved");
-        setMessageCharge("Le bulletin a été enregistré avec succès en base de données.");
+        setMessageCharge("Le bulletin a été validé et enregistré avec succès en base de données.");
         router.refresh();
       } catch (e) {
         setErreur(e instanceof Error ? e.message : "Erreur inconnue");
+        setSaveStatus("error");
       }
     });
   }
@@ -623,33 +598,121 @@ export default function SaisieFormulaireConsolide({
     reader.readAsText(file);
   };
 
+  // Handlers pour le Pager Odoo
+  const handlePrevEmployee = () => {
+    if (pagerInfo?.prevId) {
+      router.push(`/saisie?salarieId=${pagerInfo.prevId}&annee=${annee}&mois=${mois}`);
+    }
+  };
+
+  const handleNextEmployee = () => {
+    if (pagerInfo?.nextId) {
+      router.push(`/saisie?salarieId=${pagerInfo.nextId}&annee=${annee}&mois=${mois}`);
+    }
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--s4)" }}>
-      {/* Top Selector Bar Card */}
-      <div className="card" style={{ padding: "var(--s4)" }}>
-        <div style={{ display: "flex", gap: "var(--s4)", alignItems: "flex-end", flexWrap: "wrap" }}>
-          <div className="field" style={{ flex: "2 1 250px", marginBottom: 0 }}>
-            <label style={{ fontSize: "var(--t2xs)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em" }}>SALARIÉ</label>
+    <div className="odoo-saisie-wrapper flex flex-col gap-4">
+      {/* 1. ODOO CONTROL PANEL (Breadcrumbs, Actions & Switcher Pager) */}
+      <OdooControlPanel
+        breadcrumbs={[
+          { label: "Saisie Mensuelle", href: "/saisie" },
+          { label: `${MOIS[mois - 1]} ${annee}` },
+          { label: salarieActive ? salarieActive.nom_prenom : "Sélection" },
+        ]}
+        primaryAction={{
+          label: isPending ? "Enregistrement…" : "Enregistrer le bulletin",
+          onClick: () => formRef.current?.requestSubmit(),
+          icon: (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+          ),
+        }}
+        secondaryActions={[
+          {
+            label: "Copier mois précédent",
+            onClick: handleCopierMoisPrecedent,
+            icon: (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            ),
+          },
+          {
+            label: "Saisie collective",
+            href: "/saisie/collective",
+          },
+          {
+            label: "Inspecter le calcul (Live)",
+            onClick: () => setIsDrawerOpen(true),
+          },
+        ]}
+        pager={
+          pagerInfo
+            ? {
+                current: pagerInfo.current,
+                total: pagerInfo.total,
+                onPrev: handlePrevEmployee,
+                onNext: handleNextEmployee,
+                hasPrev: !!pagerInfo.prevId,
+                hasNext: !!pagerInfo.nextId,
+                enableShortcuts: true,
+              }
+            : undefined
+        }
+      />
+
+      {/* 2. BARRE COMPACTE DE SÉLECTION PÉRIODE & SALARIÉ */}
+      <div
+        className="odoo-selector-strip px-4 py-3 rounded-lg flex flex-wrap items-center justify-between gap-3 text-xs"
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+        }}
+      >
+        <div className="flex items-center gap-3 flex-wrap flex-1 min-w-[280px]">
+          {/* Select Salarié */}
+          <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+            <span className="font-bold text-[11px] uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+              COLLABORATEUR
+            </span>
             <select
               value={salarieId}
               onChange={handleChangerSalarie}
-              style={{ width: "100%", height: "42px" }}
+              className="text-xs px-2.5 py-1.5 rounded border font-semibold min-w-[180px]"
+              style={{
+                background: "var(--surface-2)",
+                borderColor: "var(--border)",
+                color: "var(--text)",
+              }}
             >
-              <option value="">Sélectionner un salarié…</option>
+              <option value="">Choisir un salarié…</option>
               {salaries.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.nom_prenom} {s.matricule ? ` (${s.matricule})` : ""}
+                  {s.nom_prenom} {s.matricule ? `(${s.matricule})` : ""}
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="field" style={{ flex: "1 1 120px", marginBottom: 0 }}>
-            <label style={{ fontSize: "var(--t2xs)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em" }}>MOIS</label>
+          {/* Select Mois & Année */}
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[11px] uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+              PÉRIODE
+            </span>
             <select
               value={mois}
               onChange={handleChangerMois}
-              style={{ width: "100%", height: "42px" }}
+              className="text-xs px-2 py-1.5 rounded border font-medium"
+              style={{
+                background: "var(--surface-2)",
+                borderColor: "var(--border)",
+                color: "var(--text)",
+              }}
             >
               {MOIS.map((m, i) => (
                 <option key={i} value={i + 1}>
@@ -657,725 +720,603 @@ export default function SaisieFormulaireConsolide({
                 </option>
               ))}
             </select>
-          </div>
-
-          <div className="field" style={{ flex: "1 1 100px", marginBottom: 0 }}>
-            <label style={{ fontSize: "var(--t2xs)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em" }}>ANNÉE</label>
             <input
               type="number"
               value={annee}
               onChange={handleChangerAnnee}
-              style={{ width: "100%", height: "42px" }}
+              className="text-xs px-2 py-1.5 rounded border w-18 text-center font-medium"
+              style={{
+                background: "var(--surface-2)",
+                borderColor: "var(--border)",
+                color: "var(--text)",
+              }}
             />
-          </div>
-
-          <div style={{ display: "flex", gap: "var(--s2)" }}>
-            {salarieActive && (
-              <button
-                type="button"
-                onClick={handleCopierMoisPrecedent}
-                disabled={isPending}
-                className="btn btn-secondary"
-                style={{ height: "42px", fontWeight: "bold" }}
-                title="Copier les données saisies le mois précédent pour ce salarié"
-              >
-                Copier mois précédent
-              </button>
-            )}
-            
-            <button
-              type="button"
-              onClick={handleCopierMasse}
-              disabled={isPending}
-              className="btn btn-secondary"
-              style={{ height: "42px", fontWeight: "bold", border: "1px dashed var(--accent)" }}
-              title="Copier en masse les bulletins de tous les salariés pour la période précédente"
-            >
-              Copier masse
-            </button>
           </div>
         </div>
 
-        {/* Barre de status Auto-save & CSV Actions */}
-        {salarieActive && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "var(--s3)", fontSize: "var(--txs)", borderTop: "1px solid var(--border-soft)", paddingTop: "var(--s2)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)" }}>
-              {saveStatus === "saving" && <span style={{ color: "var(--text-muted)", animation: "pulse 1s infinite" }}>● Enregistrement automatique...</span>}
-              {saveStatus === "saved" && <span style={{ color: "var(--teal)", fontWeight: "bold" }}>✓ Enregistré automatiquement</span>}
-              {saveStatus === "modified" && <span style={{ color: "var(--amber-700)" }}>● Saisie modifiée...</span>}
-              {saveStatus === "error" && <span style={{ color: "var(--red)" }}>Échec de sauvegarde</span>}
-            </div>
+        {/* Status et outils CSV */}
+        <div className="flex items-center gap-3 ml-auto">
+          {saveStatus === "saving" && (
+            <span className="text-xs font-medium text-amber-600 animate-pulse">● Enregistrement…</span>
+          )}
+          {saveStatus === "saved" && (
+            <span className="text-xs font-bold text-teal-600">✓ Enregistré</span>
+          )}
+          {saveStatus === "modified" && (
+            <span className="text-xs font-semibold text-amber-600">● Modifié (non validé)</span>
+          )}
 
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--s3)" }}>
-              <button onClick={handleExportCSV} className="btn-link" style={{ fontSize: "var(--txs)", cursor: "pointer", background: "none", border: "none" }}>
-                Exporter CSV
-              </button>
-              <label className="btn-link" style={{ fontSize: "var(--txs)", cursor: "pointer" }}>
-                Importer CSV
-                <input type="file" accept=".csv" onChange={handleImportCSV} style={{ display: "none" }} />
-              </label>
-            </div>
+          <div className="flex items-center gap-2 border-l pl-3" style={{ borderColor: "var(--border-soft)" }}>
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              className="text-[11px] font-semibold hover:underline"
+              style={{ color: "var(--accent)" }}
+            >
+              Export CSV
+            </button>
+            <label className="text-[11px] font-semibold hover:underline cursor-pointer" style={{ color: "var(--accent)" }}>
+              Import CSV
+              <input type="file" accept=".csv" onChange={handleImportCSV} style={{ display: "none" }} />
+            </label>
           </div>
-        )}
+        </div>
       </div>
 
+      {/* Messages et Alertes */}
       {erreur && (
-        <div className="badge badge-red" style={{ padding: "var(--s3)", borderRadius: "var(--r)", display: "block" }}>
-          {erreur}
+        <div className="p-3 text-xs font-semibold rounded bg-red-50 text-red-700 border border-red-200">
+          ⚠️ {erreur}
         </div>
       )}
 
       {messageCharge && (
-        <div className="badge badge-green" style={{ padding: "var(--s3)", borderRadius: "var(--r)", display: "block" }}>
-          {messageCharge}
+        <div className="p-3 text-xs font-semibold rounded bg-teal-50 text-teal-800 border border-teal-200">
+          ✓ {messageCharge}
         </div>
       )}
 
-      {/* Warnings / Smart Guardrails */}
       {validationWarnings.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+        <div className="flex flex-col gap-1">
           {validationWarnings.map((w, idx) => (
-            <div key={idx} style={{ background: "#fffbeb", borderLeft: "3px solid #d97706", color: "#b45309", padding: "8px 12px", borderRadius: "4px", fontSize: "var(--txs)", fontWeight: 600 }}>
-              {w}
+            <div key={idx} className="p-2 text-xs font-semibold rounded bg-amber-50 text-amber-800 border border-amber-200">
+              ⚡ {w}
             </div>
           ))}
         </div>
       )}
 
+      {/* 3. ODOO FORM SHEET (Fiche Document Centrale) */}
       {salarieActive ? (
-        <div style={{ display: "grid", gap: "var(--s6)", alignItems: "start" }} className="grid grid-cols-1 lg:grid-cols-3">
-
-          {/* Main Form Column (BULLETIN DE PAIE) */}
-          <div className="lg:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "var(--s4)" }}>
-
-            <div style={{
-              background: "#0f233c",
-              color: "white",
-              padding: "var(--s3) var(--s5)",
-              borderTopLeftRadius: "var(--rlg)",
-              borderTopRightRadius: "var(--rlg)",
-              fontWeight: 700,
-              fontSize: "var(--t2xs)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              marginBottom: "-20px",
-              zIndex: 2
-            }}>
-              BULLETIN DE PAIE
-            </div>
-
-            <form key={formKey} ref={formRef} onSubmit={onSubmit} onKeyDown={handleKeyDown} onChange={debouncedCalcul} className="card" style={{ display: "flex", flexDirection: "column", gap: "var(--s5)", paddingTop: "var(--s8)" }}>
-              <input type="hidden" name="annee" value={annee} />
-              <input type="hidden" name="mois" value={mois} />
-
-              {/* SALAIRE DE BASE */}
-              <div style={{ borderBottom: "var(--hairline)", paddingBottom: "var(--s4)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s3)" }}>
-                  <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
-                    SALAIRE DE BASE
-                  </h4>
-                </div>
-                <div className="field" style={{ marginBottom: 0 }}>
-                  <label style={{ fontSize: "10px", color: "var(--text-muted)" }}>SALAIRE DE BASE THÉORIQUE (DA)</label>
-                  <input
-                    name="salaire_base_theorique"
-                    type="number"
-                    step="0.01"
-                    defaultValue={initialValues["salaire_base_theorique"] ?? salarieActive.salaire_base_theorique}
-                    onFocus={(e) => e.target.select()}
-                    style={{ fontWeight: "bold" }}
-                  />
-                  {prevMonthValues["salaire_base_theorique"] !== undefined && (
-                    <span style={{ fontSize: "10px", color: "var(--text-muted)", display: "block", marginTop: 4 }}>
-                      Mois dernier : {formatDA(prevMonthValues["salaire_base_theorique"])}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* ABSENCES */}
-              <div style={{ borderBottom: "var(--hairline)", paddingBottom: "var(--s4)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s4)" }}>
-                  <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
-                    ABSENCES (HEURES)
-                  </h4>
-                  <span className="badge badge-red" style={{ fontSize: "9px", padding: "2px 8px" }}>RÉDUISENT LE SALAIRE</span>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: "var(--s3)" }}>
-                  {CHAMPS_ABSENCES.map((c) => (
-                    <div key={c.name} className="field" style={{ marginBottom: 0 }}>
-                      <label style={{ fontSize: "9px" }}>{c.label}</label>
-                      <input
-                        name={c.name}
-                        type="number"
-                        step="0.01"
-                        defaultValue={initialValues[c.name] ?? 0}
-                        onFocus={(e) => e.target.select()}
-                        style={{ textAlign: "center" }}
-                      />
-                      {prevMonthValues[c.name] !== undefined && prevMonthValues[c.name] > 0 && (
-                        <span style={{ fontSize: "8px", color: "var(--text-muted)", display: "block", marginTop: 4, textAlign: "center" }}>
-                          Mois dernier : {prevMonthValues[c.name]} h
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* HEURES SUPPLEMENTAIRES */}
-              <div style={{ borderBottom: "var(--hairline)", paddingBottom: "var(--s4)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s4)" }}>
-                  <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
-                    HEURES SUPPLÉMENTAIRES
-                  </h4>
-                  <span className="badge badge-accent" style={{ fontSize: "9px", padding: "2px 8px" }}>MAJORATIONS PARAMÉTRABLES</span>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--s3)" }}>
-                  {CHAMPS_HEURES_SUP.map((c) => (
-                    <div key={c.name} className="field" style={{ marginBottom: 0 }}>
-                      <label style={{ fontSize: "9px" }}>{c.label}</label>
-                      <input
-                        name={c.name}
-                        type="number"
-                        step="0.01"
-                        defaultValue={initialValues[c.name] ?? 0}
-                        onFocus={(e) => e.target.select()}
-                        style={{ textAlign: "center" }}
-                      />
-                      {prevMonthValues[c.name] !== undefined && prevMonthValues[c.name] > 0 && (
-                        <span style={{ fontSize: "8px", color: "var(--text-muted)", display: "block", marginTop: 4, textAlign: "center" }}>
-                          Mois dernier : {prevMonthValues[c.name]} h
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Champs masqués pour préserver la compatibilité et les valeurs existantes */}
-              {CHAMPS_PRIMES_MONTANT.map((c) => (
-                <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
-              ))}
-              {CHAMPS_PRIMES_POURCENTAGE.map((c) => (
-                <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
-              ))}
-              {CHAMPS_RETENUES.map((c) => (
-                <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
-              ))}
-
-              {/* PRIMES, INDEMNITÉS ET RETENUES — CATALOGUE DYNAMIQUE */}
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)", marginBottom: "var(--s4)" }}>
-                  <h4 style={{ fontSize: "var(--txs)", fontWeight: 700, textTransform: "uppercase", color: "var(--text)", letterSpacing: "0.04em" }}>
-                    RUBRIQUES DU CATALOGUE
-                  </h4>
-                  <span className="badge badge-teal" style={{ fontSize: "9px", padding: "2px 8px" }}>PERSONNALISÉES PAR SALARIÉ</span>
-                </div>
-
-                {/* Add Rubric Input search bar */}
-                <div style={{ position: "relative", marginBottom: "var(--s4)", border: "1px dashed var(--amber)", borderRadius: "var(--r)", padding: "12px", background: "var(--amber-50)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "var(--s2)" }}>
-                    <span style={{ fontSize: "var(--t2xs)", fontWeight: "bold", color: "var(--amber-800)", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                      + AJOUTER UNE RUBRIQUE
-                    </span>
-                    <div style={{ flex: 1, position: "relative" }}>
-                      <input
-                        type="text"
-                        value={recherche}
-                        onChange={(e) => setRecherche(e.target.value)}
-                        placeholder="Rechercher par code ou libellé..."
-                        style={{ width: "100%", padding: "8px 12px", borderRadius: "4px", border: "1px solid var(--border)", fontSize: "var(--tsm)", background: "var(--surface)" }}
-                      />
-                    </div>
-                  </div>
-
-                  {resultatsRecherche.length > 0 && (
-                    <div
-                      className="card"
-                      style={{
-                        position: "absolute",
-                        zIndex: 10,
-                        top: "100%",
-                        left: 0,
-                        right: 0,
-                        marginTop: 4,
-                        padding: "var(--s1)",
-                        maxHeight: 260,
-                        overflowY: "auto",
-                        boxShadow: "var(--shmd)",
-                      }}
+        <OdooSheet
+          statusbar={
+            <OdooStatusbar
+              steps={[
+                { id: "draft", label: "1. Brouillon" },
+                { id: "computed", label: "2. Calculé en direct" },
+                { id: "saved", label: "3. Validé & Enregistré" },
+              ]}
+              currentStep={estEnregistre ? "saved" : resultat ? "computed" : "draft"}
+              actions={
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => formRef.current?.requestSubmit()}
+                    disabled={isPending}
+                    className="btn btn-primary text-xs font-bold px-3 py-1.5 rounded"
+                  >
+                    Valider le bulletin
+                  </button>
+                  {initialBulletin?.bulletin_id && (
+                    <button
+                      type="button"
+                      onClick={handleSupprimer}
+                      disabled={isPending}
+                      className="text-xs font-semibold text-red-600 hover:underline px-2"
                     >
-                      {resultatsRecherche.map((r) => {
-                        const isGain = r.type_valeur === "Gain (+)";
-                        const badgeClass = isGain ? "badge-teal" : "badge-red";
-                        const badgeText = isGain ? "Gain" : "Retenue";
-                        const catLabel = LABELS_CATEGORIE[r.categorie] || r.categorie;
-                        return (
-                          <button
-                            key={r.code}
-                            type="button"
-                            onClick={() => ajouterRubrique(r)}
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              width: "100%",
-                              padding: "8px 12px",
-                              background: "none",
-                              border: "none",
-                              borderBottom: "1px solid var(--border-soft)",
-                              cursor: "pointer",
-                              fontSize: "var(--tsm)",
-                              textAlign: "left",
-                            }}
-                          >
-                            <div>
-                              <strong style={{ fontFamily: "var(--mono)", color: "var(--accent)" }}>{r.code}</strong>{" "}
-                              <span style={{ color: "var(--text)" }}>— {r.libelle}</span>
-                            </div>
-                            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                              <span className={`badge ${badgeClass}`} style={{ fontSize: "10px", padding: "2px 6px" }}>{badgeText}</span>
-                              <span className="badge" style={{ fontSize: "10px", padding: "2px 6px", border: "1px solid var(--border)" }}>{catLabel}</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                      Supprimer
+                    </button>
                   )}
                 </div>
+              }
+            />
+          }
+          avatar={
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold shadow-sm"
+              style={{
+                background: "var(--accent-bg)",
+                color: "var(--accent-ink)",
+                border: "2px solid var(--accent)",
+              }}
+            >
+              {salarieActive.nom_prenom.slice(0, 2).toUpperCase()}
+            </div>
+          }
+          title={salarieActive.nom_prenom}
+          subtitle={`Matricule : ${salarieActive.matricule || "—"} • Fonction : ${salarieActive.fonction || "Non renseigné"} • Période : ${MOIS[mois - 1]} ${annee}`}
+          smartButtons={[
+            {
+              id: "sb-base",
+              label: "Salaire de base",
+              count: formatDA(initialValues["salaire_base_theorique"] ?? salarieActive.salaire_base_theorique),
+            },
+            {
+              id: "sb-brut",
+              label: "Total Brut (Gains)",
+              count: formatDA(resultat ? resultat.total_gains : 0),
+            },
+            {
+              id: "sb-cnas",
+              label: "Retenue CNAS (9%)",
+              count: formatDA(resultat ? resultat.retenue_cnas : 0),
+            },
+            {
+              id: "sb-net",
+              label: "NET À PAYER",
+              count: formatDA(resultat ? resultat.net_a_payer : 0),
+            },
+          ]}
+        >
+          {/* Formulaire englobant avec Onglets Odoo */}
+          <form
+            key={formKey}
+            ref={formRef}
+            onSubmit={onSubmit}
+            onKeyDown={handleKeyDown}
+            onChange={debouncedCalcul}
+            className="flex flex-col gap-6"
+          >
+            <input type="hidden" name="annee" value={annee} />
+            <input type="hidden" name="mois" value={mois} />
 
-                {/* Rubrics list */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "var(--s2)" }}>
-                  {lignes.map((ligne) => {
-                    const isGain = ligne.type_valeur === "Gain (+)" || !ligne.type_valeur?.includes("Retenue");
-                    const prevL = prevMonthLignes.find(pl => pl.code === ligne.code);
+            {/* Champs masqués pour compatibilité existante */}
+            {CHAMPS_PRIMES_MONTANT.map((c) => (
+              <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
+            ))}
+            {CHAMPS_PRIMES_POURCENTAGE.map((c) => (
+              <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
+            ))}
+            {CHAMPS_RETENUES.map((c) => (
+              <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
+            ))}
 
-                    return (
-                      <div
-                        key={ligne.code}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "var(--s3)",
-                          padding: "var(--s2) var(--s3)",
-                          background: "var(--surface-2)",
-                          borderRadius: "var(--r)",
-                          border: "1px solid var(--border-soft)",
-                          justifyContent: "space-between",
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: "var(--s3)", flex: "1 1 auto" }}>
-                          <div style={{
-                            background: "var(--amber-100)",
-                            color: "var(--amber-800)",
-                            padding: "4px 8px",
-                            borderRadius: "4px",
-                            fontWeight: "bold",
-                            fontFamily: "var(--mono)",
-                            fontSize: "var(--txs)",
-                            minWidth: "60px",
-                            textAlign: "center"
-                          }}>
-                            {ligne.code}
-                          </div>
-
-                          <div style={{ display: "flex", flexDirection: "column" }}>
-                            <div style={{ fontWeight: 600, fontSize: "var(--tsm)" }}>
-                              {ligne.libelle}
-                            </div>
-                            {prevL && (
-                              <span style={{ fontSize: "8px", color: "var(--text-muted)" }}>
-                                Mois dernier : {prevL.valeur_1} {prevL.valeur_2 > 0 ? ` x ${prevL.valeur_2}` : ""}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div style={{ display: "flex", alignItems: "center", gap: "var(--s3)", flexWrap: "nowrap" }}>
-                          <div style={{
-                            width: "24px",
-                            height: "24px",
-                            borderRadius: "50%",
-                            background: isGain ? "var(--green-100)" : "var(--red-100)",
-                            color: isGain ? "var(--green-700)" : "var(--red-700)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontWeight: "bold",
-                            fontSize: "14px"
-                          }}>
-                            {isGain ? "+" : "-"}
-                          </div>
-
-                          {ligne.categorie === "nombre_x_taux" ? (
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                              <input
-                                name={`dyn_${ligne.code}_v1`}
-                                type="number"
-                                step="0.01"
-                                defaultValue={ligne.valeur_1}
-                                onFocus={(e) => e.target.select()}
-                                style={{ width: "60px", padding: "6px", textAlign: "center", height: "34px" }}
-                                placeholder="Nbr"
-                              />
-                              <span style={{ fontSize: "var(--txs)", color: "var(--text-muted)" }}>×</span>
-                              <input
-                                name={`dyn_${ligne.code}_v2`}
-                                type="number"
-                                step="0.01"
-                                defaultValue={ligne.valeur_2}
-                                onFocus={(e) => e.target.select()}
-                                style={{ width: "80px", padding: "6px", textAlign: "center", height: "34px" }}
-                                placeholder="Taux"
-                              />
-                            </div>
-                          ) : (
-                            <input
-                              name={`dyn_${ligne.code}_v1`}
-                              type="number"
-                              step="0.01"
-                              defaultValue={ligne.valeur_1}
-                              onFocus={(e) => e.target.select()}
-                              style={{ width: "90px", padding: "6px", textAlign: "center", height: "34px" }}
-                            />
-                          )}
-
-                          <span style={{ fontSize: "var(--tsm)", fontWeight: "bold", color: "var(--text-muted)", width: "30px" }}>
-                            {LABELS_CATEGORIE[ligne.categorie] || "DA"}
+            {/* SYSTÈME D'ONGLETS ODOO NOTEBOOK */}
+            <OdooNotebook
+              tabs={[
+                {
+                  id: "lignes_paie",
+                  label: "Rubriques & Lignes de Paie",
+                  count: lignes.length,
+                  content: (
+                    <div className="flex flex-col gap-4">
+                      {/* Salaire de base théorique */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg" style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold" style={{ color: "var(--text)" }}>
+                            Salaire de base théorique contractuel
                           </span>
-
-                          <button
-                            type="button"
-                            onClick={() => retirerRubrique(ligne.code)}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              color: "var(--text-muted)",
-                              cursor: "pointer",
-                              fontSize: "16px",
-                              padding: "4px"
-                            }}
-                          >
-                            ×
-                          </button>
+                          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                            Base mensuelle légale (173.33 h)
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            name="salaire_base_theorique"
+                            type="number"
+                            step="0.01"
+                            defaultValue={initialValues["salaire_base_theorique"] ?? salarieActive.salaire_base_theorique}
+                            onFocus={(e) => e.target.select()}
+                            className="font-bold text-sm px-3 py-1.5 rounded border text-right w-44"
+                            style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                          />
+                          <span className="text-xs font-bold" style={{ color: "var(--text-muted)" }}>DA</span>
                         </div>
                       </div>
-                    );
-                  })}
 
-                  {lignes.length === 0 && (
-                    <p style={{ fontSize: "var(--txs)", color: "var(--text-muted)", textAlign: "center", padding: "var(--s3)" }}>
-                      Aucune rubrique additionnelle ajoutée pour ce salarié.
-                    </p>
-                  )}
-                </div>
-              </div>
+                      {/* TABLE DES RUBRIQUES FAÇON ODOO */}
+                      <div className="table-wrap rounded-lg border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--border)" }}>
+                              <th className="py-2.5 px-3 font-bold w-20">Code</th>
+                              <th className="py-2.5 px-3 font-bold">Désignation de la rubrique</th>
+                              <th className="py-2.5 px-3 font-bold w-28">Type</th>
+                              <th className="py-2.5 px-3 font-bold w-28 text-center">Catégorie</th>
+                              <th className="py-2.5 px-3 font-bold w-48 text-right">Valeur / Taux</th>
+                              <th className="py-2.5 px-3 font-bold w-12 text-center"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {lignes.map((ligne) => {
+                              const isGain = ligne.type_valeur === "Gain (+)";
+                              return (
+                                <tr
+                                  key={ligne.code}
+                                  className="border-b transition-colors hover:bg-slate-50/50"
+                                  style={{ borderColor: "var(--border-soft)" }}
+                                >
+                                  {/* Code */}
+                                  <td className="py-2.5 px-3 font-mono font-bold" style={{ color: "var(--accent)" }}>
+                                    {ligne.code}
+                                  </td>
 
-              {/* Form Buttons */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "var(--s4)", borderTop: "var(--hairline)", paddingTop: "var(--s4)" }}>
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="btn btn-primary"
-                  style={{ background: "#0f233c", border: "none", display: "flex", alignItems: "center", gap: "8px" }}
-                >
-                  Enregistrer le bulletin
-                </button>
+                                  {/* Libellé */}
+                                  <td className="py-2.5 px-3 font-medium">
+                                    {ligne.libelle}
+                                  </td>
 
-                {initialBulletin?.bulletin_id && (
-                  <button
-                    type="button"
-                    onClick={handleSupprimer}
-                    disabled={isPending}
-                    className="btn"
-                    style={{ color: "var(--red-600)", background: "transparent", border: "none", fontSize: "var(--tsm)", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}
-                  >
-                    Supprimer ce bulletin
-                  </button>
-                )}
-              </div>
-            </form>
-          </div>
+                                  {/* Type */}
+                                  <td className="py-2.5 px-3">
+                                    <span
+                                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                        isGain ? "bg-teal-100 text-teal-800" : "bg-red-100 text-red-800"
+                                      }`}
+                                    >
+                                      {isGain ? "Gain (+)" : "Retenue (-)"}
+                                    </span>
+                                  </td>
 
-          {/* Right Column (RÉSULTAT DU CALCUL) */}
-          <div className="lg:col-span-1" style={{ display: "flex", flexDirection: "column", gap: "var(--s4)", position: "sticky", top: "var(--s6)" }}>
+                                  {/* Catégorie */}
+                                  <td className="py-2.5 px-3 text-center text-muted-foreground font-mono">
+                                    {LABELS_CATEGORIE[ligne.categorie] || "DA"}
+                                  </td>
 
-            <div style={{
-              background: "#0f233c",
-              color: "white",
-              padding: "var(--s3) var(--s5)",
-              borderTopLeftRadius: "var(--rlg)",
-              borderTopRightRadius: "var(--rlg)",
-              fontWeight: 700,
-              fontSize: "var(--t2xs)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              marginBottom: "-20px",
-              zIndex: 2
-            }}>
-              RÉSULTAT DU CALCUL
-            </div>
+                                  {/* Inputs Valeurs */}
+                                  <td className="py-2.5 px-3 text-right">
+                                    {ligne.categorie === "nombre_x_taux" ? (
+                                      <div className="flex items-center justify-end gap-1.5">
+                                        <input
+                                          name={`dyn_${ligne.code}_v1`}
+                                          type="number"
+                                          step="0.01"
+                                          defaultValue={ligne.valeur_1}
+                                          onFocus={(e) => e.target.select()}
+                                          className="w-16 px-2 py-1 text-right text-xs rounded border"
+                                          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                                          placeholder="Nbr"
+                                        />
+                                        <span className="text-muted-foreground">×</span>
+                                        <input
+                                          name={`dyn_${ligne.code}_v2`}
+                                          type="number"
+                                          step="0.01"
+                                          defaultValue={ligne.valeur_2}
+                                          onFocus={(e) => e.target.select()}
+                                          className="w-20 px-2 py-1 text-right text-xs rounded border font-semibold"
+                                          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                                          placeholder="Taux"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center justify-end gap-1">
+                                        <input
+                                          name={`dyn_${ligne.code}_v1`}
+                                          type="number"
+                                          step="0.01"
+                                          defaultValue={ligne.valeur_1}
+                                          onFocus={(e) => e.target.select()}
+                                          className="w-28 px-2 py-1 text-right text-xs rounded border font-semibold"
+                                          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                                        />
+                                        <span className="text-muted-foreground text-[11px]">
+                                          {ligne.categorie === "pourcentage" ? "%" : "DA"}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </td>
 
-            <div className="card" style={{ display: "flex", flexDirection: "column", gap: "var(--s4)", paddingTop: "var(--s8)" }}>
-              {resultat ? (
-                <>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", borderBottom: "var(--hairline)", paddingBottom: "var(--s3)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--tsm)" }}>
-                      <span style={{ color: "var(--text-muted)" }}>Heures travaillées</span>
-                      <strong style={{ color: "var(--text)" }}>{resultat.heures_travaillees.toFixed(2)} h</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--tsm)" }}>
-                      <span style={{ color: "var(--text-muted)" }}>Salaire de base réel</span>
-                      <strong style={{ color: "var(--text)" }}>{formatDA(resultat.salaire_base_reel)}</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--tsm)" }}>
-                      <span style={{ color: "var(--text-muted)" }}>Heures supplémentaires</span>
-                      <strong style={{ color: "var(--text)" }}>{formatDA(resultat.total_heures_sup_da)}</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--tsm)", borderTop: "1px dashed var(--border-soft)", paddingTop: "8px", marginTop: "4px" }}>
-                      <span style={{ color: "var(--text)", fontWeight: "bold" }}>Total des gains</span>
-                      <strong style={{ color: "var(--marine-900)", fontWeight: "bold" }}>{formatDA(resultat.total_gains)}</strong>
-                    </div>
-                  </div>
+                                  {/* Supprimer */}
+                                  <td className="py-2.5 px-3 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => retirerRubrique(ligne.code)}
+                                      title="Supprimer la ligne"
+                                      className="text-gray-400 hover:text-red-600 transition-colors p-1"
+                                    >
+                                      ✕
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", borderBottom: "var(--hairline)", paddingBottom: "var(--s3)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--tsm)" }}>
-                      <span style={{ color: "var(--text-muted)" }}>Base CNAS</span>
-                      <strong style={{ color: "var(--text)" }}>{formatDA(resultat.base_cnas)}</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--tsm)" }}>
-                      <span style={{ color: "var(--text-muted)" }}>Retenue CNAS (9%)</span>
-                      <strong style={{ color: "var(--text)" }}>{formatDA(resultat.retenue_cnas)}</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--tsm)" }}>
-                      <span style={{ color: "var(--text-muted)" }}>Base imposable IRG</span>
-                      <strong style={{ color: "var(--text)" }}>{formatDA(resultat.base_imposable_irg)}</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--tsm)" }}>
-                      <span style={{ color: "var(--text-muted)" }}>IRG brut</span>
-                      <strong style={{ color: "var(--text)" }}>{formatDA(resultat.irg_brut)}</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--tsm)" }}>
-                      <span style={{ color: "var(--text-muted)" }}>Abattement IRG (40%)</span>
-                      <strong style={{ color: "var(--text)" }}>{formatDA(resultat.abattement_irg)}</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--tsm)" }}>
-                      <span style={{ color: "var(--text-muted)" }}>Retenue IRG nette</span>
-                      <strong style={{ color: "var(--text)" }}>{formatDA(resultat.retenue_irg_nette)}</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--tsm)", borderTop: "1px dashed var(--border-soft)", paddingTop: "8px", marginTop: "4px" }}>
-                      <span style={{ color: "var(--text)", fontWeight: "bold" }}>Total retenues</span>
-                      <strong style={{ color: "var(--text)", fontWeight: "bold" }}>{formatDA(resultat.total_retenues)}</strong>
-                    </div>
-                  </div>
+                            {lignes.length === 0 && (
+                              <tr>
+                                <td colSpan={6} className="py-6 text-center text-muted-foreground">
+                                  Aucune rubrique additionnelle ajoutée. Cliquez sur le bouton ci-dessous pour ajouter une prime ou retenue.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
 
-                  {/* NET A PAYER BANNER */}
-                  <div style={{
-                    background: "#0f233c",
-                    color: "white",
-                    padding: "var(--s4)",
-                    borderRadius: "var(--r)",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    fontWeight: "bold"
-                  }}>
-                    <span>NET À PAYER</span>
-                    <span style={{ fontSize: "20px" }}>{formatDA(resultat.net_a_payer)}</span>
-                  </div>
-
-                  {/* Drawer trigger button */}
-                  <button
-                    type="button"
-                    onClick={() => setIsDrawerOpen(true)}
-                    className="btn btn-secondary"
-                    style={{ width: "100%", justifyContent: "center", border: "1px solid var(--accent)" }}
-                  >
-                    Inspecter le détail du calcul
-                  </button>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--s2)", marginTop: "var(--s2)" }}>
-                    {estEnregistre ? (
-                      <>
-                        <a
-                          href={`/salaries/${salarieActive.id}/bulletin/pdf?annee=${resultat.annee}&mois=${resultat.mois}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-secondary"
-                          style={{ width: "100%", justifyContent: "center" }}
+                      {/* LE BOUTON ICONIQUE ODOO : « + Ajouter une ligne » */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                          style={{
+                            color: "var(--accent)",
+                            background: "var(--accent-bg)",
+                            border: "1px dashed var(--accent)",
+                          }}
                         >
-                          Voir bulletin salarié
-                        </a>
-                        <a
-                          href={`/salaries/${salarieActive.id}/bulletin/pdf?annee=${resultat.annee}&mois=${resultat.mois}&variante=employeur`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-secondary"
-                          style={{ width: "100%", justifyContent: "center" }}
-                        >
-                          Voir bulletin employeur
-                        </a>
-                        <Link
-                          href={`/salaries/${salarieActive.id}/bulletin/explication?annee=${resultat.annee}&mois=${resultat.mois}`}
-                          className="btn btn-secondary"
-                          style={{ width: "100%", textAlign: "center", justifyContent: "center" }}
-                        >
-                          Voir l&apos;explication détaillée du calcul
-                        </Link>
-                      </>
-                    ) : (
-                      <>
-                        <button disabled className="btn btn-secondary" style={{ width: "100%", opacity: 0.5, cursor: "not-allowed" }}>
-                          Voir bulletin salarié
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                          </svg>
+                          <span>Ajouter une ligne</span>
                         </button>
-                        <button disabled className="btn btn-secondary" style={{ width: "100%", opacity: 0.5, cursor: "not-allowed" }}>
-                          Voir bulletin employeur
-                        </button>
-                        <button disabled className="btn btn-secondary" style={{ width: "100%", opacity: 0.5, cursor: "not-allowed" }}>
-                          Voir l&apos;explication détaillée du calcul
-                        </button>
-                        <p style={{ fontSize: "11px", color: "var(--text-muted)", textAlign: "center" }}>
-                          Enregistrez d&apos;abord le bulletin.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <p style={{ fontSize: "var(--tsm)", color: "var(--text-muted)", textAlign: "center", padding: "var(--s4)" }}>
-                  Le résultat du calcul s&apos;affichera en temps réel ici.
-                </p>
-              )}
-            </div>
 
-          </div>
+                        {/* Menu de sélection Odoo déroulant instantané */}
+                        {isAddMenuOpen && (
+                          <div
+                            className="absolute left-0 top-full mt-2 w-full max-w-md rounded-lg shadow-xl border p-2 z-30"
+                            style={{
+                              background: "var(--surface)",
+                              borderColor: "var(--border)",
+                            }}
+                          >
+                            <input
+                              type="text"
+                              autoFocus
+                              value={recherche}
+                              onChange={(e) => setRecherche(e.target.value)}
+                              placeholder="Rechercher une prime, indemnité ou retenue..."
+                              className="w-full text-xs px-3 py-2 rounded border mb-2"
+                              style={{ borderColor: "var(--border)", background: "var(--surface-2)" }}
+                            />
 
-        </div>
+                            <div className="max-h-56 overflow-y-auto flex flex-col gap-1">
+                              {resultatsRecherche.map((r) => {
+                                const isGain = r.type_valeur === "Gain (+)";
+                                return (
+                                  <button
+                                    key={r.code}
+                                    type="button"
+                                    onClick={() => ajouterRubrique(r)}
+                                    className="flex items-center justify-between p-2 rounded hover:bg-slate-100 text-left text-xs transition-colors"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono font-bold" style={{ color: "var(--accent)" }}>
+                                        {r.code}
+                                      </span>
+                                      <span className="font-medium" style={{ color: "var(--text)" }}>
+                                        {r.libelle}
+                                      </span>
+                                    </div>
+                                    <span
+                                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                        isGain ? "bg-teal-100 text-teal-800" : "bg-red-100 text-red-800"
+                                      }`}
+                                    >
+                                      {isGain ? "Gain" : "Retenue"}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                              {resultatsRecherche.length === 0 && (
+                                <span className="p-3 text-center text-xs text-muted-foreground">
+                                  Toutes les rubriques correspondantes sont déjà ajoutées.
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  id: "absences_heures",
+                  label: "Absences & Heures Supplémentaires",
+                  content: (
+                    <div className="flex flex-col gap-6">
+                      {/* Section Absences */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text)" }}>
+                            DÉCOMPTE DES ABSENCES (HEURES)
+                          </h4>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-700">
+                            Déduites du salaire de base
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                          {CHAMPS_ABSENCES.map((c) => (
+                            <div key={c.name} className="flex flex-col gap-1 p-2.5 rounded border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
+                              <label className="text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
+                                {c.label}
+                              </label>
+                              <input
+                                name={c.name}
+                                type="number"
+                                step="0.01"
+                                defaultValue={initialValues[c.name] ?? 0}
+                                onFocus={(e) => e.target.select()}
+                                className="text-xs font-bold text-center px-2 py-1 rounded border"
+                                style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                              />
+                              {prevMonthValues[c.name] !== undefined && prevMonthValues[c.name] > 0 && (
+                                <span className="text-[10px] text-center text-muted-foreground">
+                                  Mois dernier: {prevMonthValues[c.name]} h
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Section Heures Sup */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text)" }}>
+                            HEURES SUPPLÉMENTAIRES
+                          </h4>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-teal-100 text-teal-800">
+                            Majorations légales
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {CHAMPS_HEURES_SUP.map((c) => (
+                            <div key={c.name} className="flex flex-col gap-1 p-2.5 rounded border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
+                              <label className="text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
+                                {c.label}
+                              </label>
+                              <input
+                                name={c.name}
+                                type="number"
+                                step="0.01"
+                                defaultValue={initialValues[c.name] ?? 0}
+                                onFocus={(e) => e.target.select()}
+                                className="text-xs font-bold text-center px-2 py-1 rounded border"
+                                style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                              />
+                              {prevMonthValues[c.name] !== undefined && prevMonthValues[c.name] > 0 && (
+                                <span className="text-[10px] text-center text-muted-foreground">
+                                  Mois dernier: {prevMonthValues[c.name]} h
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  id: "cotisations_synthese",
+                  label: "Cotisations Sociales & Charges Patronales",
+                  content: (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Synthèse Retenues Salariales */}
+                      <div className="p-4 rounded-lg border flex flex-col gap-3" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
+                        <h4 className="text-xs font-bold uppercase tracking-wider pb-2 border-b" style={{ color: "var(--text)", borderColor: "var(--border-soft)" }}>
+                          Retenues Salariales & Fiscales
+                        </h4>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Assiette CNAS cotisable</span>
+                          <span className="font-semibold">{formatDA(resultat ? resultat.base_cnas : 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Retenue CNAS Salarié (9%)</span>
+                          <span className="font-bold text-red-600">{formatDA(resultat ? resultat.retenue_cnas : 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Base Imposable IRG</span>
+                          <span className="font-semibold">{formatDA(resultat ? resultat.base_imposable_irg : 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">IRG Net prélevé</span>
+                          <span className="font-bold text-red-600">{formatDA(resultat ? resultat.retenue_irg_nette : 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs font-bold pt-2 border-t" style={{ borderColor: "var(--border-soft)" }}>
+                          <span>Total Retenues Salarié</span>
+                          <span className="text-red-700">{formatDA(resultat ? resultat.total_retenues : 0)}</span>
+                        </div>
+                      </div>
+
+                      {/* Charges Patronales Employeur */}
+                      <div className="p-4 rounded-lg border flex flex-col gap-3" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
+                        <h4 className="text-xs font-bold uppercase tracking-wider pb-2 border-b" style={{ color: "var(--text)", borderColor: "var(--border-soft)" }}>
+                          Charges & Coût Total Employeur
+                        </h4>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Salaire Brut (Total gains)</span>
+                          <span className="font-semibold">{formatDA(resultat ? resultat.total_gains : 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Cotisation CNAS Employeur (26%)</span>
+                          <span className="font-bold text-amber-700">
+                            {formatDA(resultat ? resultat.base_cnas * 0.26 : 0)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs font-bold pt-2 border-t" style={{ borderColor: "var(--border-soft)" }}>
+                          <span>Coût Global Employeur</span>
+                          <span className="text-base font-bold" style={{ color: "var(--accent)" }}>
+                            {formatDA(resultat ? resultat.cout_total_employeur : 0)}
+                          </span>
+                        </div>
+                        <div className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
+                          La part patronale CNAS de 26% s&apos;applique directement sur la totalité de l&apos;assiette cotisable de l&apos;entreprise.
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </form>
+        </OdooSheet>
       ) : (
-        <div className="card" style={{ textAlign: "center", padding: "var(--s6)", color: "var(--text-muted)" }}>
-          Sélectionnez un salarié ci-dessus pour afficher et saisir ses données mensuelles de paie.
+        <div className="p-12 text-center rounded-lg border border-dashed text-muted-foreground" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+          Sélectionnez un salarié dans la barre supérieure pour afficher sa fiche de paie.
         </div>
       )}
 
-      {/* 4. Cascade de Calcul Interactive en Direct (Live Math Drawer) */}
+      {/* 4. MODAL DRAWER D'INSPECTION MATHÉMATIQUE EN DIRECT */}
       {isDrawerOpen && salarieActive && resultat && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(15, 35, 60, 0.4)",
-            backdropFilter: "blur(4px)",
-            zIndex: 9999,
-            display: "flex",
-            justifyContent: "flex-end"
-          }}
+          className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs"
           onClick={() => setIsDrawerOpen(false)}
         >
           <div
-            style={{
-              width: "100%",
-              maxWidth: "500px",
-              height: "100%",
-              background: "var(--surface)",
-              boxShadow: "var(--shlg)",
-              padding: "var(--s5)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "var(--s4)",
-              overflowY: "auto",
-              animation: "slideIn 0.3s ease-out"
-            }}
+            className="w-full max-w-lg h-full overflow-y-auto p-6 flex flex-col gap-4 shadow-2xl transition-transform"
+            style={{ background: "var(--surface)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid var(--border-soft)", paddingBottom: "var(--s3)" }}>
-              <h3 style={{ fontSize: "var(--tlg)" }}>Détails du calcul (Live)</h3>
+            <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: "var(--border)" }}>
+              <h3 className="font-bold text-base" style={{ color: "var(--text)" }}>
+                Détails du calcul (Live Engine)
+              </h3>
               <button
+                type="button"
                 onClick={() => setIsDrawerOpen(false)}
-                style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "var(--text)" }}
+                className="text-gray-400 hover:text-gray-700 text-lg font-bold"
               >
-                ×
+                ✕
               </button>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "var(--s4)", fontSize: "var(--tsm)" }}>
-              <div>
-                <strong style={{ textTransform: "uppercase", fontSize: "var(--txs)", color: "var(--accent)" }}>1. Base de calcul</strong>
-                <div style={{ background: "var(--surface-2)", padding: "12px", borderRadius: "6px", marginTop: "6px", fontFamily: "var(--mono)", fontSize: "var(--txs)", lineHeight: "1.6" }}>
-                  Salaire Base Théorique : {formatDA(resultat.salaire_base_reel + (resultat.total_heures_absence * (resultat.salaire_base_reel / 173.33)))} <br />
-                  Heures d'absences déduites : {resultat.total_heures_absence} h<br />
-                  Taux horaire : {((resultat.salaire_base_reel) / (173.33 - resultat.total_heures_absence || 1)).toFixed(2)} DA / h<br />
-                  <strong>Salaire de base réel : {formatDA(resultat.salaire_base_reel)}</strong>
-                </div>
+            <div className="flex flex-col gap-4 text-xs font-mono">
+              <div className="p-3 rounded bg-slate-50 border leading-relaxed">
+                <strong className="text-[11px] uppercase text-purple-700 block mb-1">1. Base & Absences</strong>
+                Base théorique : {formatDA(resultat.salaire_base_reel + (resultat.total_heures_absence * (resultat.salaire_base_reel / 173.33)))}<br />
+                Heures déduites : {resultat.total_heures_absence} h<br />
+                <strong>Base réelle : {formatDA(resultat.salaire_base_reel)}</strong>
               </div>
 
-              <div>
-                <strong style={{ textTransform: "uppercase", fontSize: "var(--txs)", color: "var(--accent)" }}>2. Primes & Gains</strong>
-                <div style={{ background: "var(--surface-2)", padding: "12px", borderRadius: "6px", marginTop: "6px", fontFamily: "var(--mono)", fontSize: "var(--txs)", lineHeight: "1.6" }}>
-                  Heures supplémentaires : {formatDA(resultat.total_heures_sup_da)}<br />
-                  Total primes fixes : {formatDA(resultat.total_gains - resultat.salaire_base_reel - resultat.total_heures_sup_da)}<br />
-                  <strong>Total Gains (Brut) : {formatDA(resultat.total_gains)}</strong>
-                </div>
+              <div className="p-3 rounded bg-slate-50 border leading-relaxed">
+                <strong className="text-[11px] uppercase text-purple-700 block mb-1">2. Primes & Heures Sup</strong>
+                Heures supplémentaires : {formatDA(resultat.total_heures_sup_da)}<br />
+                <strong>Total Brut : {formatDA(resultat.total_gains)}</strong>
               </div>
 
-              <div>
-                <strong style={{ textTransform: "uppercase", fontSize: "var(--txs)", color: "var(--accent)" }}>3. Cotisations Sociales (CNAS)</strong>
-                <div style={{ background: "var(--surface-2)", padding: "12px", borderRadius: "6px", marginTop: "6px", fontFamily: "var(--mono)", fontSize: "var(--txs)", lineHeight: "1.6" }}>
-                  Assiette CNAS : {formatDA(resultat.base_cnas)}<br />
-                  Part salariale (9%) : {formatDA(resultat.retenue_cnas)}<br />
-                  Part patronale (26%) : {formatDA(resultat.base_cnas * 0.26)}
-                </div>
+              <div className="p-3 rounded bg-slate-50 border leading-relaxed">
+                <strong className="text-[11px] uppercase text-purple-700 block mb-1">3. Cotisations CNAS</strong>
+                Assiette CNAS : {formatDA(resultat.base_cnas)}<br />
+                Part salariale 9% : {formatDA(resultat.retenue_cnas)}<br />
+                Part patronale 26% : {formatDA(resultat.base_cnas * 0.26)}
               </div>
 
-              <div>
-                <strong style={{ textTransform: "uppercase", fontSize: "var(--txs)", color: "var(--accent)" }}>4. Impôt sur le Revenu (IRG)</strong>
-                <div style={{ background: "var(--surface-2)", padding: "12px", borderRadius: "6px", marginTop: "6px", fontFamily: "var(--mono)", fontSize: "var(--txs)", lineHeight: "1.6" }}>
-                  Base imposable IRG : {formatDA(resultat.base_imposable_irg)} <br />
-                  IRG Brut calculé : {formatDA(resultat.irg_brut)} <br />
-                  Abattement calculé (40%) : {formatDA(resultat.abattement_irg)} <br />
-                  <strong>IRG Net prélevé : {formatDA(resultat.retenue_irg_nette)}</strong>
-                </div>
+              <div className="p-3 rounded bg-slate-50 border leading-relaxed">
+                <strong className="text-[11px] uppercase text-purple-700 block mb-1">4. Barème IRG 2022/2026</strong>
+                Base IRG : {formatDA(resultat.base_imposable_irg)}<br />
+                IRG Brut : {formatDA(resultat.irg_brut)}<br />
+                Abattement 40% : {formatDA(resultat.abattement_irg)}<br />
+                <strong>IRG Net : {formatDA(resultat.retenue_irg_nette)}</strong>
               </div>
 
-              <div>
-                <strong style={{ textTransform: "uppercase", fontSize: "var(--txs)", color: "var(--accent)" }}>5. Total & Coût Employeur</strong>
-                <div style={{ background: "var(--surface-2)", padding: "12px", borderRadius: "6px", marginTop: "6px", fontFamily: "var(--mono)", fontSize: "var(--txs)", lineHeight: "1.6" }}>
-                  Gains versés : {formatDA(resultat.total_gains)}<br />
-                  Charges patronales (26%) : {formatDA(resultat.base_cnas * 0.26)}<br />
-                  <strong>Coût global employeur : {formatDA(resultat.cout_total_employeur)}</strong>
-                </div>
+              <div className="p-3 rounded bg-purple-50 border border-purple-200 leading-relaxed font-bold text-sm">
+                NET À PAYER : {formatDA(resultat.net_a_payer)}
               </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Style animation pour le Drawer */}
-      <style jsx global>{`
-        @keyframes slideIn {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-        .btn-link {
-          color: var(--accent);
-          text-decoration: underline;
-          padding: 0;
-          font-weight: 600;
-        }
-        .btn-link:hover {
-          color: var(--accent-hover);
-        }
-      `}</style>
     </div>
   );
 }

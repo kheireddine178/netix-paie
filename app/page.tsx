@@ -1,131 +1,214 @@
 import Image from "next/image";
 import Link from "next/link";
-import FeatureSlides from "@/components/FeatureSlides";
 import {
   CreditCard,
-  Briefcase,
+  Users,
   Calendar,
+  FileText,
   Plane,
   TrendingUp,
   GraduationCap,
   UserCheck,
-  FileText,
-  ShieldAlert,
-  Scale,
-  Bookmark,
-  ChevronRight
+  ChevronRight,
+  CheckCircle2,
+  Sparkles,
 } from "lucide-react";
+
+const CORE_PILLARS = [
+  {
+    icon: Users,
+    title: "Gestion des Salariés",
+    desc: "Un annuaire unifié pour centraliser les coordonnées, fiches de poste, dossiers administratifs et coordonnées bancaires de vos équipes.",
+    color: "#4F46E5",
+  },
+  {
+    icon: CreditCard,
+    title: "Calcul Automatique de la Paie",
+    desc: "Saisissez les primes et absences, le système calcule instantanément le Brut, les cotisations et le Net à payer avec édition des bulletins PDF.",
+    color: "#059669",
+  },
+  {
+    icon: Calendar,
+    title: "Congés & Absences",
+    desc: "Gérez les demandes de congés annuels, validez en un clic et synchronisez automatiquement les déductions sur la paie du mois.",
+    color: "#F59E0B",
+  },
+  {
+    icon: FileText,
+    title: "Contrats & Documents RH",
+    desc: "Suivez les contrats CDI/CDD, éditez les attestations d'emploi, procès-verbaux d'installation et ordres de mission officiels.",
+    color: "#0D9488",
+  },
+];
 
 const SIRH_MODULES = [
   { 
-    title: "Paie & Bulletins", 
+    title: "Dossiers Collaborateurs", 
+    icon: Users, 
+    desc: "Fiches individuelles complètes, historique de carrière et suivi des effectifs." 
+  },
+  { 
+    title: "Saisie & Calcul de Paie", 
     icon: CreditCard, 
-    desc: "Calcul conforme CIDTA / CNAS, abattement 40%, catalogue de rubriques et édition de bulletins PDF." 
+    desc: "Moteur de calcul en temps réel, gestion des rubriques et impression des fiches de paie." 
   },
   { 
     title: "Contrats & Core RH", 
-    icon: Briefcase, 
-    desc: "Suivi des CDI, CDD, CTA, PV d'installation et de l'Attestation de travail." 
+    icon: FileText, 
+    desc: "Suivi des dates d'échéance, périodes d'essai, avenants et pièces jointes." 
   },
   { 
     title: "Congés & Absences", 
     icon: Calendar, 
-    desc: "Calculateur de solde légal (2.5j/mois), validation et déduction automatique sur la paie." 
+    desc: "Gestion du solde de congés, calendrier des absences et validations en ligne." 
   },
   { 
-    title: "Missions", 
+    title: "Ordres de Mission", 
     icon: Plane, 
-    desc: "Déplacements professionnels et édition instantanée de l'Ordre de Mission PDF réglementaire." 
+    desc: "Gestion des déplacements professionnels avec génération instantanée de l'ordre de mission." 
   },
   { 
-    title: "Promotions & Sanctions", 
+    title: "Carrière & Discipline", 
     icon: TrendingUp, 
-    desc: "Changements de poste (mise à jour de salaire automatique) et dossier disciplinaire." 
+    desc: "Historique des promotions, changements de salaire et suivi disciplinaire." 
   },
   { 
-    title: "Formations & Talent", 
+    title: "Formations & Évaluations", 
     icon: GraduationCap, 
-    desc: "Catalogue de cours, inscriptions et génération de la Fiche d'Évaluation de Performance." 
+    desc: "Plan de formation d'entreprise et fiches d'évaluation de performance." 
   },
   { 
-    title: "Portail Salarié (ESS)", 
+    title: "Portail Employé en Libre-Service", 
     icon: UserCheck, 
-    desc: "Espace self-service pour soumettre les congés et télécharger les bulletins." 
+    desc: "Espace dédié aux collaborateurs pour consulter leurs bulletins et poser leurs congés." 
   },
-];
-
-const LEGAL_ITEMS = [
-  { title: "CIDTA — Art. 104", icon: FileText, desc: "Barème IRG progressif + abattement salarial 40 %" },
-  { title: "Loi n°83-11 — Art. 52", icon: ShieldAlert, desc: "Taux CNAS salariale : 9 %" },
-  { title: "Loi n°83-11 — Art. 74", icon: Bookmark, desc: "Assiette cotisable (exclusions de panier, transport…)" },
-  { title: "LF 2022 — Art. 31", icon: FileText, desc: "Barème IRG actuel (6 tranches)" },
-  { title: "Décret exéc. n°24-01", icon: Scale, desc: "SNMG 24 000 DA / seuil exonération IRG 30 000 DA" },
-  { title: "Loi n°90-11", icon: Scale, desc: "Code du travail (durée légale, contrat de travail)" },
 ];
 
 export default function LandingPage() {
   return (
-    <div className="landing">
-      <header className="landing-hero">
-        <nav className="landing-nav">
-          <div className="landing-nav-logo">
-            <Image src="/logo.svg" alt="Netix SIRH" width={148} height={40} priority />
+    <div className="landing min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
+      {/* 1. HERO SECTION MODERNE */}
+      <header
+        className="landing-hero relative overflow-hidden text-white"
+        style={{
+          background: "linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%)",
+          padding: "3rem 1.5rem 5rem",
+        }}
+      >
+        {/* Navigation supérieure */}
+        <nav className="max-w-6xl mx-auto flex items-center justify-between gap-4 mb-16">
+          <div className="flex items-center gap-3">
+            <Image src="/logo.svg" alt="Netix SIRH" width={140} height={38} priority />
           </div>
-          <Link href="/dashboard" className="btn btn-ghost-light btn-sm">
-            Entrer →
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/portail"
+              className="text-xs font-semibold px-3 py-2 rounded-lg text-indigo-100 hover:text-white transition-colors"
+            >
+              Espace Salarié
+            </Link>
+            <Link
+              href="/dashboard"
+              className="text-xs font-bold px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white backdrop-blur-xs transition-all border border-white/15"
+            >
+              Accéder au SIRH →
+            </Link>
+          </div>
         </nav>
 
-        <div className="landing-hero-inner">
-          <div className="landing-eyebrow">
-            <span>SIRH &amp; Paie Algérie</span>
+        {/* Contenu principal du Hero */}
+        <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
+          {/* Eyebrow badge */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 mb-6 backdrop-blur-xs">
+            <Sparkles size={14} className="text-amber-400" />
+            <span>Système d&apos;Information Ressources Humaines &amp; Paie</span>
           </div>
-          <h1>
-            Le premier SIRH complet &amp; Paie conforme conçu pour <span className="accent">l'entreprise algérienne</span>.
+
+          {/* Titre simple et percutant */}
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-6">
+            Le SIRH moderne qui simplifie vos équipes et <span style={{ color: "#34D399" }}>automatise votre paie</span>.
           </h1>
-          <p>
-            Netix centralise vos processus RH, congés et paie conforme (CIDTA &amp; CNAS) au sein d'une plateforme moderne, collaborative et sécurisée.
+
+          {/* Description claire et accessible */}
+          <p className="text-base sm:text-lg text-indigo-100/90 max-w-2xl mx-auto leading-relaxed mb-10">
+            Netix est la plateforme tout-en-un pour piloter facilement vos collaborateurs, générer vos bulletins de salaire en un clic, et gérer les congés et contrats sans aucune complexité.
           </p>
-          <div className="landing-hero-actions">
-            <Link href="/dashboard" className="btn btn-primary btn-lg btn-button-in-button">
-              <span>Entrer dans le SIRH</span>
-              <span className="btn-icon-circle">
-                <ChevronRight size={16} />
-              </span>
+
+          {/* Boutons d'appel à l'action */}
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl font-bold text-sm bg-white text-indigo-950 shadow-xl hover:bg-indigo-50 transition-all hover:-translate-y-0.5"
+            >
+              <span>Ouvrir l&apos;application</span>
+              <ChevronRight size={16} className="text-indigo-600" />
             </Link>
-            <Link href="/portail" className="btn btn-ghost-light btn-lg">
-              Accès Portail Salarié
+
+            <Link
+              href="/saisie"
+              className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm bg-indigo-600/40 hover:bg-indigo-600/60 text-white border border-indigo-400/30 backdrop-blur-xs transition-all"
+            >
+              <span>Calculer une fiche de paie</span>
             </Link>
           </div>
 
-          <div className="landing-badges">
-            <span>CIDTA · Art. 104</span>
-            <span>Loi n°83-11 (CNAS)</span>
-            <span>Loi n°90-11</span>
-            <span>LF 2024</span>
+          {/* 3 Promesses clés */}
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 mt-12 pt-8 border-t border-indigo-400/20 text-xs font-medium text-indigo-200">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-400" />
+              <span>Gestion complète des salariés</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-400" />
+              <span>Calcul de paie en temps réel</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-400" />
+              <span>Bulletins &amp; Virements prêts à l&apos;emploi</span>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Section des 7 Modules */}
-      <section className="landing-section">
-        <div className="landing-section-head">
-          <h2>Un SIRH modulaire et intégré de bout en bout</h2>
-          <p>
-            Découvrez nos 7 modules fonctionnels pour automatiser l'intégralité de vos ressources humaines.
+      {/* 2. CE QUE FAIT NETIX : LES 4 PILIERS */}
+      <section className="max-w-6xl mx-auto px-4 py-16 w-full">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <span className="text-xs font-bold uppercase tracking-wider block mb-2" style={{ color: "var(--accent)" }}>
+            Fonctionnalités Clés
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text)" }}>
+            Tout ce dont vous avez besoin pour gérer vos ressources humaines
+          </h2>
+          <p className="text-sm text-muted-foreground mt-3">
+            Fini les fichiers Excel dispersés et les calculs manuels fastidieux : Netix regroupe l&apos;essentiel au même endroit.
           </p>
         </div>
-        <div className="modules-grid">
-          {SIRH_MODULES.map((m) => {
-            const Icon = m.icon;
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {CORE_PILLARS.map((p) => {
+            const Icon = p.icon;
             return (
-              <div className="nested-bezel-outer" key={m.title}>
-                <div className="nested-bezel-inner module-card">
-                  <div className="module-card-icon-wrap">
-                    <Icon size={20} className="text-teal" />
+              <div
+                key={p.title}
+                className="p-6 rounded-2xl border transition-all duration-150 hover:shadow-lg hover:-translate-y-0.5 flex flex-col justify-between"
+                style={{
+                  background: "var(--surface)",
+                  borderColor: "var(--border)",
+                }}
+              >
+                <div>
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-white shadow-sm"
+                    style={{ background: p.color }}
+                  >
+                    <Icon size={24} />
                   </div>
-                  <h3>{m.title}</h3>
-                  <p>{m.desc}</p>
+                  <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>
+                    {p.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    {p.desc}
+                  </p>
                 </div>
               </div>
             );
@@ -133,56 +216,76 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="landing-section" style={{ paddingTop: 0 }}>
-        <div className="landing-section-head">
-          <h2>Tout ce qu&rsquo;il faut pour éditer une paie fiable</h2>
-          <p>
-            De la fiche salarié au bulletin PDF, chaque étape suit un calcul en cascade transparent et
-            conforme à la réglementation algérienne.
-          </p>
-        </div>
-        <FeatureSlides />
-      </section>
+      {/* 3. L'ENSEMBLE DES MODULES DISPONIBLES */}
+      <section className="py-14 border-t" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center max-w-xl mx-auto mb-10">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: "var(--text)" }}>
+              Une suite RH modulaire et complète
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-2">
+              Chaque module s&apos;intègre automatiquement pour vous faire gagner du temps chaque jour.
+            </p>
+          </div>
 
-      <section className="landing-section" style={{ paddingTop: 0 }}>
-        <div className="landing-section-head">
-          <h2>Un cadre légal couvert de bout en bout</h2>
-          <p>Les textes qui encadrent le calcul sont directement intégrés au moteur de paie.</p>
-        </div>
-        <div className="legal-grid">
-          {LEGAL_ITEMS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div className="nested-bezel-outer" key={item.title}>
-                <div className="nested-bezel-inner legal-card">
-                  <div className="legal-card-icon-wrap">
-                    <Icon size={18} className="text-marine" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {SIRH_MODULES.map((m) => {
+              const Icon = m.icon;
+              return (
+                <div
+                  key={m.title}
+                  className="p-4 rounded-xl border flex flex-col gap-2.5 transition-all hover:bg-white hover:shadow-md"
+                  style={{
+                    background: "var(--surface)",
+                    borderColor: "var(--border)",
+                  }}
+                >
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: "var(--accent-bg)", color: "var(--accent)" }}
+                  >
+                    <Icon size={18} />
                   </div>
-                  <div>
-                    <strong>{item.title}</strong>
-                    <span>{item.desc}</span>
-                  </div>
+                  <h3 className="text-sm font-bold m-0" style={{ color: "var(--text)" }}>
+                    {m.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed m-0">
+                    {m.desc}
+                  </p>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </section>
 
-      <section className="landing-section" style={{ paddingTop: 0 }}>
-        <div className="landing-cta">
-          <h2>Prêt à digitaliser votre gestion des ressources humaines ?</h2>
-          <p>Configurez vos contrats, gérez vos salariés et éditez vos bulletins en toute conformité.</p>
-          <Link href="/dashboard" className="btn btn-primary btn-lg btn-button-in-button">
-            <span>Entrer dans l&rsquo;application</span>
-            <span className="btn-icon-circle">
-              <ChevronRight size={16} />
-            </span>
-          </Link>
-        </div>
+      {/* 4. APPEL À L'ACTION FINAL (CTA) */}
+      <section className="py-16 text-center max-w-3xl mx-auto px-4">
+        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-4" style={{ color: "var(--text)" }}>
+          Prêt à piloter votre entreprise avec Netix ?
+        </h2>
+        <p className="text-sm text-muted-foreground mb-8 max-w-lg mx-auto">
+          Accédez directement à votre espace de travail pour ajouter vos collaborateurs et éditer vos premières fiches de paie.
+        </p>
+        <Link
+          href="/dashboard"
+          className="btn btn-primary inline-flex items-center gap-2 text-sm font-bold px-6 py-3.5 rounded-xl shadow-lg hover:-translate-y-0.5 transition-transform"
+        >
+          <span>Accéder au Tableau de Bord</span>
+          <ChevronRight size={16} />
+        </Link>
       </section>
 
-      <footer className="landing-footer">Netix SIRH — Créé par Kharrouby Kheireddine</footer>
+      {/* FOOTER ÉPURÉ */}
+      <footer
+        className="mt-auto py-6 border-t text-center text-xs text-muted-foreground"
+        style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+      >
+        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <span>Netix SIRH — Plateforme de gestion des Ressources Humaines &amp; Paie</span>
+          <span className="font-medium">Créé par Kharrouby Kheireddine</span>
+        </div>
+      </footer>
     </div>
   );
 }

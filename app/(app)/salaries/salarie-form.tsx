@@ -2,6 +2,8 @@
 
 import React, { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import OdooSheet from "@/components/odoo/OdooSheet";
+import OdooNotebook from "@/components/odoo/OdooNotebook";
 
 interface SalarieFormProps {
   initialData?: {
@@ -71,12 +73,25 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
   }
 
   return (
-    <div style={{ display: "flex", gap: "var(--s6)", flexWrap: "wrap", alignItems: "flex-start" }}>
-      {/* Form Card */}
-      <div className="card" style={{ flex: "1 1 450px", maxWidth: 520 }}>
-        <form onSubmit={handleSubmit}>
-          <div className="field">
-            <label htmlFor="nom_prenom">Nom et prénom *</label>
+    <form onSubmit={handleSubmit} className="w-full">
+      <OdooSheet
+        avatar={
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shadow-sm"
+            style={{
+              background: "var(--accent-bg)",
+              color: "var(--accent-ink)",
+              border: "2px solid var(--accent)",
+            }}
+          >
+            {initials}
+          </div>
+        }
+        title={
+          <div className="w-full max-w-md">
+            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
+              Nom et Prénom du collaborateur *
+            </label>
             <input
               id="nom_prenom"
               name="nom_prenom"
@@ -85,159 +100,145 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
               onChange={(e) => setNomPrenom(e.target.value)}
               onBlur={handleNameBlur}
               placeholder="Ex: Amina Benali"
+              className="text-xl sm:text-2xl font-bold w-full px-3 py-1.5 rounded border"
+              style={{
+                background: "var(--surface)",
+                borderColor: "var(--border)",
+                color: "var(--text)",
+              }}
             />
           </div>
-
-          <div className="field">
-            <label htmlFor="matricule">Matricule</label>
-            <input
-              id="matricule"
-              name="matricule"
-              value={matricule}
-              onChange={(e) => setMatricule(e.target.value)}
-              placeholder="Ex: M100"
-            />
-          </div>
-
-          <div className="field">
-            <label htmlFor="fonction">Fonction</label>
+        }
+        subtitle={
+          <div className="w-full max-w-md mt-2">
+            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
+              Intitulé du poste / Fonction
+            </label>
             <input
               id="fonction"
               name="fonction"
               value={fonction}
               onChange={(e) => setFonction(e.target.value)}
-              placeholder="Ex: Ingénieur Logiciel"
+              placeholder="Ex: Ingénieur Système / Chef de projet"
+              className="text-xs font-semibold w-full px-3 py-1.5 rounded border"
+              style={{
+                background: "var(--surface)",
+                borderColor: "var(--border)",
+                color: "var(--text)",
+              }}
             />
           </div>
-
-          <div className="field">
-            <label htmlFor="salaire_base_theorique">Salaire de base théorique (DA)</label>
-            <input
-              id="salaire_base_theorique"
-              name="salaire_base_theorique"
-              type="number"
-              step="0.01"
-              value={salaireBase}
-              onChange={(e) => setSalaireBase(e.target.value)}
-              placeholder="0.00"
-            />
-          </div>
-
-          <div className="field">
-            <label htmlFor="date_visite_medicale">Date de dernière visite médicale</label>
-            <input
-              id="date_visite_medicale"
-              name="date_visite_medicale"
-              type="date"
-              value={dateVisiteMedicale}
-              onChange={(e) => setDateVisiteMedicale(e.target.value)}
-            />
-          </div>
-
-          <div className="field">
-            <label htmlFor="ccp_rib">Coordonnées bancaires (RIB ou CCP)</label>
-            <input
-              id="ccp_rib"
-              name="ccp_rib"
-              value={ccpRib}
-              onChange={(e) => setCcpRib(e.target.value)}
-              placeholder="Ex: 00799999000000123456 (20 chiffres)"
-            />
-          </div>
-
-          {error && (
-            <p className="badge badge-red" style={{ display: "block", marginBottom: "var(--s4)" }}>
-              {error}
-            </p>
-          )}
-
-          <div className="field-row" style={{ display: "flex", gap: "var(--s3)", marginTop: "var(--s4)" }}>
-            <button type="submit" disabled={isPending} className="btn btn-primary">
-              {isPending ? "Enregistrement..." : buttonText}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="btn btn-secondary"
-            >
-              Annuler
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* Live Profile Card */}
-      <div
-        className="card"
-        style={{
-          flex: "1 1 280px",
-          maxWidth: 320,
-          background: "linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%)",
-          textAlign: "center",
-          border: "1px solid var(--border)",
-          boxShadow: "var(--sh)",
-          position: "sticky",
-          top: "var(--s6)",
-          padding: "var(--s6) var(--s4)",
-        }}
+        }
       >
-        <div
-          style={{
-            width: 72,
-            height: 72,
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, var(--marine-600) 0%, var(--marine-800) 100%)",
-            color: "#fff",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "24px",
-            fontWeight: "bold",
-            margin: "0 auto var(--s4)",
-            boxShadow: "var(--shsm)",
-          }}
-        >
-          {initials}
+        {error && (
+          <div className="p-3 mb-4 rounded bg-red-50 text-red-700 border border-red-200 text-xs font-semibold">
+            ⚠️ {error}
+          </div>
+        )}
+
+        <OdooNotebook
+          tabs={[
+            {
+              id: "poste_paie",
+              label: "Contrat & Rémunération",
+              content: (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div className="flex flex-col gap-1.5 p-3 rounded border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
+                    <label htmlFor="matricule" className="font-bold text-muted-foreground">
+                      Matricule employé
+                    </label>
+                    <input
+                      id="matricule"
+                      name="matricule"
+                      value={matricule}
+                      onChange={(e) => setMatricule(e.target.value)}
+                      placeholder="Ex: M100"
+                      className="text-xs font-mono font-semibold px-2.5 py-1.5 rounded border"
+                      style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                    />
+                    <span className="text-[10px] text-muted-foreground">Identifiant unique interne pour la paie</span>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 p-3 rounded border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
+                    <label htmlFor="salaire_base_theorique" className="font-bold text-muted-foreground">
+                      Salaire de base contractuel (DA)
+                    </label>
+                    <input
+                      id="salaire_base_theorique"
+                      name="salaire_base_theorique"
+                      type="number"
+                      step="0.01"
+                      value={salaireBase}
+                      onChange={(e) => setSalaireBase(e.target.value)}
+                      placeholder="0.00"
+                      className="text-xs font-bold px-2.5 py-1.5 rounded border text-right"
+                      style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                    />
+                    <span className="text-[10px] text-muted-foreground">Montant de base légal mensuel</span>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 p-3 rounded border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
+                    <label htmlFor="date_visite_medicale" className="font-bold text-muted-foreground">
+                      Dernière visite médicale de travail
+                    </label>
+                    <input
+                      id="date_visite_medicale"
+                      name="date_visite_medicale"
+                      type="date"
+                      value={dateVisiteMedicale}
+                      onChange={(e) => setDateVisiteMedicale(e.target.value)}
+                      className="text-xs px-2.5 py-1.5 rounded border"
+                      style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                    />
+                    <span className="text-[10px] text-muted-foreground">Suivi obligatoire médecine du travail</span>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              id: "coordonnees_banque",
+              label: "Banque & Paiement",
+              content: (
+                <div className="max-w-md flex flex-col gap-1.5 p-3 rounded border text-xs" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
+                  <label htmlFor="ccp_rib" className="font-bold text-muted-foreground">
+                    Coordonnées bancaires (RIB ou CCP 20 chiffres)
+                  </label>
+                  <input
+                    id="ccp_rib"
+                    name="ccp_rib"
+                    value={ccpRib}
+                    onChange={(e) => setCcpRib(e.target.value)}
+                    placeholder="Ex: 00799999000000123456"
+                    className="text-xs font-mono px-2.5 py-1.5 rounded border"
+                    style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                  />
+                  <span className="text-[10px] text-muted-foreground">
+                    Utilisé pour les états de virement bancaire et chèques de paie
+                  </span>
+                </div>
+              ),
+            },
+          ]}
+        />
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3 pt-6 mt-6 border-t" style={{ borderColor: "var(--border)" }}>
+          <button
+            type="submit"
+            disabled={isPending}
+            className="btn btn-primary text-xs font-bold px-4 py-2 rounded"
+          >
+            {isPending ? "Enregistrement…" : buttonText}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="btn btn-secondary text-xs font-semibold px-4 py-2 rounded"
+          >
+            Annuler
+          </button>
         </div>
-
-        <h2 style={{ fontSize: "var(--tmd)", fontWeight: 700, marginBottom: "var(--s1)", color: "var(--text)" }}>
-          {nomPrenom.trim() || "Nouveau Salarié"}
-        </h2>
-
-        <p style={{ fontSize: "var(--tsm)", color: "var(--text-muted)", marginBottom: "var(--s4)" }}>
-          {fonction.trim() || "Aucune fonction renseignée"}
-        </p>
-
-        <div
-          style={{
-            borderTop: "1px solid var(--border)",
-            paddingTop: "var(--s4)",
-            marginTop: "var(--s4)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "var(--s2)",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--txs)" }}>
-            <span style={{ color: "var(--text-muted)" }}>Matricule :</span>
-            <span style={{ fontWeight: 600 }}>{matricule.trim() ? (
-              <span className="badge badge-accent" style={{ padding: "2px 8px" }}>{matricule}</span>
-            ) : "—"}</span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--txs)" }}>
-            <span style={{ color: "var(--text-muted)" }}>Salaire de base :</span>
-            <span style={{ fontWeight: 650, color: "var(--accent)" }}>
-              {Number(salaireBase || 0).toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, ' ')} DA
-            </span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--txs)" }}>
-            <span style={{ color: "var(--text-muted)" }}>Compte bancaire :</span>
-            <span style={{ fontWeight: 600, fontFamily: "var(--mono)" }}>
-              {ccpRib.trim() ? ccpRib : "—"}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
+      </OdooSheet>
+    </form>
   );
 }

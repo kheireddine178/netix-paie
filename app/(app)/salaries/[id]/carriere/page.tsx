@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { getSalarie, listerPromotionsSalarie, listerSanctionsSalarie, listerObjectifsSalarie } from "../../actions";
 import CarriereClientPage from "./CarriereClientPage";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -24,49 +24,32 @@ export default async function Page({ params }: Props) {
   ]);
 
   return (
-    <div className="space-y-6">
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h1>Carrière & Discipline — {salarie.nom_prenom}</h1>
-          <p>Gérez l'évolution de poste (promotions) et le dossier disciplinaire (sanctions) du salarié.</p>
-        </div>
-        <Link href={`/salaries/${salarie.id}`} className="btn btn-secondary btn-sm">
-          ← Retour au Profil
-        </Link>
-      </div>
+    <div className="flex flex-col gap-4">
+      <OdooControlPanel
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
+          { label: "Carrière & Discipline" },
+        ]}
+        primaryAction={{
+          label: "💰 Calculer la paie",
+          href: `/saisie?salarieId=${salarie.id}`,
+        }}
+        secondaryActions={[
+          { label: "← Fiche Salarié", href: `/salaries/${salarie.id}` },
+          { label: "Congés", href: `/salaries/${salarie.id}/conges` },
+          { label: "Contrats", href: `/salaries/${salarie.id}/contrat` },
+          { label: "Missions", href: `/salaries/${salarie.id}/missions` },
+          { label: "Formations", href: `/salaries/${salarie.id}/formations` },
+        ]}
+      />
 
-      {/* Barre de navigation interne du salarié */}
-      <div style={{ display: "flex", gap: "var(--s3)", borderBottom: "var(--hairline)", paddingBottom: "var(--s3)" }}>
-        <Link href={`/salaries/${salarie.id}/bulletin`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Calcul Bulletin
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <Link href={`/salaries/${salarie.id}/rubriques`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Rubriques
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <Link href={`/salaries/${salarie.id}/historique`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Historique Paies
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <Link href={`/salaries/${salarie.id}/contrat`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Contrat & Documents
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <Link href={`/salaries/${salarie.id}/conges`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Absences & Congés
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <Link href={`/salaries/${salarie.id}/missions`} className="btn-link" style={{ textDecoration: "none", color: "var(--text-muted)", fontSize: "var(--tsm)" }}>
-          Missions & Déplacements
-        </Link>
-        <span style={{ color: "var(--border)" }}>|</span>
-        <strong style={{ color: "var(--accent)", fontSize: "var(--tsm)" }}>
-          Carrière & Discipline
-        </strong>
-      </div>
-
-      <CarriereClientPage salarie={salarie} promotions={promotions} sanctions={sanctions} objectifs={objectifs} />
+      <CarriereClientPage
+        salarie={salarie}
+        promotions={promotions}
+        sanctions={sanctions}
+        objectifs={objectifs}
+      />
     </div>
   );
 }

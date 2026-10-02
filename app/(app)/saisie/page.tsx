@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   listerSalaries,
   getSalarie,
@@ -36,9 +35,13 @@ export default async function SaisiePage({ searchParams }: Props) {
   let parametres = null;
   let initialBulletin = null;
 
-  if (params.salarieId) {
-    const id = parseInt(params.salarieId, 10);
-    salarieActive = await getSalarie(id);
+  // Determine target salary id: use query param, or fallback to first employee if available
+  const targetId = params.salarieId
+    ? parseInt(params.salarieId, 10)
+    : activeSalaries[0]?.id;
+
+  if (targetId) {
+    salarieActive = await getSalarie(targetId);
 
     if (salarieActive) {
       [rubriquesAssignees, catalogueRubriques, parametres, initialBulletin] = await Promise.all([
@@ -50,46 +53,45 @@ export default async function SaisiePage({ searchParams }: Props) {
     }
   }
 
-  return (
-    <>
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h1>Saisie mensuelle</h1>
-          <p>Absences, heures supplémentaires, rubriques — le résultat se calcule en temps réel.</p>
-        </div>
-        <div style={{ display: "flex", gap: "var(--s3)" }}>
-          <Link href="/saisie/collective" className="btn btn-primary btn-sm" style={{ textDecoration: "none" }}>
-            Saisie collective de masse ➔
-          </Link>
-          <Link href="/saisie/avances" className="btn btn-secondary btn-sm" style={{ textDecoration: "none" }}>
-            Valider les avances
-          </Link>
-        </div>
-      </div>
+  // Calculate pager indices
+  const currentIdx = salarieActive
+    ? activeSalaries.findIndex((s) => s.id === salarieActive?.id)
+    : -1;
 
-      <SaisieFormulaireConsolide
-        salaries={activeSalaries}
-        salarieActive={salarieActive}
-        anneeActive={selectedAnnee}
-        moisActive={selectedMois}
-        rubriquesAssignees={rubriquesAssignees}
-        catalogueRubriques={catalogueRubriques}
-        parametres={parametres || {
-          snmg: 20000,
-          duree_legale_mensuelle: 173.33,
-          taux_cnas_salarie: 0.09,
-          taux_cnas_employeur: 0.26,
-          majoration_hs_1: 0.5,
-          majoration_hs_2: 0.75,
-          majoration_hs_3: 1.0,
-          bareme_irg: [],
-          seuil_exoneration_irg: 30000,
-          taux_abattement_irg: 0.4,
-          abattement_irg_min: 1000,
-          abattement_irg_max: 1500,
-        }}
-        initialBulletin={initialBulletin}
-      />
-    </>
+  const prevSalarie = currentIdx > 0 ? activeSalaries[currentIdx - 1] : null;
+  const nextSalarie = currentIdx >= 0 && currentIdx < activeSalaries.length - 1
+    ? activeSalaries[currentIdx + 1]
+    : null;
+
+  return (
+    <SaisieFormulaireConsolide
+      salaries={activeSalaries}
+      salarieActive={salarieActive}
+      anneeActive={selectedAnnee}
+      moisActive={selectedMois}
+      rubriquesAssignees={rubriquesAssignees}
+      catalogueRubriques={catalogueRubriques}
+      parametres={parametres || {
+        snmg: 20000,
+        duree_legale_mensuelle: 173.33,
+        taux_cnas_salarie: 0.09,
+        taux_cnas_employeur: 0.26,
+        majoration_hs_1: 0.5,
+        majoration_hs_2: 0.75,
+        majoration_hs_3: 1.0,
+        bareme_irg: [],
+        seuil_exoneration_irg: 30000,
+        taux_abattement_irg: 0.4,
+        abattement_irg_min: 1000,
+        abattement_irg_max: 1500,
+      }}
+      initialBulletin={initialBulletin}
+      pagerInfo={{
+        current: currentIdx + 1,
+        total: activeSalaries.length,
+        prevId: prevSalarie ? prevSalarie.id : null,
+        nextId: nextSalarie ? nextSalarie.id : null,
+      }}
+    />
   );
 }

@@ -23,10 +23,10 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Netix SIRH — Gestion RH & Paie Algérienne",
-  description: "SIRH complet pour la gestion RH et la paie conforme CIDTA / LF 2024 / Loi n°90-11 en Algérie.",
+  title: "Netix SIRH — Gestion RH & Paie Simplifiée",
+  description: "Plateforme tout-en-un pour piloter facilement vos collaborateurs, automatiser la paie et gérer les congés et contrats.",
   manifest: "/manifest.json",
-  themeColor: "#7C3AED", // HRFlow Primary
+  themeColor: "#4F46E5",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -48,7 +48,7 @@ export default function RootLayout({
     <html lang="fr" className={`h-full antialiased ${lexend.variable} ${dmSans.variable} ${robotoMono.variable}`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#7C3AED" />
+        <meta name="theme-color" content="#4F46E5" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>

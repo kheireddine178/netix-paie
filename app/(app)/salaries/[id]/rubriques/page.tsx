@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { getSalarie, listerCatalogueRubriques, listerRubriquesSalarie } from "../../actions";
 import RubriquesForm from "./RubriquesForm";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -20,26 +20,24 @@ export default async function RubriquesPage({
   ]);
 
   return (
-    <>
-      <div
-        className="page-header"
-        style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}
-      >
-        <div>
-          <h1>Rubriques du catalogue — {salarie.nom_prenom}</h1>
-          <p>
-            Cochez les rubriques du catalogue ({catalogue.length} codes) applicables à ce salarié.
-            Elles apparaîtront ensuite comme champs de saisie sur la page de bulletin mensuel. La
-            « valeur par défaut » est facultative : elle pré-remplit le champ chaque mois (vous
-            pouvez toujours la modifier au moment de la saisie du bulletin).
-          </p>
-        </div>
-        <Link href={`/salaries/${salarie.id}`} className="btn btn-secondary btn-sm">
-          ← Retour au Profil
-        </Link>
-      </div>
+    <div className="flex flex-col gap-4">
+      <OdooControlPanel
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
+          { label: "Rubriques du catalogue" },
+        ]}
+        primaryAction={{
+          label: "💰 Calculer la paie",
+          href: `/saisie?salarieId=${salarie.id}`,
+        }}
+        secondaryActions={[
+          { label: "← Fiche Salarié", href: `/salaries/${salarie.id}` },
+          { label: "Catalogue général", href: "/rubriques" },
+        ]}
+      />
 
       <RubriquesForm salarieId={salarie.id} catalogue={catalogue} assignees={assignees} />
-    </>
+    </div>
   );
 }

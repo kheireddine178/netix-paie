@@ -4,9 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import OdooMobileDrawer from "./odoo/OdooMobileDrawer";
 
-// Lucide-style inline SVG icons (no emoji, consistent 16x16 viewBox)
-const Icons = {
+// Lucide-style inline SVG icons
+export const Icons = {
   home: (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
@@ -84,7 +85,7 @@ const Icons = {
   ),
 };
 
-const NAV_ITEMS = [
+export const NAV_ITEMS = [
   { href: "/dashboard",  label: "Accueil",              icon: Icons.home },
   { href: "/salaries",   label: "Collaborateurs",        icon: Icons.users },
   { href: "/saisie",     label: "Saisie mensuelle",      icon: Icons.calculator },
@@ -117,55 +118,70 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="sidebar">
-      <Link href="/" className="brand">
-        <div className="brand-mark">
-          <Image src="/logo-icon.svg" alt="Netix" width={32} height={32} priority />
-        </div>
-        <div className="brand-text">
-          <strong>Netix SIRH</strong>
-          <span>Algérie</span>
-        </div>
-      </Link>
+    <>
+      {/* Mobile Drawer (Only active on small viewports) */}
+      <OdooMobileDrawer
+        navItems={NAV_ITEMS}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
 
-      <nav style={{ padding: "12px 0", flex: 1 }}>
-        {NAV_ITEMS.map((item) => {
-          const isActive =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname === item.href || pathname.startsWith(item.href + "/");
-          return (
-            <Link key={item.href} href={item.href} className={`nav-link${isActive ? " active" : ""}`} aria-label={item.label}>
-              {item.icon}
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Desktop Sidebar (Hidden on mobile via CSS) */}
+      <aside className="sidebar odoo-desktop-sidebar">
+        <Link href="/" className="brand">
+          <div className="brand-mark">
+            <Image src="/logo-icon.svg" alt="Netix" width={32} height={32} priority />
+          </div>
+          <div className="brand-text">
+            <strong>Netix SIRH</strong>
+            <span>Algérie</span>
+          </div>
+        </Link>
 
-      <button
-        type="button"
-        onClick={toggleTheme}
-        aria-label={theme === "dark" ? "Activer le thème clair" : "Activer le thème sombre"}
-        className="theme-toggle"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          margin: "0 12px 16px",
-          padding: "10px 12px",
-          borderRadius: "8px",
-          border: "1px solid rgba(255,255,255,.12)",
-          background: "rgba(255,255,255,.06)",
-          color: "#fff",
-          fontSize: "13px",
-          fontWeight: 600,
-          cursor: "pointer",
-        }}
-      >
-        {theme === "dark" ? Icons.sun : Icons.moon}
-        <span className="theme-label">{theme === "dark" ? "Thème clair" : "Thème sombre"}</span>
-      </button>
-    </aside>
+        <nav style={{ padding: "12px 0", flex: 1 }}>
+          {NAV_ITEMS.map((item) => {
+            const isActive =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-link${isActive ? " active" : ""}`}
+                aria-label={item.label}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label={theme === "dark" ? "Activer le thème clair" : "Activer le thème sombre"}
+          className="theme-toggle"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            margin: "0 12px 16px",
+            padding: "10px 12px",
+            borderRadius: "8px",
+            border: "1px solid var(--border)",
+            background: "var(--surface-2)",
+            color: "var(--text)",
+            fontSize: "13px",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+        >
+          {theme === "dark" ? Icons.sun : Icons.moon}
+          <span className="theme-label">{theme === "dark" ? "Thème clair" : "Thème sombre"}</span>
+        </button>
+      </aside>
+    </>
   );
 }

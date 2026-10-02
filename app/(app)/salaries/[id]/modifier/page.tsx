@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getSalarie, modifierSalarie } from "../../actions";
 import SalarieForm from "../../salarie-form";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 export default async function ModifierSalariePage({
   params,
@@ -15,11 +16,20 @@ export default async function ModifierSalariePage({
   const modifierAvecId = modifierSalarie.bind(null, salarie.id);
 
   return (
-    <>
-      <div className="page-header">
-        <h1>Modifier le salarié</h1>
-        <p>Mettez à jour les informations de base de {salarie.nom_prenom}.</p>
-      </div>
+    <div className="flex flex-col gap-4">
+      <OdooControlPanel
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
+          { label: "Modifier la fiche" },
+        ]}
+        secondaryActions={[
+          {
+            label: "Annuler et voir la fiche",
+            href: `/salaries/${salarie.id}`,
+          },
+        ]}
+      />
 
       <SalarieForm
         initialData={{
@@ -28,12 +38,12 @@ export default async function ModifierSalariePage({
           matricule: salarie.matricule,
           fonction: salarie.fonction,
           salaire_base_theorique: salarie.salaire_base_theorique,
+          date_visite_medicale: salarie.date_visite_medicale,
           ccp_rib: salarie.ccp_rib,
         }}
         actionSubmit={modifierAvecId}
         buttonText="Enregistrer les modifications"
       />
-    </>
+    </div>
   );
 }
-

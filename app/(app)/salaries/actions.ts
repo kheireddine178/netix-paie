@@ -21,6 +21,13 @@ import { resoudreLigneRubrique, type RubriqueCatalogueRow } from "@/lib/rubrique
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+
+function getAuditAuteurId(userId?: string | null): string | null {
+  if (!userId) return null;
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+  return isUuid ? userId : null;
+}
+
 // ------------------------------------------------------------------
 // Helpers d'authentification et d'autorisation de la Phase 1
 // ------------------------------------------------------------------
@@ -168,7 +175,7 @@ export async function creerSalarie(formData: FormData) {
 
   // Journalisation d'audit (Audit Trail)
   await supabase.from("audit_logs").insert({
-    auteur_id: user.id,
+    auteur_id: getAuditAuteurId(user?.id),
     auteur_email: email,
     table_cible: "salaries",
     type_action: "INSERT",
@@ -213,7 +220,7 @@ export async function modifierSalarie(id: number, formData: FormData) {
 
   // Journalisation d'audit (Audit Trail)
   await supabase.from("audit_logs").insert({
-    auteur_id: user.id,
+    auteur_id: getAuditAuteurId(user?.id),
     auteur_email: email,
     table_cible: "salaries",
     type_action: "UPDATE",
@@ -234,7 +241,7 @@ export async function desactiverSalarie(id: number) {
   if (error) throw new Error(error.message);
 
   await supabase.from("audit_logs").insert({
-    auteur_id: user.id,
+    auteur_id: getAuditAuteurId(user?.id),
     auteur_email: email,
     table_cible: "salaries",
     type_action: "UPDATE",
@@ -253,7 +260,7 @@ export async function reactiverSalarie(id: number) {
   if (error) throw new Error(error.message);
 
   await supabase.from("audit_logs").insert({
-    auteur_id: user.id,
+    auteur_id: getAuditAuteurId(user?.id),
     auteur_email: email,
     table_cible: "salaries",
     type_action: "UPDATE",
@@ -625,7 +632,7 @@ export async function creerBulletin(salarieId: number, formData: FormData): Prom
 
   // Journalisation d'audit (Audit Trail)
   await supabase.from("audit_logs").insert({
-    auteur_id: user.id,
+    auteur_id: getAuditAuteurId(user?.id),
     auteur_email: email,
     table_cible: "bulletins",
     type_action: existing ? "UPDATE" : "INSERT",
@@ -1016,7 +1023,7 @@ export async function supprimerBulletin(salarieId: number, bulletinId: number) {
 
   // Journalisation d'audit (Audit Trail)
   await supabase.from("audit_logs").insert({
-    auteur_id: user.id,
+    auteur_id: getAuditAuteurId(user?.id),
     auteur_email: email,
     table_cible: "bulletins",
     type_action: "DELETE",
@@ -1046,7 +1053,7 @@ export async function cloturerBulletin(salarieId: number, annee: number, mois: n
 
   // Journalisation d'audit (Audit Trail)
   await supabase.from("audit_logs").insert({
-    auteur_id: user.id,
+    auteur_id: getAuditAuteurId(user?.id),
     auteur_email: email,
     table_cible: "bulletins",
     type_action: "UPDATE",
@@ -1144,7 +1151,7 @@ export async function copierMoisPrecedentMasse(anneeCible: number, moisCible: nu
 
   // Journalisation d'audit (Audit Trail)
   await supabase.from("audit_logs").insert({
-    auteur_id: user.id,
+    auteur_id: getAuditAuteurId(user?.id),
     auteur_email: email,
     table_cible: "bulletins",
     type_action: "INSERT",
@@ -1924,7 +1931,7 @@ export async function enregistrerBulletinsCollectifs(
 
     // Journalisation d'audit (Audit Trail)
     await supabase.from("audit_logs").insert({
-      auteur_id: user.id,
+      auteur_id: getAuditAuteurId(user?.id),
       auteur_email: email,
       table_cible: "bulletins",
       type_action: existants?.some((b) => b.salarie_id === v.salarie_id) ? "UPDATE" : "INSERT",

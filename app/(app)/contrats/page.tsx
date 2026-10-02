@@ -1,77 +1,61 @@
-import Link from "next/link";
 import { listerSalaries } from "../salaries/actions";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
+import OdooKanbanCard from "@/components/odoo/OdooKanbanCard";
 
 export const dynamic = "force-dynamic";
+
+function formatDA(n: number) {
+  return n.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, " ") + " DA";
+}
 
 export default async function ContratsPage() {
   const salaries = await listerSalaries();
 
   return (
-    <div className="space-y-6">
-      <div className="page-header">
-        <h1>💼 Contrats & Core RH</h1>
-        <p>Sélectionnez un collaborateur pour gérer son contrat, ses avenants et ses pièces jointes.</p>
-      </div>
+    <div className="flex flex-col gap-4">
+      {/* 1. ODOO CONTROL PANEL */}
+      <OdooControlPanel
+        breadcrumbs={[{ label: "Contrats & Documents RH" }]}
+        secondaryActions={[
+          {
+            label: "Collaborateurs",
+            href: "/salaries",
+          },
+        ]}
+      />
 
       {salaries.length === 0 ? (
-        <div className="card">
-          <p style={{ color: "var(--text-muted)" }}>Aucun salarié enregistré.</p>
-          <Link href="/salaries/nouveau" className="btn btn-primary" style={{ marginTop: "var(--s3)" }}>
-            + Ajouter un collaborateur
-          </Link>
+        <div
+          className="p-12 text-center rounded-lg border border-dashed text-muted-foreground"
+          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+        >
+          Aucun salarié enregistré.
         </div>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-            gap: "var(--s4)",
-          }}
-        >
+        <div className="odoo-kanban-grid">
           {salaries.map((s) => (
-            <Link
+            <OdooKanbanCard
               key={s.id}
+              title={s.nom_prenom}
+              subtitle={s.fonction || "Poste non renseigné"}
+              badge={{
+                text: s.actif ? "Actif" : "Inactif",
+                variant: s.actif ? "success" : "neutral",
+              }}
+              metrics={[
+                { label: "Matricule", value: s.matricule || "—" },
+                { label: "Salaire de base", value: formatDA(s.salaire_base_theorique) },
+              ]}
               href={`/salaries/${s.id}/contrat`}
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <div
-                className="card hover-card"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--s4)",
-                  padding: "var(--s4)",
-                  cursor: "pointer",
-                  borderLeft: "4px solid var(--teal)",
-                  transition: "transform 0.15s, box-shadow 0.15s",
-                }}
-              >
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: "50%",
-                    background: "var(--accent)",
-                    color: "#fff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: "bold",
-                    fontSize: 18,
-                    flexShrink: 0,
-                  }}
+              actions={
+                <span
+                  className="text-xs font-bold hover:underline"
+                  style={{ color: "var(--teal)" }}
                 >
-                  {s.nom_prenom.charAt(0).toUpperCase()}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: "bold", margin: 0 }}>{s.nom_prenom}</p>
-                  <p style={{ fontSize: "var(--tsm)", color: "var(--text-muted)", margin: "2px 0 0" }}>
-                    {s.fonction || "Pas de fonction"} · {s.matricule || "—"}
-                  </p>
-                </div>
-                <span style={{ color: "var(--teal)", fontWeight: "bold", fontSize: 18 }}>→</span>
-              </div>
-            </Link>
+                  Voir contrats & documents →
+                </span>
+              }
+            />
           ))}
         </div>
       )}

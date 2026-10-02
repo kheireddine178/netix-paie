@@ -10,6 +10,8 @@ import {
   type LigneVirement,
 } from "./actions";
 import { type RubriqueCatalogue } from "../salaries/actions";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
+import OdooSheet from "@/components/odoo/OdooSheet";
 
 const MOIS = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -142,28 +144,59 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
   };
 
   return (
-    <div className="space-y-6 print-container">
-      {/* Contrôles et Filtres (Masqués à l'impression) */}
-      <div className="card no-print">
-        <h2 style={{ marginBottom: "var(--s4)" }}>États de Paie & Centralisation</h2>
-        
-        <div className="grid md:grid-cols-4 gap-4 items-end">
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label htmlFor="annee-sel">Année</label>
-            <input
-              id="annee-sel"
-              type="number"
-              value={annee}
-              onChange={(e) => setAnnee(parseInt(e.target.value) || now.getFullYear())}
-            />
-          </div>
+    <div className="flex flex-col gap-4 print-container">
+      {/* 1. ODOO CONTROL PANEL (Masqué à l'impression) */}
+      <div className="no-print">
+        <OdooControlPanel
+          breadcrumbs={[
+            { label: "États de Paie & Centralisation" },
+            { label: `${MOIS[mois - 1]} ${annee}` },
+          ]}
+          primaryAction={{
+            label: isPending ? "Génération en cours…" : "Générer le rapport",
+            onClick: handleGenerer,
+            icon: (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+            ),
+          }}
+          secondaryActions={[
+            {
+              label: "Imprimer le rapport",
+              onClick: printReport,
+              icon: (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="8" />
+                </svg>
+              ),
+            },
+          ]}
+        />
+      </div>
 
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label htmlFor="mois-sel">Mois</label>
+      {/* 2. BARRE DE FILTRES ODOO */}
+      <div
+        className="no-print px-4 py-3 rounded-lg flex flex-wrap items-center justify-between gap-3 text-xs"
+        style={{
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+        }}
+      >
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">
+              Période
+            </span>
             <select
-              id="mois-sel"
               value={mois}
               onChange={(e) => setMois(parseInt(e.target.value))}
+              className="text-xs px-2 py-1.5 rounded border"
+              style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}
             >
               {MOIS.map((m, i) => (
                 <option key={i} value={i + 1}>
@@ -171,12 +204,20 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
                 </option>
               ))}
             </select>
+            <input
+              type="number"
+              value={annee}
+              onChange={(e) => setAnnee(parseInt(e.target.value) || now.getFullYear())}
+              className="text-xs px-2 py-1.5 rounded border w-20 text-center"
+              style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}
+            />
           </div>
 
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label htmlFor="onglet-sel">Type de Rapport</label>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">
+              Rapport
+            </span>
             <select
-              id="onglet-sel"
               value={onglet}
               onChange={(e) => {
                 setOnglet(e.target.value as any);
@@ -184,6 +225,8 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
                 setNominatifList([]);
                 setVirementList([]);
               }}
+              className="text-xs px-2.5 py-1.5 rounded border font-semibold"
+              style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}
             >
               <option value="centralisateur">Centralisateur Général (Mois)</option>
               <option value="nominatif">État nominatif par rubrique</option>
@@ -192,27 +235,19 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
             </select>
           </div>
 
-          <button
-            onClick={handleGenerer}
-            disabled={isPending}
-            className="btn btn-primary"
-            style={{ width: "100%", height: "42px" }}
-          >
-            {isPending ? "Génération..." : "Obtenir l'état"}
-          </button>
-        </div>
-
-        {onglet === "nominatif" && (
-          <div className="grid md:grid-cols-2 gap-4 style-select-rubrique" style={{ marginTop: "var(--s3)" }}>
-            <div className="field" style={{ marginBottom: 0 }}>
-              <label htmlFor="rubrique-sel">Sélectionner la rubrique</label>
+          {onglet === "nominatif" && (
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">
+                Rubrique
+              </span>
               <select
-                id="rubrique-sel"
                 value={selectedRubrique}
                 onChange={(e) => {
                   setSelectedRubrique(e.target.value);
                   setNominatifList([]);
                 }}
+                className="text-xs px-2 py-1.5 rounded border"
+                style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}
               >
                 {codeRubriquesOptions.map((o) => (
                   <option key={o.code} value={o.code}>
@@ -221,8 +256,17 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
                 ))}
               </select>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleGenerer}
+          disabled={isPending}
+          className="btn btn-primary text-xs font-bold px-3 py-1.5 rounded ml-auto"
+        >
+          {isPending ? "Génération…" : "Obtenir l'état"}
+        </button>
       </div>
 
       {erreur && (

@@ -6,28 +6,28 @@
    ============================================================ */
 
 :root {
-  /* HRFlow Theme */
-  --bg:          #FAFAFA;
+  /* Option 01 : Modern SaaS / Fintech Clean (PayFit style) */
+  --bg:          #F8FAFC;
   --surface:     #FFFFFF;
-  --surface-2:   #F9FAFB;
-  --sidebar-bg:  #FFFFFF; /* HRFlow prefers light, clean sidebars */
-  --border:      #E5E7EB;
-  --border-soft: #F3F4F6;
-  --text:        #111827;
-  --text-2:      #374151;
-  --text-muted:  #6B7280;
+  --surface-2:   #F1F5F9;
+  --sidebar-bg:  #FFFFFF;
+  --border:      #E2E8F0;
+  --border-soft: #F1F5F9;
+  --text:        #0F172A;
+  --text-2:      #334155;
+  --text-muted:  #64748B;
 
-  --accent:       #7C3AED; /* HRFlow Primary */
-  --accent-ink:   #5B21B6;
-  --accent-bg:    #EDE9FE;
-  --accent-light: #F5F3FF;
+  --accent:       #4F46E5; /* Indigo Moderne */
+  --accent-ink:   #3730A3;
+  --accent-bg:    #EEF2FF;
+  --accent-light: #F5F7FF;
 
-  --teal:     #0D9488; /* HRFlow Secondary */
-  --teal-bg:  #CCFBF1;
-  --teal-ink: #0F766E;
+  --teal:     #059669; /* Émeraude / Net & Gains */
+  --teal-bg:  #ECFDF5;
+  --teal-ink: #065F46;
 
-  --amber:    #F97316; /* HRFlow Tertiary */
-  --amber-bg: #FFEDD5;
+  --amber:    #F59E0B; /* Ambre chaleureux */
+  --amber-bg: #FEF3C7;
 
   --red-700: #B91C1C;
   --red-600: #EF4444;
@@ -203,60 +203,87 @@ input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
 }
 
 /* ============================================================
-   RESPONSIVE — Mobile (≤760px) : sidebar devient une barre
-   horizontale en haut de l'écran, contenu en pleine largeur
+   RESPONSIVE — Mobile (≤768px) : Tiroir mobile Odoo & Pleine largeur
    ============================================================ */
-@media (max-width: 760px) {
-  .app-shell { flex-direction: column; }
+@media (max-width: 768px) {
+  .app-shell {
+    flex-direction: column;
+    min-height: 100vh;
+  }
 
-  .sidebar {
-    position: static;
+  /* La sidebar desktop est masquée au profit du tiroir OdooMobileDrawer */
+  .odoo-desktop-sidebar {
+    display: none !important;
+  }
+
+  .content {
+    padding: var(--s3) var(--s3);
     width: 100%;
-    height: auto;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    border-right: none;
-    border-bottom: 1px solid rgba(37,99,168,.4);
-    overflow: visible;
+    min-width: 0;
   }
-
-  .brand { order: 0; padding: var(--s3) var(--s4); border-bottom: none; flex-shrink: 0; }
-
-  /* Bouton thème : passe en icône seule, reste sur la 1ère rangée à droite */
-  .theme-toggle { order: 1; margin: 0 var(--s3) 0 auto !important; flex-shrink: 0; }
-  .theme-toggle .theme-label { display: none; }
-
-  /* Le menu occupe toute la 2ème rangée, en scroll horizontal */
-  .sidebar nav {
-    order: 2;
-    flex: 1 1 100%;
-    display: flex;
-    flex-direction: row !important;
-    overflow-x: auto;
-    padding: 4px 8px 10px !important;
-    -webkit-overflow-scrolling: touch;
-    border-top: 1px solid rgba(255,255,255,.12);
-  }
-  .nav-link {
-    white-space: nowrap;
-    flex-shrink: 0;
-    margin: 4px 4px 0;
-  }
-
-  .content { padding: var(--s4) var(--s4); }
 
   .page-header {
     flex-direction: column;
     align-items: flex-start !important;
     gap: var(--s3);
   }
-  .page-header > a, .page-header > button { align-self: stretch; text-align: center; }
+  .page-header > a, .page-header > button {
+    align-self: stretch;
+    text-align: center;
+  }
 
-  /* Toute rangée en flex inline (formulaires côte à côte) passe en colonne */
-  .field-row, .selectors-bar { flex-direction: column !important; }
+  .field-row, .selectors-bar {
+    flex-direction: column !important;
+  }
 
-  table { min-width: 560px; }
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    margin-bottom: var(--s4);
+    border-radius: var(--r);
+    border: 1px solid var(--border);
+  }
+  table {
+    min-width: 600px;
+    width: 100%;
+  }
+
+  /* Odoo Sheet adjustments on mobile */
+  .odoo-sheet {
+    padding: var(--s4) !important;
+  }
+}
+
+/* ============================================================
+   ODOO ENTERPRISE UX UTILITY STYLES
+   ============================================================ */
+.odoo-kanban-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--s4);
+}
+
+@media (max-width: 640px) {
+  .odoo-kanban-grid {
+    grid-template-columns: 1fr;
+    gap: var(--s3);
+  }
+}
+
+.odoo-form-sheet {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shsm);
+}
+
+.odoo-statusbar-pipeline::-webkit-scrollbar {
+  display: none;
+}
+.odoo-statusbar-pipeline {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 @media (max-width: 480px) {
