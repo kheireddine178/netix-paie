@@ -3,6 +3,8 @@ import { getSalarie, modifierSalarie } from "../../actions";
 import SalarieForm from "../../salarie-form";
 import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
+export const dynamic = "force-dynamic";
+
 export default async function ModifierSalariePage({
   params,
 }: {

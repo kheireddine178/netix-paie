@@ -2,6 +2,8 @@ import { creerSalarie } from "../actions";
 import SalarieForm from "../salarie-form";
 import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
+export const dynamic = "force-dynamic";
+
 export default function NouveauSalariePage() {
   return (
     <div className="flex flex-col gap-4">
