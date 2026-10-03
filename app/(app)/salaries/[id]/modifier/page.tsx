@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { getSalarie, modifierSalarie } from "../../actions";
 import SalarieForm from "../../salarie-form";
-import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -19,18 +18,8 @@ export default async function ModifierSalariePage({
 
   return (
     <div className="flex flex-col gap-4">
-      <OdooControlPanel
-        breadcrumbs={[
-          { label: "Collaborateurs", href: "/salaries" },
-          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
-          { label: "Modifier la fiche" },
-        ]}
-        secondaryActions={[
-          {
-            label: "Annuler et voir la fiche",
-            href: `/salaries/${salarie.id}`,
-          },
-        ]}
+      <PageHeader
+        title="Annuler et voir la fiche"
       />
 
       <SalarieForm

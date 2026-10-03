@@ -1,7 +1,8 @@
 import { listerSalaries, listerBulletinsPourPeriode } from "../../salaries/actions";
 import SaisieCollectiveClient from "./saisie-collective-client";
-import OdooSubNav from "@/components/odoo/OdooSubNav";
-import OdooControlPanel from "@/components/odoo/OdooControlPanel";
+import { PageHeader } from "@/components/ui/PageHeader";
+import Link from "next/link";
+import { User, Users, Wallet } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -46,41 +47,27 @@ export default async function SaisieCollectivePage({ searchParams }: Props) {
   }));
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* 0. ODOO SUBNAV TABS */}
-      <OdooSubNav
-        items={[
-          { label: "👤 Saisie individuelle", href: "/saisie" },
-          { label: "📊 Grille collective en masse", href: "/saisie/collective" },
-          { label: "💳 Acomptes & Avances", href: "/saisie/avances" },
-        ]}
-      />
+    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-10">
+      <div className="flex flex-col gap-4">
+        {/* Navigation */}
+        <div className="flex items-center gap-2 text-sm text-[#64748B]">
+          <Link href="/saisie" className="flex items-center gap-2 hover:text-[#0F172A] transition-colors px-3 py-1.5 rounded-md font-medium">
+            <User className="w-4 h-4" /> Saisie individuelle
+          </Link>
+          <Link href="/saisie/collective" className="flex items-center gap-2 hover:text-[#4F46E5] transition-colors bg-[#F8FAFC] px-3 py-1.5 rounded-md font-medium text-[#4F46E5]">
+            <Users className="w-4 h-4" /> Grille collective
+          </Link>
+          <Link href="/saisie/avances" className="flex items-center gap-2 hover:text-[#0F172A] transition-colors px-3 py-1.5 rounded-md font-medium">
+            <Wallet className="w-4 h-4" /> Acomptes & Avances
+          </Link>
+        </div>
 
-      {/* 1. ODOO CONTROL PANEL */}
-      <OdooControlPanel
-        breadcrumbs={[
-          { label: "Saisie Mensuelle", href: "/saisie" },
-          { label: "Grille collective de masse" },
-          { label: `${MOIS[selectedMois - 1]} ${selectedAnnee}` },
-        ]}
-        secondaryActions={[
-          {
-            label: "← Saisie individuelle",
-            href: "/saisie",
-          },
-          {
-            label: "Avances & Acomptes",
-            href: "/saisie/avances",
-          },
-        ]}
-        extraRight={
-          <span className="text-xs font-semibold px-2.5 py-1 rounded bg-slate-100 text-slate-700">
-            👥 {activeSalaries.length} salariés actifs
-          </span>
-        }
-      />
+        <PageHeader
+          title="Grille de Saisie Collective"
+          subtitle={\`Période: \${MOIS[selectedMois - 1]} \${selectedAnnee} — \${activeSalaries.length} salariés actifs\`}
+        />
+      </div>
 
-      {/* 2. GRILLE CLIENT */}
       <SaisieCollectiveClient
         salaries={activeSalaries}
         initialBulletins={initialBulletins}

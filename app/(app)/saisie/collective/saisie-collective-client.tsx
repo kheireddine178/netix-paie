@@ -4,7 +4,12 @@ import React, { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { type Salarie } from "../../salaries/actions";
-import { enregistrerBulletinsCollectifs } from "../../salaries/actions";
+import { Lock, Edit3, Search, Save } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Card, CardContent } from "@/components/ui/Card";
 
 interface BulletinSimplifie {
   salarie_id: number;
@@ -181,77 +186,81 @@ export default function SaisieCollectiveClient({
   return (
     <div className="space-y-6">
       {/* Configuration bar */}
-      <div className="card no-print" style={{ display: "flex", gap: "var(--s4)", alignItems: "flex-end", flexWrap: "wrap", border: "1px solid var(--border)", padding: "var(--s4)" }}>
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label htmlFor="mois-sel">Mois</label>
-          <select
-            id="mois-sel"
-            value={mois}
-            onChange={(e) => handlePeriodChange(annee, parseInt(e.target.value, 10))}
+      <Card>
+        <CardContent className="p-4 flex flex-wrap items-end gap-4">
+          <div className="space-y-1">
+            <label htmlFor="mois-sel" className="text-xs font-semibold text-[#0F172A]">Mois</label>
+            <Select
+              value={mois.toString()}
+              onChange={(v) => handlePeriodChange(annee, parseInt(v, 10))}
+              options={MOIS.map((m, i) => ({ value: (i + 1).toString(), label: m }))}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label htmlFor="annee-sel" className="text-xs font-semibold text-[#0F172A]">Année</label>
+            <Select
+              value={annee.toString()}
+              onChange={(v) => handlePeriodChange(parseInt(v, 10), mois)}
+              options={Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map((y) => ({
+                value: y.toString(),
+                label: y.toString()
+              }))}
+            />
+          </div>
+
+          <div className="space-y-1 flex-1 min-w-[250px]">
+            <label htmlFor="search-sal" className="text-xs font-semibold text-[#0F172A]">Filtrer les salariés</label>
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+              <Input
+                id="search-sal"
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher par nom, fonction, matricule..."
+                className="pl-9"
+              />
+            </div>
+          </div>
+
+          <Button
+            onClick={handleSave}
+            disabled={isPending}
+            className="w-full sm:w-auto"
           >
-            {MOIS.map((m, i) => (
-              <option key={i} value={i + 1}>{m}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label htmlFor="annee-sel">Année</label>
-          <select
-            id="annee-sel"
-            value={annee}
-            onChange={(e) => handlePeriodChange(parseInt(e.target.value, 10), mois)}
-          >
-            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="field" style={{ marginBottom: 0, flex: "1 1 250px" }}>
-          <label htmlFor="search-sal">Filtrer les salariés</label>
-          <input
-            id="search-sal"
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher par nom, fonction, matricule..."
-          />
-        </div>
-
-        <button
-          onClick={handleSave}
-          disabled={isPending}
-          className="btn btn-primary"
-          style={{ height: "42px", minWidth: "180px", justifyContent: "center" }}
-        >
-          {isPending ? "Calcul & Enregistrement..." : "💾 Enregistrer la paie"}
-        </button>
-      </div>
+            {isPending ? "Calcul & Enregistrement..." : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Enregistrer la paie
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
 
       {message && (
         <div
-          className={`badge ${message.type === "success" ? "badge-teal" : "badge-red"}`}
-          style={{ display: "block", padding: "12px var(--s4)", fontSize: "var(--tsm)", textAlign: "center" }}
+          className={`p-3 rounded-lg text-sm text-center font-medium ${message.type === "success" ? "bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE]" : "bg-red-50 text-red-600 border border-red-200"}`}
         >
           {message.text}
         </div>
       )}
 
       {/* Grid container */}
-      <div className="card" style={{ padding: 0, overflow: "hidden", border: "1px solid var(--border)" }}>
-        <div style={{ overflowX: "auto" }}>
-          <table className="table" style={{ width: "100%", margin: 0, borderCollapse: "collapse", fontSize: "var(--txs)" }}>
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left border-collapse">
             <thead>
-              <tr style={{ background: "var(--surface-2)", borderBottom: "2px solid var(--border)" }}>
-                <th style={{ padding: "12px", minWidth: "180px", position: "sticky", left: 0, background: "var(--surface-2)", zIndex: 10 }}>Salarié</th>
-                <th style={{ padding: "12px" }}>Matricule</th>
+              <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                <th className="p-3 font-semibold text-[#64748B] sticky left-0 bg-[#F8FAFC] z-10 min-w-[180px]">Salarié</th>
+                <th className="p-3 font-semibold text-[#64748B] text-center">Matricule</th>
                 {COLUMNS.map((col) => (
-                  <th key={col.key} style={{ padding: "12px", textAlign: "center", minWidth: "110px" }}>
+                  <th key={col.key} className="p-3 font-semibold text-[#64748B] text-center min-w-[110px]">
                     {col.label}
                   </th>
                 ))}
-                <th style={{ padding: "12px", textAlign: "center" }}>Statut</th>
+                <th className="p-3 font-semibold text-[#64748B] text-center">Statut</th>
               </tr>
             </thead>
             <tbody>
@@ -269,39 +278,29 @@ export default function SaisieCollectiveClient({
                   statut: "Brouillon",
                 };
                 
-                const isLocked = values.statut === "Clôturé";
+                const isLocked = values.statut === "Clôturée" || values.statut === "Clôturé"; // Handle both spellings
 
                 return (
                   <tr
                     key={s.id}
-                    style={{
-                      borderBottom: "1px solid var(--border)",
-                      background: isLocked ? "rgba(var(--text-muted), 0.05)" : undefined
-                    }}
+                    className={`border-b border-[#E2E8F0] ${isLocked ? "bg-[#F1F5F9]/50" : "hover:bg-[#F8FAFC]/50"}`}
                   >
                     {/* Fixed name column */}
                     <td
-                      style={{
-                        padding: "10px 12px",
-                        fontWeight: 650,
-                        position: "sticky",
-                        left: 0,
-                        background: "var(--surface)",
-                        zIndex: 5,
-                        boxShadow: "2px 0 5px rgba(0,0,0,0.05)"
-                      }}
+                      className="p-3 sticky left-0 z-5 shadow-[2px_0_5px_rgba(0,0,0,0.02)]"
+                      style={{ backgroundColor: isLocked ? "#F8FAFC" : "#ffffff" }}
                     >
-                      <div>{s.nom_prenom}</div>
-                      <div style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: "normal" }}>
+                      <div className="font-semibold text-[#0F172A]">{s.nom_prenom}</div>
+                      <div className="text-[10px] text-[#64748B]">
                         {s.fonction || "Pas de fonction"}
                       </div>
                     </td>
 
-                    <td style={{ padding: "10px 12px", textAlign: "center" }}>
+                    <td className="p-3 text-center">
                       {s.matricule ? (
-                        <span className="badge badge-accent">{s.matricule}</span>
+                        <Badge variant="neutral">{s.matricule}</Badge>
                       ) : (
-                        "—"
+                        <span className="text-[#94A3B8]">—</span>
                       )}
                     </td>
 
@@ -310,7 +309,7 @@ export default function SaisieCollectiveClient({
                       const val = values[field] ?? 0;
 
                       return (
-                        <td key={col.key} style={{ padding: "6px", textAlign: "center" }}>
+                        <td key={col.key} className="p-2 text-center">
                           <input
                             type="number"
                             step={field === "autre_prime_fixe" ? "0.01" : "1"}
@@ -322,28 +321,21 @@ export default function SaisieCollectiveClient({
                             data-row={rowIndex}
                             data-col={colIndex}
                             placeholder="0"
-                            style={{
-                              width: "100%",
-                              padding: "6px 8px",
-                              border: "1px solid var(--border)",
-                              borderRadius: "var(--radius-sm)",
-                              textAlign: "right",
-                              fontFamily: "var(--mono)",
-                              fontSize: "var(--txs)",
-                              background: isLocked ? "var(--surface-3)" : "var(--surface)",
-                              color: isLocked ? "var(--text-muted)" : "var(--text)",
-                              outline: "none"
-                            }}
+                            className={`w-full p-1.5 border rounded text-right tabular-nums focus:outline-none focus:ring-1 focus:ring-[#4F46E5] focus:border-[#4F46E5] transition-colors ${isLocked ? "bg-[#F1F5F9] border-transparent text-[#94A3B8]" : "bg-white border-[#E2E8F0] text-[#0F172A]"}`}
                           />
                         </td>
                       );
                     })}
 
-                    <td style={{ padding: "10px 12px", textAlign: "center" }}>
+                    <td className="p-3 text-center">
                       {isLocked ? (
-                        <span className="badge badge-teal" style={{ fontSize: "10px", padding: "2px 6px" }}>🔒 Clôturé</span>
+                        <Badge variant="neutral" className="inline-flex items-center gap-1">
+                          <Lock className="w-3 h-3" /> Clôturé
+                        </Badge>
                       ) : (
-                        <span className="badge badge-secondary" style={{ fontSize: "10px", padding: "2px 6px" }}>✏️ Brouillon</span>
+                        <Badge variant="brand" className="inline-flex items-center gap-1">
+                          <Edit3 className="w-3 h-3" /> {values.statut || "Brouillon"}
+                        </Badge>
                       )}
                     </td>
                   </tr>
@@ -352,7 +344,7 @@ export default function SaisieCollectiveClient({
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

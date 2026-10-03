@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSalarie, listerBulletinsSalarie } from "../../actions";
 import BulletinRowActions from "./BulletinRowActions";
-import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -26,20 +25,8 @@ export default async function HistoriquePage({
 
   return (
     <div className="flex flex-col gap-4">
-      <OdooControlPanel
-        breadcrumbs={[
-          { label: "Collaborateurs", href: "/salaries" },
-          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
-          { label: "Historique des bulletins" },
-        ]}
-        primaryAction={{
-          label: "💰 Calculer la paie",
-          href: `/saisie?salarieId=${salarie.id}`,
-        }}
-        secondaryActions={[
-          { label: "← Fiche Salarié", href: `/salaries/${salarie.id}` },
-          { label: "Journal de paie global", href: "/historique" },
-        ]}
+      <PageHeader
+        title="Journal de paie global"
       />
 
       {bulletins.length === 0 ? (

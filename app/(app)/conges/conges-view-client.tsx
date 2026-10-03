@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Salarie, CongeGlobalRow } from "../salaries/actions";
 import {
@@ -9,8 +8,13 @@ import {
   supprimerCongeGlobal,
   creerCongeSalarie,
 } from "../salaries/actions";
-import OdooControlPanel from "@/components/odoo/OdooControlPanel";
-import OdooKanbanCard from "@/components/odoo/OdooKanbanCard";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Plus, Search, CheckCircle2, Clock, Trash2, CheckCircle, XCircle, AlertCircle, CalendarDays, Users } from "lucide-react";
 
 export interface CongesViewClientProps {
   conges: CongeGlobalRow[];
@@ -39,14 +43,12 @@ export default function CongesViewClient({
   const [formJours, setFormJours] = useState(1);
   const [formMotif, setFormMotif] = useState("");
 
-  // KPIs
   const totalEnAttente = conges.filter((c) => c.statut === "En attente" || c.statut === "En attente validation RH").length;
   const totalApprouves = conges.filter((c) => c.statut === "Approuvé").length;
   const totalJoursPris = conges
     .filter((c) => c.statut === "Approuvé" && c.type_conge === "Annuel")
     .reduce((sum, c) => sum + (c.jours_ouvrables || 0), 0);
 
-  // Handlers
   const handleChangerStatut = (id: number, statut: string) => {
     setMessage(null);
     startTransition(async () => {
@@ -85,7 +87,7 @@ export default function CongesViewClient({
     formData.append("date_fin", formFin);
     formData.append("jours_ouvrables", String(formJours));
     formData.append("motif", formMotif);
-    formData.append("statut", "Approuvé"); // Directly approved when entered by HR Admin
+    formData.append("statut", "Approuvé");
 
     startTransition(async () => {
       try {
@@ -103,7 +105,6 @@ export default function CongesViewClient({
     });
   };
 
-  // Filtered leaves
   const filteredConges = conges.filter((c) => {
     if (filterStatut === "attente") {
       if (c.statut !== "En attente" && c.statut !== "En attente validation RH") return false;
@@ -128,561 +129,277 @@ export default function CongesViewClient({
     return true;
   });
 
-  const getTypeBadgeStyle = (type: string) => {
-    switch (type) {
-      case "Annuel":
-        return { background: "var(--teal-bg)", color: "var(--teal-ink)", border: "1px solid var(--teal)" };
-      case "Maladie":
-        return { background: "#FEF2F2", color: "#B91C1C", border: "1px solid #FCA5A5" };
-      case "Sans solde":
-        return { background: "#FFFBEB", color: "#B45309", border: "1px solid #FCD34D" };
-      case "Maternité":
-        return { background: "#FDF2F8", color: "#BE185D", border: "1px solid #FBCFE8" };
-      default:
-        return { background: "var(--surface-2)", color: "var(--text-muted)", border: "1px solid var(--border)" };
-    }
-  };
-
   return (
-    <div className="flex flex-col gap-4">
-      {/* 1. ODOO CONTROL PANEL */}
-      <OdooControlPanel
-        breadcrumbs={[{ label: "Congés & Absences" }]}
-        primaryAction={{
-          label: "+ Nouvelle demande",
-          onClick: () => setIsModalOpen(true),
-          icon: (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-          ),
-        }}
-        search={{
-          value: search,
-          onChange: setSearch,
-          placeholder: "Rechercher par collaborateur, matricule, motif…",
-        }}
-        filters={[
-          {
-            id: "all",
-            label: "Toutes les demandes",
-            active: filterStatut === "all",
-            onClick: () => setFilterStatut("all"),
-          },
-          {
-            id: "attente",
-            label: `À valider (${totalEnAttente})`,
-            active: filterStatut === "attente",
-            onClick: () => setFilterStatut("attente"),
-          },
-          {
-            id: "approuve",
-            label: "Approuvées",
-            active: filterStatut === "approuve",
-            onClick: () => setFilterStatut("approuve"),
-          },
-          {
-            id: "annuel",
-            label: "Congés Annuels",
-            active: filterStatut === "annuel",
-            onClick: () => setFilterStatut("annuel"),
-          },
-          {
-            id: "maladie",
-            label: "Maladies / Sans solde",
-            active: filterStatut === "maladie",
-            onClick: () => setFilterStatut("maladie"),
-          },
-        ]}
-        viewMode={viewMode === "balances" ? "list" : viewMode}
-        onViewModeChange={(m) => setViewMode(m)}
-        extraRight={
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setViewMode(viewMode === "balances" ? "list" : "balances")}
-              className={`text-xs font-semibold px-2.5 py-1.5 rounded transition-all cursor-pointer`}
-              style={{
-                background: viewMode === "balances" ? "var(--accent)" : "var(--surface-2)",
-                color: viewMode === "balances" ? "#FFFFFF" : "var(--text)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              👥 {viewMode === "balances" ? "Vue Demandes" : "Soldes Collaborateurs"}
-            </button>
-          </div>
+    <div className="flex flex-col gap-6 max-w-[1200px] mx-auto w-full">
+      <PageHeader
+        title="Congés & Absences"
+        subtitle="Gérez les demandes de congés et le planning des absences"
+        primaryAction={
+          <Button onClick={() => setIsModalOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Nouvelle demande
+          </Button>
         }
-      />
-
-      {/* 2. KPI STRIP (Odoo Stats) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-        <div
-          className="p-3.5 rounded-lg border flex flex-col justify-between"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: "var(--amber)" }}>
-            ⏳ En attente de validation
-          </span>
-          <div className="text-xl font-bold mt-1" style={{ color: "var(--amber)" }}>
-            {totalEnAttente} demande(s)
+        secondaryActions={
+          <Button variant="secondary" onClick={() => setViewMode(viewMode === "balances" ? "list" : "balances")} className="gap-2">
+            <Users className="w-4 h-4" />
+            {viewMode === "balances" ? "Vue Demandes" : "Soldes Collaborateurs"}
+          </Button>
+        }
+      >
+        <div className="flex items-center gap-4 mt-6">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher..."
+              className="pl-9"
+            />
+          </div>
+          <div className="flex bg-[#F1F5F9] p-1 rounded-lg">
+            {[
+              { id: "all", label: "Toutes" },
+              { id: "attente", label: `À valider (${totalEnAttente})` },
+              { id: "approuve", label: "Approuvées" },
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setFilterStatut(f.id)}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  filterStatut === f.id ? "bg-white text-[#0F172A] shadow-sm" : "text-[#64748B] hover:text-[#0F172A]"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
         </div>
+      </PageHeader>
 
-        <div
-          className="p-3.5 rounded-lg border flex flex-col justify-between"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: "var(--teal)" }}>
-            ✓ Demandes approuvées
-          </span>
-          <div className="text-xl font-bold mt-1" style={{ color: "var(--teal)" }}>
-            {totalApprouves} validée(s)
-          </div>
-        </div>
-
-        <div
-          className="p-3.5 rounded-lg border flex flex-col justify-between"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: "var(--accent)" }}>
-            🏖️ Jours pris cumulés
-          </span>
-          <div className="text-xl font-bold mt-1" style={{ color: "var(--accent)" }}>
-            {totalJoursPris} jours
-          </div>
-        </div>
-
-        <div
-          className="p-3.5 rounded-lg border flex flex-col justify-between"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-            👥 Effectif suivi
-          </span>
-          <div className="text-xl font-bold mt-1" style={{ color: "var(--text)" }}>
-            {salaries.length} salariés
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[#64748B]">En attente de validation</p>
+                <p className="text-2xl font-semibold text-[#0F172A] mt-2">{totalEnAttente}</p>
+              </div>
+              <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center">
+                <Clock className="w-6 h-6 text-amber-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[#64748B]">Demandes approuvées</p>
+                <p className="text-2xl font-semibold text-[#0F172A] mt-2">{totalApprouves}</p>
+              </div>
+              <div className="w-12 h-12 bg-teal-50 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-6 h-6 text-teal-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[#64748B]">Jours pris cumulés</p>
+                <p className="text-2xl font-semibold text-[#0F172A] mt-2">{totalJoursPris}</p>
+              </div>
+              <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center">
+                <CalendarDays className="w-6 h-6 text-[#4F46E5]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Feedback Messages */}
       {message && (
-        <div
-          className={`p-3 text-xs font-semibold rounded ${
-            message.type === "success"
-              ? "bg-teal-50 text-teal-800 border border-teal-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
+        <div className={`p-4 rounded-lg text-sm font-medium border ${
+          message.type === 'success' 
+            ? 'bg-teal-50 text-teal-900 border-teal-200' 
+            : 'bg-red-50 text-red-900 border-red-200'
+        }`}>
           {message.text}
         </div>
       )}
 
-      {/* 3. CONTENU PRINCIPAL */}
       {viewMode === "balances" ? (
-        /* VUE SOLDES INDIVIDUELS (Trombinoscope & Reliquats) */
-        <div className="flex flex-col gap-3">
-          <div className="text-xs font-bold text-muted-foreground">
-            Soldes individuels de congés légaux (Loi 90-11 : 2.5 jours/mois)
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead>
+                <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                  <th className="p-4 font-semibold text-[#64748B]">Collaborateur</th>
+                  <th className="p-4 font-semibold text-[#64748B] text-center">Jours pris</th>
+                  <th className="p-4 font-semibold text-[#64748B] text-center">Jours en attente</th>
+                  <th className="p-4 font-semibold text-[#64748B] text-center">Reliquat</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E2E8F0]">
+                {salaries.map((s) => {
+                  const stat = statsSalarie[s.id] || { pris: 0, enAttente: 0, reliquat: 30 };
+                  return (
+                    <tr key={s.id} className="hover:bg-[#F8FAFC]/50 transition-colors">
+                      <td className="p-4 font-medium text-[#0F172A]">{s.nom_prenom}</td>
+                      <td className="p-4 text-center text-[#64748B]">{stat.pris} j</td>
+                      <td className="p-4 text-center text-amber-600 font-medium">{stat.enAttente > 0 ? `${stat.enAttente} j` : "-"}</td>
+                      <td className="p-4 text-center font-medium text-[#0F172A]">{stat.reliquat} j</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-          <div className="odoo-kanban-grid">
-            {salaries.map((s) => {
-              const stat = statsSalarie[s.id];
-              return (
-                <OdooKanbanCard
-                  key={s.id}
-                  title={s.nom_prenom}
-                  subtitle={s.fonction || "Poste non renseigné"}
-                  badge={
-                    (stat?.enAttente || 0) > 0
-                      ? { text: `${stat?.enAttente} à valider`, variant: "warning" }
-                      : { text: "À jour", variant: "success" }
-                  }
-                  metrics={[
-                    { label: "Solde Reliquat", value: `${stat?.reliquat || 0} j` },
-                    { label: "Jours Pris", value: `${stat?.pris || 0} j` },
-                  ]}
-                  href={`/salaries/${s.id}/conges`}
-                  actions={
-                    <span className="text-xs font-bold hover:underline" style={{ color: "var(--amber)" }}>
-                      Gérer le dossier →
-                    </span>
-                  }
-                />
-              );
-            })}
-          </div>
-        </div>
-      ) : filteredConges.length === 0 ? (
-        <div
-          className="p-12 text-center rounded-lg border border-dashed text-xs text-muted-foreground"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          Aucune demande de congé ne correspond aux critères de filtre.
-        </div>
-      ) : viewMode === "list" ? (
-        /* VUE LISTE ODOO (Tableau RH avec actions directes) */
-        <div
-          className="table-wrap rounded-lg border overflow-hidden"
-          style={{ borderColor: "var(--border)", background: "var(--surface)" }}
-        >
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--border)" }}>
-                <th className="py-2.5 px-3 font-bold">Collaborateur</th>
-                <th className="py-2.5 px-3 font-bold w-28">Type</th>
-                <th className="py-2.5 px-3 font-bold w-48">Période</th>
-                <th className="py-2.5 px-3 font-bold w-20 text-center">Durée</th>
-                <th className="py-2.5 px-3 font-bold">Motif</th>
-                <th className="py-2.5 px-3 font-bold w-28 text-center">Statut</th>
-                <th className="py-2.5 px-3 font-bold w-48 text-right">Actions RH</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredConges.map((c) => {
-                const isPendingItem = c.statut === "En attente" || c.statut === "En attente validation RH";
-
-                return (
-                  <tr
-                    key={c.id}
-                    className="border-b transition-colors hover:bg-slate-50/70"
-                    style={{ borderColor: "var(--border-soft)" }}
-                  >
-                    <td className="py-2.5 px-3 font-semibold">
-                      <Link
-                        href={`/salaries/${c.salarie_id}/conges`}
-                        className="hover:underline flex items-center gap-2"
-                        style={{ color: "var(--text)" }}
-                      >
-                        <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
-                          style={{ background: "var(--accent-bg)", color: "var(--accent-ink)" }}
-                        >
-                          {(c.salaries?.nom_prenom || "S").slice(0, 2).toUpperCase()}
-                        </div>
-                        <span>{c.salaries?.nom_prenom || `Salarié #${c.salarie_id}`}</span>
-                      </Link>
-                    </td>
-
-                    <td className="py-2.5 px-3">
-                      <span
-                        className="px-2 py-0.5 rounded text-[10px] font-bold"
-                        style={getTypeBadgeStyle(c.type_conge)}
-                      >
-                        {c.type_conge}
-                      </span>
-                    </td>
-
-                    <td className="py-2.5 px-3 font-mono text-[11px]">
-                      {c.date_debut.split("-").reverse().join("/")} → {c.date_fin.split("-").reverse().join("/")}
-                    </td>
-
-                    <td className="py-2.5 px-3 text-center font-bold">
-                      {c.jours_ouvrables} j
-                    </td>
-
-                    <td className="py-2.5 px-3 text-muted-foreground truncate max-w-[200px]" title={c.motif || ""}>
-                      {c.motif || "—"}
-                    </td>
-
-                    <td className="py-2.5 px-3 text-center">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          c.statut === "Approuvé"
-                            ? "bg-teal-100 text-teal-800"
-                            : c.statut === "Rejeté"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {c.statut}
-                      </span>
-                    </td>
-
-                    <td className="py-2.5 px-3 text-right">
-                      <div className="inline-flex items-center gap-1.5 justify-end">
-                        {isPendingItem ? (
-                          <>
-                            <button
-                              type="button"
-                              disabled={isPending}
-                              onClick={() => handleChangerStatut(c.id, "Approuvé")}
-                              title="Valider la demande de congé"
-                              className="btn btn-primary btn-sm text-[11px] py-1 px-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded"
-                            >
-                              ✓ Valider
-                            </button>
-                            <button
-                              type="button"
-                              disabled={isPending}
-                              onClick={() => handleChangerStatut(c.id, "Rejeté")}
-                              title="Refuser la demande"
-                              className="btn btn-secondary btn-sm text-[11px] py-1 px-2 text-red-600 hover:bg-red-50 rounded"
-                            >
-                              ✕ Refuser
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled={isPending}
-                            onClick={() => handleChangerStatut(c.id, "En attente")}
-                            className="text-[11px] text-muted-foreground hover:underline mr-1"
-                            title="Remettre en attente"
-                          >
-                            ↺ Revoir
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => handleSupprimer(c.id)}
-                          className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                          title="Supprimer la demande"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        </Card>
       ) : (
-        /* VUE KANBAN (Cartes réactives par demande) */
-        <div className="odoo-kanban-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredConges.map((c) => (
-            <div
-              key={c.id}
-              className="p-4 rounded-lg border transition-all hover:shadow-md flex flex-col justify-between"
-              style={{
-                background: "var(--surface)",
-                borderColor: "var(--border)",
-              }}
-            >
-              <div>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs"
-                      style={{ background: "var(--accent-bg)", color: "var(--accent-ink)" }}
-                    >
-                      {(c.salaries?.nom_prenom || "S").slice(0, 2).toUpperCase()}
+            <Card key={c.id} className="flex flex-col">
+              <CardContent className="p-5 flex-1 flex flex-col">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#EEF2FF] flex items-center justify-center text-sm font-bold text-[#4F46E5]">
+                      {c.salaries?.nom_prenom?.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <span className="font-bold text-xs block" style={{ color: "var(--text)" }}>
-                        {c.salaries?.nom_prenom}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {c.salaries?.fonction || "Collaborateur"}
-                      </span>
+                      <h4 className="font-semibold text-[#0F172A] text-sm">{c.salaries?.nom_prenom}</h4>
+                      <p className="text-xs text-[#64748B]">{c.type_conge}</p>
                     </div>
                   </div>
-
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      c.statut === "Approuvé"
-                        ? "bg-teal-100 text-teal-800"
-                        : c.statut === "Rejeté"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-amber-100 text-amber-800"
-                    }`}
-                  >
+                  <Badge variant={c.statut === "Approuvé" ? "success" : c.statut === "Rejeté" ? "danger" : "warning"}>
                     {c.statut}
-                  </span>
+                  </Badge>
                 </div>
-
-                <div className="mt-3 pt-2 border-t text-xs flex flex-col gap-1" style={{ borderColor: "var(--border-soft)" }}>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground text-[11px]">Type :</span>
-                    <span className="font-semibold">{c.type_conge}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground text-[11px]">Durée :</span>
-                    <strong className="text-teal-700">{c.jours_ouvrables} jour(s)</strong>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground text-[11px]">Période :</span>
-                    <span className="font-mono text-[10px]">
-                      {c.date_debut.split("-").reverse().join("/")} → {c.date_fin.split("-").reverse().join("/")}
+                
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#64748B]">Période</span>
+                    <span className="font-medium text-[#0F172A]">
+                      {new Date(c.date_debut).toLocaleDateString()} - {new Date(c.date_fin).toLocaleDateString()}
                     </span>
                   </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#64748B]">Durée</span>
+                    <span className="font-medium text-[#0F172A]">{c.jours_ouvrables} jours</span>
+                  </div>
                   {c.motif && (
-                    <div className="mt-1 text-[11px] italic text-muted-foreground bg-slate-50 p-1.5 rounded">
-                      « {c.motif} »
-                    </div>
+                    <p className="text-xs text-[#64748B] bg-[#F8FAFC] p-2 rounded line-clamp-2">
+                      {c.motif}
+                    </p>
                   )}
                 </div>
-              </div>
 
-              <div className="mt-3 pt-2 border-t flex items-center justify-between" style={{ borderColor: "var(--border-soft)" }}>
-                <Link
-                  href={`/salaries/${c.salarie_id}/conges`}
-                  className="text-[11px] font-semibold hover:underline"
-                  style={{ color: "var(--accent)" }}
-                >
-                  Dossier →
-                </Link>
-
-                {c.statut === "En attente" && (
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
+                <div className="mt-auto pt-4 border-t border-[#E2E8F0] flex justify-between gap-2">
+                  {(c.statut === "En attente" || c.statut === "En attente validation RH") && (
+                    <>
+                      <Button 
+                        variant="secondary" 
+                        className="flex-1 text-teal-600 bg-teal-50 hover:bg-teal-100 border-none"
+                        onClick={() => handleChangerStatut(c.id, "Approuvé")}
+                        disabled={isPending}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" /> Approuver
+                      </Button>
+                      <Button 
+                        variant="secondary"
+                        className="flex-1 text-red-600 bg-red-50 hover:bg-red-100 border-none"
+                        onClick={() => handleChangerStatut(c.id, "Rejeté")}
+                        disabled={isPending}
+                      >
+                        <XCircle className="w-4 h-4 mr-2" /> Rejeter
+                      </Button>
+                    </>
+                  )}
+                  {c.statut === "Approuvé" && (
+                    <Button 
+                      variant="secondary"
+                      className="w-full text-amber-600 bg-amber-50 hover:bg-amber-100 border-none"
+                      onClick={() => handleChangerStatut(c.id, "En attente")}
                       disabled={isPending}
-                      onClick={() => handleChangerStatut(c.id, "Approuvé")}
-                      className="btn btn-primary btn-sm text-[10px] py-1 px-2 bg-teal-600 text-white rounded font-bold"
                     >
-                      ✓ Valider
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isPending}
-                      onClick={() => handleChangerStatut(c.id, "Rejeté")}
-                      className="btn btn-secondary btn-sm text-[10px] py-1 px-1.5 text-red-600 rounded"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+                      <AlertCircle className="w-4 h-4 mr-2" /> Remettre en attente
+                    </Button>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    className="px-3 text-[#64748B] hover:text-red-600"
+                    onClick={() => handleSupprimer(c.id)}
+                    disabled={isPending}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       )}
 
-      {/* 4. MODAL DE NOUVELLE DEMANDE (Odoo Quick Drawer / Modal) */}
       {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div
-            className="w-full max-w-lg rounded-xl shadow-xl p-6"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b mb-4" style={{ borderColor: "var(--border)" }}>
-              <h3 className="font-bold text-base m-0" style={{ color: "var(--text)" }}>
-                Nouvelle Demande de Congé
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 font-bold text-lg"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleCreerConge} className="flex flex-col gap-3 text-xs">
-              <div>
-                <label className="font-bold block mb-1">Collaborateur concerné :</label>
-                <select
-                  value={formSalarieId}
-                  onChange={(e) => setFormSalarieId(e.target.value)}
-                  required
-                  className="w-full p-2 rounded border"
-                  style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text)" }}
-                >
-                  {salaries.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nom_prenom} {s.matricule ? `(${s.matricule})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold block mb-1">Type de congé :</label>
-                  <select
-                    value={formType}
-                    onChange={(e) => setFormType(e.target.value)}
-                    className="w-full p-2 rounded border"
-                    style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text)" }}
-                  >
-                    <option value="Annuel">Congé Annuel Payé</option>
-                    <option value="Maladie">Congé Maladie</option>
-                    <option value="Sans solde">Congé Sans Solde</option>
-                    <option value="Maternité">Congé Maternité</option>
-                    <option value="Événement familial">Événement familial légal</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="font-bold block mb-1">Nombre de jours ouvrables :</label>
-                  <input
-                    type="number"
-                    min="0.5"
-                    step="0.5"
-                    value={formJours}
-                    onChange={(e) => setFormJours(parseFloat(e.target.value) || 1)}
-                    required
-                    className="w-full p-2 rounded border font-bold"
-                    style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text)" }}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold block mb-1">Date de début :</label>
-                  <input
-                    type="date"
-                    value={formDebut}
-                    onChange={(e) => setFormDebut(e.target.value)}
-                    required
-                    className="w-full p-2 rounded border"
-                    style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text)" }}
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold block mb-1">Date de fin :</label>
-                  <input
-                    type="date"
-                    value={formFin}
-                    onChange={(e) => setFormFin(e.target.value)}
-                    required
-                    className="w-full p-2 rounded border"
-                    style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text)" }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="font-bold block mb-1">Motif ou commentaire :</label>
-                <textarea
-                  value={formMotif}
-                  onChange={(e) => setFormMotif(e.target.value)}
-                  placeholder="Ex : Congé d'été, raison médicale..."
-                  rows={2}
-                  className="w-full p-2 rounded border"
-                  style={{ background: "var(--surface-2)", borderColor: "var(--border)", color: "var(--text)" }}
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t mt-2" style={{ borderColor: "var(--border)" }}>
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="btn btn-secondary btn-sm"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="btn btn-primary btn-sm font-bold"
-                >
-                  {isPending ? "Enregistrement…" : "Enregistrer et Valider"}
+        <div className="fixed inset-0 bg-[#0F172A]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md shadow-xl border-none">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-semibold text-[#0F172A]">Nouvelle demande</h3>
+                <button onClick={() => setIsModalOpen(false)} className="text-[#64748B] hover:text-[#0F172A]">
+                  <XCircle className="w-5 h-5" />
                 </button>
               </div>
-            </form>
-          </div>
+              
+              <form onSubmit={handleCreerConge} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#0F172A]">Collaborateur</label>
+                  <Select value={formSalarieId} onChange={setFormSalarieId} options={salaries.map(s => ({ value: String(s.id), label: s.nom_prenom }))} />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#0F172A]">Type de congé</label>
+                  <Select value={formType} onChange={setFormType} options={[
+                    { value: "Annuel", label: "Congé Annuel" },
+                    { value: "Maladie", label: "Maladie" },
+                    { value: "Sans solde", label: "Sans solde" },
+                    { value: "Maternité", label: "Maternité" }
+                  ]} />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#0F172A]">Du</label>
+                    <Input type="date" value={formDebut} onChange={e => setFormDebut(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[#0F172A]">Au</label>
+                    <Input type="date" value={formFin} onChange={e => setFormFin(e.target.value)} required />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#0F172A]">Jours ouvrables</label>
+                  <Input type="number" step="0.5" min="0.5" value={formJours} onChange={e => setFormJours(parseFloat(e.target.value))} required />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#0F172A]">Motif (optionnel)</label>
+                  <textarea 
+                    className="w-full min-h-[80px] p-2.5 text-sm rounded-md border border-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#4F46E5]"
+                    value={formMotif}
+                    onChange={e => setFormMotif(e.target.value)}
+                  />
+                </div>
+                
+                <div className="pt-4 flex justify-end gap-3">
+                  <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Annuler</Button>
+                  <Button type="submit" disabled={isPending}>Enregistrer</Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

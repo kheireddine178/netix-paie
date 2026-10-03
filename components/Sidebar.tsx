@@ -74,7 +74,8 @@ export default function Sidebar() {
       title: "Paie",
       icon: Wallet,
       items: [
-        { label: "Saisie mensuelle", href: "/saisie" },
+        { label: "Clôture du mois", href: "/paie/cloture" },
+        { label: "Saisie individuelle", href: "/saisie" },
         { label: "Saisie collective", href: "/saisie/collective" },
         { label: "États & Déclarations", href: "/rapports" },
         { label: "Rubriques (Admin)", href: "/rubriques", adminOnly: true },

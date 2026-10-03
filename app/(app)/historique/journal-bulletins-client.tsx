@@ -3,15 +3,12 @@
 import React, { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  IconCalculator,
-  IconFileText,
-  IconTrash,
-  IconSearch,
-  IconUser,
-  IconCalendar,
-} from "@/components/Icons";
-import OdooControlPanel from "@/components/odoo/OdooControlPanel";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Calculator, FileText, Trash2, Search, DollarSign, ShieldCheck, Receipt, Hash, ChevronRight } from "lucide-react";
 import {
   type BulletinGlobalItem,
   type Salarie,
@@ -22,6 +19,10 @@ const NOMS_MOIS = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
   "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
 ];
+
+function fmtDA(n: number) {
+  return n.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).replace(/[\u202F\u00A0]/g, " ") + " DA";
+}
 
 interface Props {
   bulletins: BulletinGlobalItem[];
@@ -37,333 +38,169 @@ export default function JournalBulletinsClient({ bulletins, salaries }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  // Distinct years in bulletins
-  const anneesDisponibles = Array.from(
-    new Set(bulletins.map((b) => b.annee))
-  ).sort((a, b) => b - a);
-  if (anneesDisponibles.length === 0) {
-    anneesDisponibles.push(now.getFullYear());
-  }
+  const anneesDisponibles = Array.from(new Set(bulletins.map(b => b.annee))).sort((a, b) => b - a);
+  if (anneesDisponibles.length === 0) anneesDisponibles.push(now.getFullYear());
 
-  // Filtrage
-  const bulletinsFiltres = bulletins.filter((b) => {
+  const bulletinsFiltres = bulletins.filter(b => {
     if (selectedAnnee !== "tous" && b.annee !== selectedAnnee) return false;
     if (selectedMois !== "tous" && b.mois !== selectedMois) return false;
     if (filterStatut !== "Tous" && (b.statut || "Calculé") !== filterStatut) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchNom = b.salaries?.nom_prenom.toLowerCase().includes(q);
-      const matchMatricule = b.salaries?.matricule?.toLowerCase().includes(q);
-      if (!matchNom && !matchMatricule) return false;
+      return (b.salaries?.nom_prenom || "").toLowerCase().includes(q) || (b.salaries?.matricule || "").toLowerCase().includes(q);
     }
     return true;
   });
 
-  // KPI Calculations
   const totalMasseNette = bulletinsFiltres.reduce((sum, b) => sum + (b.net_a_payer || 0), 0);
   const totalRetenueSS = bulletinsFiltres.reduce((sum, b) => sum + (b.retenue_ss || 0), 0);
   const totalIRG = bulletinsFiltres.reduce((sum, b) => sum + (b.irg || 0), 0);
-  const totalBulletins = bulletinsFiltres.length;
 
   const handleSupprimerBulletin = (salarieId: number, bulletinId: number, mois: number, annee: number) => {
-    if (
-      !confirm(
-        `Supprimer définitivement ce bulletin de ${NOMS_MOIS[mois - 1]} ${annee} ?\n\nCette action est irréversible.`
-      )
-    ) {
-      return;
-    }
-
+    if (!confirm(`Supprimer définitivement ce bulletin de ${NOMS_MOIS[mois - 1]} ${annee} ?\n\nCette action est irréversible.`)) return;
     startTransition(async () => {
       try {
         await supprimerBulletin(salarieId, bulletinId);
         router.refresh();
-      } catch (err: any) {
-        alert(err.message || "Erreur lors de la suppression");
-      }
+      } catch (err: any) { alert(err.message || "Erreur lors de la suppression"); }
     });
   };
 
+  const statutVariant = (st: string | null | undefined) => {
+    if (st === "Clôturé") return "neutral";
+    if (st === "Validé") return "success";
+    return "brand";
+  };
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* 1. ODOO CONTROL PANEL */}
-      <OdooControlPanel
-        breadcrumbs={[{ label: "Journal Général des Bulletins de Paie" }]}
-        primaryAction={{
-          label: "💰 Nouvelle saisie de paie",
-          href: "/saisie",
-        }}
-        secondaryActions={[
-          {
-            label: "📊 Rapports & G50",
-            href: "/rapports",
-          },
-          {
-            label: "👥 Collaborateurs",
-            href: "/salaries",
-          },
-        ]}
-        search={{
-          value: searchQuery,
-          onChange: setSearchQuery,
-          placeholder: "Rechercher par salarié ou matricule…",
-        }}
-      />
-
-      {/* 2. BARRE DE FILTRES ODOO & PERIODE */}
-      <div
-        className="p-3.5 rounded-lg border flex flex-wrap items-center justify-between gap-3 text-xs"
-        style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+    <div className="flex flex-col gap-6 max-w-[1200px] mx-auto w-full">
+      <PageHeader
+        title="Journal Général de Paie"
+        subtitle="Historique et journal de tous les bulletins de salaire émis"
+        primaryAction={<Button asChild><Link href="/saisie">Nouvelle saisie de paie</Link></Button>}
+        secondaryActions={<Button variant="secondary" asChild><Link href="/rapports">Rapports & G50</Link></Button>}
       >
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-muted-foreground">Année :</span>
-            <select
-              value={selectedAnnee}
-              onChange={(e) =>
-                setSelectedAnnee(e.target.value === "tous" ? "tous" : parseInt(e.target.value, 10))
-              }
-              className="p-1.5 rounded border bg-transparent font-medium"
-              style={{ borderColor: "var(--border)" }}
-            >
-              <option value="tous">Toutes les années</option>
-              {anneesDisponibles.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
+        <div className="flex flex-wrap items-center justify-between gap-4 mt-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-[#64748B]">Année</span>
+              <select value={selectedAnnee} onChange={e => setSelectedAnnee(e.target.value === "tous" ? "tous" : parseInt(e.target.value, 10))}
+                className="p-2 rounded-md border border-[#E2E8F0] text-sm bg-white focus:ring-1 focus:ring-[#4F46E5] focus:outline-none">
+                <option value="tous">Toutes</option>
+                {anneesDisponibles.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-[#64748B]">Mois</span>
+              <select value={selectedMois} onChange={e => setSelectedMois(e.target.value === "tous" ? "tous" : parseInt(e.target.value, 10))}
+                className="p-2 rounded-md border border-[#E2E8F0] text-sm bg-white focus:ring-1 focus:ring-[#4F46E5] focus:outline-none">
+                <option value="tous">Tous</option>
+                {NOMS_MOIS.map((m, idx) => <option key={m} value={idx + 1}>{m}</option>)}
+              </select>
+            </div>
+            <div className="flex bg-[#F1F5F9] p-1 rounded-lg">
+              {["Tous", "Calculé", "Validé", "Clôturé"].map(st => (
+                <button key={st} onClick={() => setFilterStatut(st)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${filterStatut === st ? "bg-white text-[#0F172A] shadow-sm" : "text-[#64748B]"}`}>
+                  {st}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
-
-          <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-muted-foreground">Mois :</span>
-            <select
-              value={selectedMois}
-              onChange={(e) =>
-                setSelectedMois(e.target.value === "tous" ? "tous" : parseInt(e.target.value, 10))
-              }
-              className="p-1.5 rounded border bg-transparent font-medium"
-              style={{ borderColor: "var(--border)" }}
-            >
-              <option value="tous">Tous les mois</option>
-              {NOMS_MOIS.map((m, idx) => (
-                <option key={m} value={idx + 1}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-1 border-l pl-3" style={{ borderColor: "var(--border)" }}>
-            <span className="font-semibold text-muted-foreground mr-1">Statut :</span>
-            {["Tous", "Calculé", "Validé", "Clôturé"].map((st) => (
-              <button
-                key={st}
-                type="button"
-                onClick={() => setFilterStatut(st)}
-                className={`px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
-                  filterStatut === st
-                    ? "bg-slate-900 text-white shadow-sm"
-                    : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-                }`}
-              >
-                {st}
-              </button>
-            ))}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+            <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Rechercher..." className="pl-9 w-56" />
           </div>
         </div>
+      </PageHeader>
 
-        <div className="text-xs text-muted-foreground">
-          <strong>{bulletinsFiltres.length}</strong> bulletin(s) affiché(s)
-        </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {[
+          { label: "Masse salariale nette", value: fmtDA(totalMasseNette), icon: DollarSign, color: "text-teal-600 bg-teal-50" },
+          { label: "Cotisations CNAS (9%)", value: fmtDA(totalRetenueSS), icon: ShieldCheck, color: "text-blue-600 bg-blue-50" },
+          { label: "Impôt IRG précompté", value: fmtDA(totalIRG), icon: Receipt, color: "text-purple-600 bg-purple-50" },
+          { label: "Bulletins affichés", value: bulletinsFiltres.length.toString(), icon: Hash, color: "text-[#64748B] bg-slate-100" },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <Card key={label}>
+            <CardContent className="p-6 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[#64748B]">{label}</p>
+                <p className="text-xl font-semibold text-[#0F172A] mt-2">{value}</p>
+              </div>
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${color}`}>
+                <Icon className="w-6 h-6" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* 3. KPI RIBBON ODOO */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div
-          className="p-3.5 rounded-lg border flex flex-col justify-between"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          <div className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">
-            Masse Salariale Nette
-          </div>
-          <div className="text-xl font-black text-emerald-700 mt-1">
-            {totalMasseNette.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, " ")} DA
-          </div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">
-            Total Net à payer filtré
-          </div>
-        </div>
-
-        <div
-          className="p-3.5 rounded-lg border flex flex-col justify-between"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          <div className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-            Cotisations CNAS (9%)
-          </div>
-          <div className="text-xl font-black text-blue-700 mt-1">
-            {totalRetenueSS.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, " ")} DA
-          </div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">
-            Retenues Sécurité Sociale
-          </div>
-        </div>
-
-        <div
-          className="p-3.5 rounded-lg border flex flex-col justify-between"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          <div className="text-xs font-semibold text-purple-700 uppercase tracking-wider">
-            Impôt IRG Précompté
-          </div>
-          <div className="text-xl font-black text-purple-700 mt-1">
-            {totalIRG.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, " ")} DA
-          </div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">
-            Retenue fiscale à la source
-          </div>
-        </div>
-
-        <div
-          className="p-3.5 rounded-lg border flex flex-col justify-between"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Nombre de Bulletins
-          </div>
-          <div className="text-2xl font-black mt-1" style={{ color: "var(--text)" }}>
-            {totalBulletins}
-          </div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">
-            Période sélectionnée
-          </div>
-        </div>
-      </div>
-
-      {/* 4. TABLEAU DU JOURNAL DES BULLETINS */}
       {bulletinsFiltres.length === 0 ? (
-        <div
-          className="p-12 text-center rounded-lg border border-dashed text-muted-foreground"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          <IconCalculator size={32} className="mx-auto mb-2 opacity-40 text-emerald-600" />
-          <p className="font-semibold text-sm">Aucun bulletin ne correspond aux critères sélectionnés.</p>
-          <p className="text-xs mt-1">
-            Effectuez une saisie de paie depuis le module{" "}
-            <Link href="/saisie" className="font-semibold text-indigo-600 hover:underline">
-              Saisie mensuelle
-            </Link>.
-          </p>
-        </div>
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Calculator className="w-10 h-10 mx-auto mb-3 text-[#94A3B8]" />
+            <p className="font-semibold text-sm text-[#0F172A]">Aucun bulletin ne correspond aux critères.</p>
+            <p className="text-xs text-[#64748B] mt-1">
+              Effectuez une saisie depuis <Link href="/saisie" className="text-[#4F46E5] hover:underline font-medium">Saisie mensuelle</Link>.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <div
-          className="rounded-lg border overflow-hidden shadow-sm"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
+        <Card className="overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-sm text-left">
               <thead>
-                <tr
-                  className="border-b text-[11px] font-bold uppercase tracking-wider text-muted-foreground"
-                  style={{ background: "var(--bg-subtle, rgba(0,0,0,0.02))", borderColor: "var(--border)" }}
-                >
-                  <th className="py-2.5 px-3">Collaborateur</th>
-                  <th className="py-2.5 px-3">Période</th>
-                  <th className="py-2.5 px-3 text-right">Salaire Base</th>
-                  <th className="py-2.5 px-3 text-right">Salaire Poste</th>
-                  <th className="py-2.5 px-3 text-right">CNAS (9%)</th>
-                  <th className="py-2.5 px-3 text-right">IRG</th>
-                  <th className="py-2.5 px-3 text-right">Net à Payer</th>
-                  <th className="py-2.5 px-3 text-center">Statut</th>
-                  <th className="py-2.5 px-3 text-right">Actions Odoo</th>
+                <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                  <th className="p-4 font-semibold text-[#64748B]">Collaborateur</th>
+                  <th className="p-4 font-semibold text-[#64748B]">Période</th>
+                  <th className="p-4 font-semibold text-[#64748B] text-right">Salaire base</th>
+                  <th className="p-4 font-semibold text-[#64748B] text-right">CNAS (9%)</th>
+                  <th className="p-4 font-semibold text-[#64748B] text-right">IRG</th>
+                  <th className="p-4 font-semibold text-[#64748B] text-right">Net à payer</th>
+                  <th className="p-4 font-semibold text-[#64748B] text-center">Statut</th>
+                  <th className="p-4 font-semibold text-[#64748B] text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y" style={{ borderColor: "var(--border)" }}>
-                {bulletinsFiltres.map((b) => (
-                  <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="py-2.5 px-3">
-                      <Link
-                        href={`/salaries/${b.salarie_id}`}
-                        className="font-bold hover:underline flex items-center gap-1.5"
-                        style={{ color: "var(--text)" }}
-                      >
-                        <span>{b.salaries?.nom_prenom || `Salarié #${b.salarie_id}`}</span>
+              <tbody className="divide-y divide-[#E2E8F0]">
+                {bulletinsFiltres.map(b => (
+                  <tr key={b.id} className="hover:bg-[#F8FAFC]/50 transition-colors">
+                    <td className="p-4">
+                      <Link href={`/salaries/${b.salarie_id}`} className="font-semibold text-[#0F172A] hover:text-[#4F46E5] transition-colors">
+                        {b.salaries?.nom_prenom || `Salarié #${b.salarie_id}`}
                       </Link>
-                      <div className="text-[11px] text-muted-foreground">
-                        {b.salaries?.matricule ? `Matr. ${b.salaries.matricule}` : ""}
-                        {b.salaries?.fonction ? ` • ${b.salaries.fonction}` : ""}
-                      </div>
+                      {(b.salaries?.matricule || b.salaries?.fonction) && (
+                        <p className="text-xs text-[#64748B]">
+                          {b.salaries?.matricule && `Matr. ${b.salaries.matricule}`}
+                          {b.salaries?.fonction && ` • ${b.salaries.fonction}`}
+                        </p>
+                      )}
                     </td>
-
-                    <td className="py-2.5 px-3 font-semibold whitespace-nowrap">
-                      {NOMS_MOIS[b.mois - 1]} {b.annee}
-                    </td>
-
-                    <td className="py-2.5 px-3 text-right text-muted-foreground whitespace-nowrap">
-                      {b.salaire_base_reel.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, " ")} DA
-                    </td>
-
-                    <td className="py-2.5 px-3 text-right font-medium whitespace-nowrap">
-                      {b.salaire_poste.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, " ")} DA
-                    </td>
-
-                    <td className="py-2.5 px-3 text-right text-blue-700 font-medium whitespace-nowrap">
-                      {b.retenue_ss.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, " ")} DA
-                    </td>
-
-                    <td className="py-2.5 px-3 text-right text-purple-700 font-medium whitespace-nowrap">
-                      {b.irg.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, " ")} DA
-                    </td>
-
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                      <span className="inline-block px-2.5 py-1 rounded font-bold text-xs bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        {b.net_a_payer.toLocaleString("fr-FR").replace(/[\u202F\u00A0]/g, " ")} DA
+                    <td className="p-4 font-medium text-[#0F172A] whitespace-nowrap">{NOMS_MOIS[b.mois - 1]} {b.annee}</td>
+                    <td className="p-4 text-right text-[#64748B] font-mono whitespace-nowrap">{fmtDA(b.salaire_base_reel)}</td>
+                    <td className="p-4 text-right text-blue-700 font-mono whitespace-nowrap">{fmtDA(b.retenue_ss)}</td>
+                    <td className="p-4 text-right text-purple-700 font-mono whitespace-nowrap">{fmtDA(b.irg)}</td>
+                    <td className="p-4 text-right whitespace-nowrap">
+                      <span className="px-2.5 py-1 rounded-md bg-teal-50 text-teal-700 font-semibold font-mono border border-teal-200">
+                        {fmtDA(b.net_a_payer)}
                       </span>
                     </td>
-
-                    <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-bold border ${
-                          b.statut === "Clôturé"
-                            ? "bg-slate-100 text-slate-700 border-slate-300"
-                            : b.statut === "Validé"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : "bg-blue-50 text-blue-700 border-blue-200"
-                        }`}
-                      >
-                        {b.statut || "Calculé"}
-                      </span>
+                    <td className="p-4 text-center">
+                      <Badge variant={statutVariant(b.statut)}>{b.statut || "Calculé"}</Badge>
                     </td>
-
-                    <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                    <td className="p-4 text-right">
                       <div className="inline-flex items-center gap-1">
-                        <Link
-                          href={`/salaries/${b.salarie_id}/bulletin/explication?annee=${b.annee}&mois=${b.mois}`}
-                          className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px] transition-colors"
-                          title="Détail du calcul"
-                        >
-                          Explication
+                        <Link href={`/salaries/${b.salarie_id}/bulletin/explication?annee=${b.annee}&mois=${b.mois}`}>
+                          <Button variant="secondary" className="text-xs">Détail</Button>
                         </Link>
-                        <a
-                          href={`/salaries/${b.salarie_id}/bulletin/pdf?annee=${b.annee}&mois=${b.mois}&variante=salarie`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-[11px] transition-colors inline-flex items-center gap-1"
-                          title="Bulletin PDF Salarié"
-                        >
-                          <IconFileText size={12} />
-                          <span>PDF</span>
+                        <a href={`/salaries/${b.salarie_id}/bulletin/pdf?annee=${b.annee}&mois=${b.mois}&variante=salarie`} target="_blank" rel="noreferrer">
+                          <Button variant="secondary" className="text-xs gap-1 text-[#4F46E5]">
+                            <FileText className="w-3 h-3" /> PDF
+                          </Button>
                         </a>
-                        <button
-                          type="button"
-                          disabled={isPending}
-                          onClick={() => handleSupprimerBulletin(b.salarie_id, b.id, b.mois, b.annee)}
-                          className="p-1 rounded text-red-600 hover:bg-red-50 transition-colors"
-                          title="Supprimer ce bulletin"
-                        >
-                          <IconTrash size={13} />
-                        </button>
+                        <Button variant="ghost" className="px-2 text-[#64748B] hover:text-red-600"
+                          disabled={isPending} onClick={() => handleSupprimerBulletin(b.salarie_id, b.id, b.mois, b.annee)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -371,36 +208,24 @@ export default function JournalBulletinsClient({ bulletins, salaries }: Props) {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
-      {/* 5. ACCES DIRECT PAR COLLABORATEUR */}
-      <div
-        className="p-4 rounded-lg border text-xs"
-        style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-      >
-        <div className="font-bold text-sm mb-2 flex items-center gap-1.5" style={{ color: "var(--text)" }}>
-          <IconUser size={16} />
-          <span>Accès direct à l&apos;historique complet d&apos;un salarié</span>
-        </div>
-        <p className="text-muted-foreground mb-3">
-          Consultez l&apos;évolution salariale et l&apos;historique pluriannuel d&apos;un collaborateur spécifique :
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {salaries.map((s) => (
-            <Link
-              key={s.id}
-              href={`/salaries/${s.id}/historique`}
-              className="px-2.5 py-1.5 rounded border hover:border-indigo-400 hover:bg-indigo-50/40 text-xs font-semibold transition-all flex items-center gap-1"
-              style={{ borderColor: "var(--border)" }}
-            >
-              <span>{s.nom_prenom}</span>
-              {s.matricule && <span className="text-muted-foreground text-[10px]">({s.matricule})</span>}
-              <span className="text-indigo-600">→</span>
-            </Link>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-sm font-semibold text-[#0F172A] mb-4">Accès direct par collaborateur</h3>
+          <div className="flex flex-wrap gap-2">
+            {salaries.map(s => (
+              <Link key={s.id} href={`/salaries/${s.id}/historique`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#E2E8F0] text-xs font-medium text-[#64748B] hover:border-[#4F46E5] hover:text-[#4F46E5] hover:bg-indigo-50/30 transition-all">
+                {s.nom_prenom}
+                {s.matricule && <span className="text-[#94A3B8]">({s.matricule})</span>}
+                <ChevronRight className="w-3 h-3" />
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

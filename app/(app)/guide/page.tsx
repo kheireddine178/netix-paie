@@ -31,7 +31,9 @@ import {
   Folder,
   ChevronDown
 } from "lucide-react";
-import OdooControlPanel from "@/components/odoo/OdooControlPanel";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
+import Link from "next/link";
 
 const IconMap: Record<string, React.ComponentType<any>> = {
   Calculator,
@@ -167,7 +169,7 @@ export default function GuidePage() {
     (window as any).copyChecklist = () => {
       const el = document.getElementById("checklist-retraite");
       if (!el) return;
-      const text = "✅ CHECKLIST — DOCUMENTS DÉPART EN RETRAITE\n\n" + el.innerText.replace(/☐/g, "☐").trim();
+      const text = " CHECKLIST — DOCUMENTS DÉPART EN RETRAITE\n\n" + el.innerText.replace(//g, "").trim();
       navigator.clipboard.writeText(text).then(() => {
         alert("Checklist copiée dans le presse-papiers !");
       });
@@ -177,7 +179,7 @@ export default function GuidePage() {
       const el = document.getElementById("checklist-data");
       if (!el) return;
       const items = el.querySelectorAll("div");
-      let text = "🔒 CHECKLIST CONFORMITÉ PROTECTION DES DONNÉES RH — LOI 18-07\n\n";
+      let text = " CHECKLIST CONFORMITÉ PROTECTION DES DONNÉES RH — LOI 18-07\n\n";
       items.forEach((item) => {
         text += (item as HTMLElement).innerText.trim() + "\n";
       });
@@ -190,7 +192,7 @@ export default function GuidePage() {
       const el = document.getElementById("checklist-etranger");
       if (!el) return;
       const items = el.querySelectorAll("div");
-      let text = "🌍 CHECKLIST — EMBAUCHE TRAVAILLEUR ÉTRANGER EN ALGÉRIE\n\n";
+      let text = " CHECKLIST — EMBAUCHE TRAVAILLEUR ÉTRANGER EN ALGÉRIE\n\n";
       items.forEach((item) => {
         const t = (item as HTMLElement).innerText.trim();
         if (t) text += t + "\n";
@@ -603,7 +605,7 @@ export default function GuidePage() {
                       <span className="sim-slider-val">{fmtDA(panier)}</span>
                     </div>
                     <div className="calc-subnote">
-                      ⚠️ Le panier est <strong>non cotisable CNAS</strong> (Ord. n°95-01 Art. 1) mais reste <strong>imposable à l'IRG</strong> (non répertorié Art. 68 CIDTA).
+                      ️ Le panier est <strong>non cotisable CNAS</strong> (Ord. n°95-01 Art. 1) mais reste <strong>imposable à l'IRG</strong> (non répertorié Art. 68 CIDTA).
                     </div>
                   </div>
 
@@ -658,7 +660,7 @@ export default function GuidePage() {
                         <p className="sim-lbl">
                           ③ Base imposable IRG
                           {calcResults.exo && (
-                            <span className="badge-exo">✓ exonéré</span>
+                            <span className="badge-exo"> exonéré</span>
                           )}
                           {calcResults.zoneAb2 && (
                             <span className="badge-exo" style={{ backgroundColor: "#fef3c7", color: "#92400e" }}>
@@ -901,7 +903,7 @@ export default function GuidePage() {
           <div>
             <div className="panel">
               <div className="panel-kicker">Outil transverse</div>
-              <div className="panel-title">📖 Dictionnaire RH — Termes &amp; Acronymes</div>
+              <div className="panel-title"> Dictionnaire RH — Termes &amp; Acronymes</div>
               <p className="panel-text">
                 Retrouvez ici les définitions des termes RH internationaux couramment utilisés et des acronymes/sigles juridiques algériens. Chaque entrée précise la définition, le thème du guide concerné et la référence légale lorsqu'elle existe.
               </p>
@@ -930,14 +932,14 @@ export default function GuidePage() {
                   onClick={() => setDicoCat("international")}
                   style={{ fontSize: 12, padding: "6px 14px" }}
                 >
-                  🌐 Termes RH
+                   Termes RH
                 </button>
                 <button
                   className={`rh-tab ${dicoCat === "algerie" ? "active" : ""}`}
                   onClick={() => setDicoCat("algerie")}
                   style={{ fontSize: 12, padding: "6px 14px" }}
                 >
-                  🇩🇿 Acronymes DZ
+                   Acronymes DZ
                 </button>
               </div>
               <span className="count-rhBadge" style={{ alignSelf: "center" }}>
@@ -984,7 +986,7 @@ export default function GuidePage() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
                     <strong style={{ fontSize: 15, color: "var(--teal-700)" }}>{item.term}</strong>
                     <span style={{ fontSize: 10, textTransform: "uppercase", color: "var(--text-muted)", fontWeight: 700 }}>
-                      {item.cat === "algerie" ? "🇩🇿 Sigle DZ" : "🌐 Concept"}
+                      {item.cat === "algerie" ? " Sigle DZ" : " Concept"}
                     </span>
                   </div>
                   <p style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.6 }}>{item.def}</p>
@@ -1009,7 +1011,7 @@ export default function GuidePage() {
           <div>
             <div className="panel">
               <div className="panel-kicker">Modèles administratifs</div>
-              <div className="panel-title">📄 Modèles &amp; Documents Prêts à l'Emploi</div>
+              <div className="panel-title"> Modèles &amp; Documents Prêts à l'Emploi</div>
               <p className="panel-text">
                 Retrouvez ici des modèles de documents juridiques, de contrats, de courriers disciplinaires et d'attestations rédigés conformément à la Loi n°90-11 et aux usages administratifs algériens. Vous pouvez copier chaque modèle en un clic pour l'adapter à votre entreprise.
               </p>
@@ -1021,25 +1023,25 @@ export default function GuidePage() {
                 className={`rh-tab ${modelesSubTab === "contrats" ? "active" : ""}`}
                 onClick={() => setModelesSubTab("contrats")}
               >
-                📑 Contrats
+                 Contrats
               </button>
               <button
                 className={`rh-tab ${modelesSubTab === "discipline" ? "active" : ""}`}
                 onClick={() => setModelesSubTab("discipline")}
               >
-                ⚖️ Discipline &amp; Rupture
+                ️ Discipline &amp; Rupture
               </button>
               <button
                 className={`rh-tab ${modelesSubTab === "attestations" ? "active" : ""}`}
                 onClick={() => setModelesSubTab("attestations")}
               >
-                📋 Attestations
+                 Attestations
               </button>
               <button
                 className={`rh-tab ${modelesSubTab === "evaluation" ? "active" : ""}`}
                 onClick={() => setModelesSubTab("evaluation")}
               >
-                🎯 Évaluation &amp; RI
+                 Évaluation &amp; RI
               </button>
             </div>
 
@@ -1400,7 +1402,7 @@ TITRE V — DISPOSITIONS FINALES
           <div>
             <div className="panel">
               <div className="panel-kicker">Outil transverse</div>
-              <div className="panel-title">❓ FAQ RH — Questions &amp; réponses rapides</div>
+              <div className="panel-title"> FAQ RH — Questions &amp; réponses rapides</div>
               <p className="panel-text">
                 Réponses courtes et directes aux questions les plus fréquentes posées par les managers, salariés et chefs d'entreprise. Chaque réponse renvoie au thème du guide pour approfondir. Ces réponses sont données à titre indicatif.
               </p>
@@ -1429,49 +1431,49 @@ TITRE V — DISPOSITIONS FINALES
                   onClick={() => setFaqCat("contrat")}
                   style={{ fontSize: 12, padding: "6px 14px" }}
                 >
-                  📑 Contrat
+                   Contrat
                 </button>
                 <button
                   className={`rh-tab ${faqCat === "paie" ? "active" : ""}`}
                   onClick={() => setFaqCat("paie")}
                   style={{ fontSize: 12, padding: "6px 14px" }}
                 >
-                  💰 Paie
+                   Paie
                 </button>
                 <button
                   className={`rh-tab ${faqCat === "conges" ? "active" : ""}`}
                   onClick={() => setFaqCat("conges")}
                   style={{ fontSize: 12, padding: "6px 14px" }}
                 >
-                  🏖️ Congés
+                  ️ Congés
                 </button>
                 <button
                   className={`rh-tab ${faqCat === "discipline" ? "active" : ""}`}
                   onClick={() => setFaqCat("discipline")}
                   style={{ fontSize: 12, padding: "6px 14px" }}
                 >
-                  ⚖️ Discipline
+                  ️ Discipline
                 </button>
                 <button
                   className={`rh-tab ${faqCat === "sante" ? "active" : ""}`}
                   onClick={() => setFaqCat("sante")}
                   style={{ fontSize: 12, padding: "6px 14px" }}
                 >
-                  🏥 Santé
+                   Santé
                 </button>
                 <button
                   className={`rh-tab ${faqCat === "retraite" ? "active" : ""}`}
                   onClick={() => setFaqCat("retraite")}
                   style={{ fontSize: 12, padding: "6px 14px" }}
                 >
-                  🎯 Retraite
+                   Retraite
                 </button>
                 <button
                   className={`rh-tab ${faqCat === "divers" ? "active" : ""}`}
                   onClick={() => setFaqCat("divers")}
                   style={{ fontSize: 12, padding: "6px 14px" }}
                 >
-                  📌 Divers
+                   Divers
                 </button>
               </div>
               <span className="count-rhBadge" style={{ alignSelf: "center" }}>

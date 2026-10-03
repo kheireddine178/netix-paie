@@ -2,8 +2,11 @@
 
 import React, { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import OdooSheet from "@/components/odoo/OdooSheet";
-import OdooNotebook from "@/components/odoo/OdooNotebook";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { User, Briefcase, CreditCard, AlertTriangle, Save, X } from "lucide-react";
 
 interface SalarieFormProps {
   initialData?: {
@@ -73,172 +76,154 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full">
-      <OdooSheet
-        avatar={
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold shadow-sm"
-            style={{
-              background: "var(--accent-bg)",
-              color: "var(--accent-ink)",
-              border: "2px solid var(--accent)",
-            }}
-          >
-            {initials}
-          </div>
-        }
-        title={
-          <div className="w-full max-w-md">
-            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-              Nom et Prénom du collaborateur *
-            </label>
-            <input
-              id="nom_prenom"
-              name="nom_prenom"
-              required
-              value={nomPrenom}
-              onChange={(e) => setNomPrenom(e.target.value)}
-              onBlur={handleNameBlur}
-              placeholder="Ex: Amina Benali"
-              className="text-xl sm:text-2xl font-bold w-full px-3 py-1.5 rounded border"
-              style={{
-                background: "var(--surface)",
-                borderColor: "var(--border)",
-                color: "var(--text)",
-              }}
-            />
-          </div>
-        }
-        subtitle={
-          <div className="w-full max-w-md mt-2">
-            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block mb-1">
-              Intitulé du poste / Fonction
-            </label>
-            <input
-              id="fonction"
-              name="fonction"
-              value={fonction}
-              onChange={(e) => setFonction(e.target.value)}
-              placeholder="Ex: Ingénieur Système / Chef de projet"
-              className="text-xs font-semibold w-full px-3 py-1.5 rounded border"
-              style={{
-                background: "var(--surface)",
-                borderColor: "var(--border)",
-                color: "var(--text)",
-              }}
-            />
-          </div>
-        }
-      >
-        {error && (
-          <div className="p-3 mb-4 rounded bg-red-50 text-red-700 border border-red-200 text-xs font-semibold">
-            ⚠️ {error}
-          </div>
-        )}
-
-        <OdooNotebook
-          tabs={[
-            {
-              id: "poste_paie",
-              label: "Contrat & Rémunération",
-              content: (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="flex flex-col gap-1.5 p-3 rounded border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
-                    <label htmlFor="matricule" className="font-bold text-muted-foreground">
-                      Matricule employé
-                    </label>
-                    <input
-                      id="matricule"
-                      name="matricule"
-                      value={matricule}
-                      onChange={(e) => setMatricule(e.target.value)}
-                      placeholder="Ex: M100"
-                      className="text-xs font-mono font-semibold px-2.5 py-1.5 rounded border"
-                      style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-                    />
-                    <span className="text-[10px] text-muted-foreground">Identifiant unique interne pour la paie</span>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 p-3 rounded border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
-                    <label htmlFor="salaire_base_theorique" className="font-bold text-muted-foreground">
-                      Salaire de base contractuel (DA)
-                    </label>
-                    <input
-                      id="salaire_base_theorique"
-                      name="salaire_base_theorique"
-                      type="number"
-                      step="0.01"
-                      value={salaireBase}
-                      onChange={(e) => setSalaireBase(e.target.value)}
-                      placeholder="0.00"
-                      className="text-xs font-bold px-2.5 py-1.5 rounded border text-right"
-                      style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-                    />
-                    <span className="text-[10px] text-muted-foreground">Montant de base légal mensuel</span>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 p-3 rounded border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
-                    <label htmlFor="date_visite_medicale" className="font-bold text-muted-foreground">
-                      Dernière visite médicale de travail
-                    </label>
-                    <input
-                      id="date_visite_medicale"
-                      name="date_visite_medicale"
-                      type="date"
-                      value={dateVisiteMedicale}
-                      onChange={(e) => setDateVisiteMedicale(e.target.value)}
-                      className="text-xs px-2.5 py-1.5 rounded border"
-                      style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-                    />
-                    <span className="text-[10px] text-muted-foreground">Suivi obligatoire médecine du travail</span>
-                  </div>
-                </div>
-              ),
-            },
-            {
-              id: "coordonnees_banque",
-              label: "Banque & Paiement",
-              content: (
-                <div className="max-w-md flex flex-col gap-1.5 p-3 rounded border text-xs" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
-                  <label htmlFor="ccp_rib" className="font-bold text-muted-foreground">
-                    Coordonnées bancaires (RIB ou CCP 20 chiffres)
-                  </label>
-                  <input
-                    id="ccp_rib"
-                    name="ccp_rib"
-                    value={ccpRib}
-                    onChange={(e) => setCcpRib(e.target.value)}
-                    placeholder="Ex: 00799999000000123456"
-                    className="text-xs font-mono px-2.5 py-1.5 rounded border"
-                    style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-                  />
-                  <span className="text-[10px] text-muted-foreground">
-                    Utilisé pour les états de virement bancaire et chèques de paie
-                  </span>
-                </div>
-              ),
-            },
-          ]}
-        />
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3 pt-6 mt-6 border-t" style={{ borderColor: "var(--border)" }}>
-          <button
-            type="submit"
-            disabled={isPending}
-            className="btn btn-primary text-xs font-bold px-4 py-2 rounded"
-          >
-            {isPending ? "Enregistrement…" : buttonText}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="btn btn-secondary text-xs font-semibold px-4 py-2 rounded"
-          >
-            Annuler
-          </button>
+    <form onSubmit={handleSubmit} className="w-full max-w-5xl mx-auto flex flex-col gap-6">
+      {error && (
+        <div className="p-4 rounded-lg bg-red-50 text-red-800 border border-red-200 text-sm font-medium flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0" /> {error}
         </div>
-      </OdooSheet>
+      )}
+
+      {/* Main Profile Header */}
+      <Card className="border-[#E2E8F0] shadow-sm overflow-hidden">
+        <div className="h-24 bg-gradient-to-r from-[#4F46E5]/10 to-[#4F46E5]/5" />
+        <CardContent className="px-6 pb-6 pt-0 relative">
+          <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-end -mt-10 mb-6">
+            <div className="w-24 h-24 rounded-2xl bg-white border-4 border-white shadow-md flex items-center justify-center text-3xl font-bold text-[#4F46E5] bg-gradient-to-br from-indigo-50 to-indigo-100 flex-shrink-0">
+              {initials}
+            </div>
+            
+            <div className="flex-1 w-full space-y-4">
+              <div className="w-full max-w-md space-y-1">
+                <label htmlFor="nom_prenom" className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                  Nom et Prénom du collaborateur *
+                </label>
+                <Input
+                  id="nom_prenom"
+                  name="nom_prenom"
+                  required
+                  value={nomPrenom}
+                  onChange={(e) => setNomPrenom(e.target.value)}
+                  onBlur={handleNameBlur}
+                  placeholder="Ex: Amina Benali"
+                  className="text-lg font-semibold h-10 bg-white"
+                />
+              </div>
+              <div className="w-full max-w-md space-y-1">
+                <label htmlFor="fonction" className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                  Intitulé du poste / Fonction
+                </label>
+                <Input
+                  id="fonction"
+                  name="fonction"
+                  value={fonction}
+                  onChange={(e) => setFonction(e.target.value)}
+                  placeholder="Ex: Ingénieur Système / Chef de projet"
+                  className="h-10 bg-white"
+                />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Detailed Tabs */}
+      <Tabs defaultValue="poste" className="w-full">
+        <TabsList className="bg-[#F8FAFC] border border-[#E2E8F0] p-1 w-full justify-start rounded-lg h-auto flex-wrap gap-1 mb-6">
+          <TabsTrigger value="poste" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-[#4F46E5] data-[state=active]:shadow-sm rounded-md py-2 px-4">
+            <Briefcase className="w-4 h-4" /> Contrat & Rémunération
+          </TabsTrigger>
+          <TabsTrigger value="banque" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-[#4F46E5] data-[state=active]:shadow-sm rounded-md py-2 px-4">
+            <CreditCard className="w-4 h-4" /> Banque & Paiement
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="poste" className="m-0 focus:outline-none">
+          <Card className="border-[#E2E8F0] shadow-sm">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <label htmlFor="matricule" className="text-sm font-semibold text-[#0F172A]">Matricule employé</label>
+                  <Input
+                    id="matricule"
+                    name="matricule"
+                    value={matricule}
+                    onChange={(e) => setMatricule(e.target.value)}
+                    placeholder="Ex: M100"
+                    className="font-mono bg-[#F8FAFC]"
+                  />
+                  <p className="text-xs text-[#64748B]">Identifiant unique interne pour la paie</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="salaire_base_theorique" className="text-sm font-semibold text-[#0F172A]">Salaire de base contractuel (DA)</label>
+                  <Input
+                    id="salaire_base_theorique"
+                    name="salaire_base_theorique"
+                    type="number"
+                    step="0.01"
+                    value={salaireBase}
+                    onChange={(e) => setSalaireBase(e.target.value)}
+                    placeholder="0.00"
+                    className="font-mono bg-[#F8FAFC]"
+                  />
+                  <p className="text-xs text-[#64748B]">Montant de base légal mensuel</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="date_visite_medicale" className="text-sm font-semibold text-[#0F172A]">Dernière visite médicale</label>
+                  <Input
+                    id="date_visite_medicale"
+                    name="date_visite_medicale"
+                    type="date"
+                    value={dateVisiteMedicale}
+                    onChange={(e) => setDateVisiteMedicale(e.target.value)}
+                    className="bg-[#F8FAFC]"
+                  />
+                  <p className="text-xs text-[#64748B]">Suivi obligatoire médecine du travail</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="banque" className="m-0 focus:outline-none">
+          <Card className="border-[#E2E8F0] shadow-sm">
+            <CardContent className="p-6">
+              <div className="max-w-md space-y-1.5">
+                <label htmlFor="ccp_rib" className="text-sm font-semibold text-[#0F172A]">Coordonnées bancaires (RIB ou CCP 20 chiffres)</label>
+                <Input
+                  id="ccp_rib"
+                  name="ccp_rib"
+                  value={ccpRib}
+                  onChange={(e) => setCcpRib(e.target.value)}
+                  placeholder="Ex: 00799999000000123456"
+                  className="font-mono bg-[#F8FAFC]"
+                />
+                <p className="text-xs text-[#64748B]">Utilisé pour les états de virement bancaire et chèques de paie</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Actions */}
+      <div className="flex items-center gap-3 pt-6 border-t border-[#E2E8F0]">
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="gap-2 bg-[#4F46E5] hover:bg-[#4338CA] px-6"
+        >
+          <Save className="w-4 h-4" /> {isPending ? "Enregistrement…" : buttonText}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.back()}
+          className="gap-2"
+        >
+          <X className="w-4 h-4" /> Annuler
+        </Button>
+      </div>
     </form>
   );
 }

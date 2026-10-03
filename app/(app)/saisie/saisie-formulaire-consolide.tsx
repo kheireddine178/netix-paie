@@ -21,12 +21,13 @@ import type { Parametres, LigneRubriqueDynamique } from "@/lib/paieCalcul";
 import { calculerPaie, calculerBaseAvantRubriques, SAISIE_VIDE } from "@/lib/paieCalcul";
 import { resoudreLigneRubrique } from "@/lib/rubriquesDynamiques";
 
-// Odoo UI Toolkit
-import OdooControlPanel from "@/components/odoo/OdooControlPanel";
-import OdooSheet from "@/components/odoo/OdooSheet";
-import OdooStatusbar from "@/components/odoo/OdooStatusbar";
-import OdooNotebook from "@/components/odoo/OdooNotebook";
-import OdooSubNav from "@/components/odoo/OdooSubNav";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Input } from "@/components/ui/Input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
+import { Save, CheckCircle2, AlertCircle, FileText, Upload, Download, Copy, Users, User, ArrowLeft, ArrowRight, Activity, X, Plus, Search, Trash2, Calculator, Wallet, Clock, Info } from "lucide-react";
 
 const MOIS = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -613,715 +614,552 @@ export default function SaisieFormulaireConsolide({
   };
 
   return (
-    <div className="odoo-saisie-wrapper flex flex-col gap-4">
-      {/* 0. ODOO SUBNAV TABS */}
-      <OdooSubNav
-        items={[
-          { label: "👤 Saisie individuelle", href: "/saisie" },
-          { label: "📊 Grille collective en masse", href: "/saisie/collective" },
-          { label: "💳 Acomptes & Avances", href: "/saisie/avances" },
-        ]}
-      />
-
-      {/* 1. ODOO CONTROL PANEL (Breadcrumbs, Actions & Switcher Pager) */}
-      <OdooControlPanel
-        breadcrumbs={[
-          { label: "Saisie Mensuelle", href: "/saisie" },
-          { label: `${MOIS[mois - 1]} ${annee}` },
-          { label: salarieActive ? salarieActive.nom_prenom : "Sélection" },
-        ]}
-        primaryAction={{
-          label: isPending ? "Enregistrement…" : "Enregistrer le bulletin",
-          onClick: () => formRef.current?.requestSubmit(),
-          icon: (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-              <polyline points="17 21 17 13 7 13 7 21" />
-              <polyline points="7 3 7 8 15 8" />
-            </svg>
-          ),
-        }}
-        secondaryActions={[
-          {
-            label: "Copier mois précédent",
-            onClick: handleCopierMoisPrecedent,
-            icon: (
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-              </svg>
-            ),
-          },
-          {
-            label: "Saisie collective",
-            href: "/saisie/collective",
-          },
-          {
-            label: "Inspecter le calcul (Live)",
-            onClick: () => setIsDrawerOpen(true),
-          },
-        ]}
-        pager={
-          pagerInfo
-            ? {
-                current: pagerInfo.current,
-                total: pagerInfo.total,
-                onPrev: handlePrevEmployee,
-                onNext: handleNextEmployee,
-                hasPrev: !!pagerInfo.prevId,
-                hasNext: !!pagerInfo.nextId,
-                enableShortcuts: true,
-              }
-            : undefined
-        }
-      />
-
-      {/* 2. BARRE COMPACTE DE SÉLECTION PÉRIODE & SALARIÉ */}
-      <div
-        className="odoo-selector-strip px-4 py-3 rounded-lg flex flex-wrap items-center justify-between gap-3 text-xs"
-        style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-        }}
-      >
-        <div className="flex items-center gap-3 flex-wrap flex-1 min-w-[280px]">
-          {/* Select Salarié */}
-          <div className="flex items-center gap-2 flex-1 sm:flex-initial">
-            <span className="font-bold text-[11px] uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
-              COLLABORATEUR
-            </span>
-            <select
-              value={salarieId}
-              onChange={handleChangerSalarie}
-              className="text-xs px-2.5 py-1.5 rounded border font-semibold min-w-[180px]"
-              style={{
-                background: "var(--surface-2)",
-                borderColor: "var(--border)",
-                color: "var(--text)",
-              }}
-            >
-              <option value="">Choisir un salarié…</option>
-              {salaries.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nom_prenom} {s.matricule ? `(${s.matricule})` : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Select Mois & Année */}
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[11px] uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
-              PÉRIODE
-            </span>
-            <select
-              value={mois}
-              onChange={handleChangerMois}
-              className="text-xs px-2 py-1.5 rounded border font-medium"
-              style={{
-                background: "var(--surface-2)",
-                borderColor: "var(--border)",
-                color: "var(--text)",
-              }}
-            >
-              {MOIS.map((m, i) => (
-                <option key={i} value={i + 1}>
-                  {m}
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              value={annee}
-              onChange={handleChangerAnnee}
-              className="text-xs px-2 py-1.5 rounded border w-18 text-center font-medium"
-              style={{
-                background: "var(--surface-2)",
-                borderColor: "var(--border)",
-                color: "var(--text)",
-              }}
-            />
-          </div>
+    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-10">
+      <div className="flex flex-col gap-4">
+        {/* Navigation & Secondary Actions */}
+        <div className="flex items-center gap-2 text-sm text-[#64748B]">
+          <Link href="/saisie" className="flex items-center gap-2 hover:text-[#4F46E5] transition-colors bg-[#F8FAFC] px-3 py-1.5 rounded-md font-medium text-[#4F46E5]">
+            <User className="w-4 h-4" /> Saisie individuelle
+          </Link>
+          <Link href="/saisie/collective" className="flex items-center gap-2 hover:text-[#0F172A] transition-colors px-3 py-1.5 rounded-md font-medium">
+            <Users className="w-4 h-4" /> Grille collective
+          </Link>
+          <Link href="/saisie/avances" className="flex items-center gap-2 hover:text-[#0F172A] transition-colors px-3 py-1.5 rounded-md font-medium">
+            <Wallet className="w-4 h-4" /> Acomptes & Avances
+          </Link>
         </div>
 
-        {/* Status et outils CSV */}
-        <div className="flex items-center gap-3 ml-auto">
-          {saveStatus === "saving" && (
-            <span className="text-xs font-medium text-amber-600 animate-pulse">● Enregistrement…</span>
-          )}
-          {saveStatus === "saved" && (
-            <span className="text-xs font-bold text-teal-600">✓ Enregistré</span>
-          )}
-          {saveStatus === "modified" && (
-            <span className="text-xs font-semibold text-amber-600">● Modifié (non validé)</span>
-          )}
-
-          <div className="flex items-center gap-2 border-l pl-3" style={{ borderColor: "var(--border-soft)" }}>
-            <button
-              type="button"
-              onClick={handleExportCSV}
-              className="text-[11px] font-semibold hover:underline"
-              style={{ color: "var(--accent)" }}
-            >
-              Export CSV
-            </button>
-            <label className="text-[11px] font-semibold hover:underline cursor-pointer" style={{ color: "var(--accent)" }}>
-              Import CSV
-              <input type="file" accept=".csv" onChange={handleImportCSV} style={{ display: "none" }} />
-            </label>
-          </div>
-        </div>
+        <PageHeader
+          title={salarieActive ? `Bulletin: ${salarieActive.nom_prenom}` : "Saisie Mensuelle"}
+          subtitle={`Période: ${MOIS[mois - 1]} ${annee}`}
+          primaryAction={
+            <Button onClick={() => formRef.current?.requestSubmit()} disabled={isPending || !salarieActive} className="gap-2 bg-[#4F46E5] hover:bg-[#4338CA]">
+              <Save className="w-4 h-4" /> {isPending ? "Enregistrement…" : "Enregistrer le bulletin"}
+            </Button>
+          }
+          secondaryActions={
+            <>
+              {salarieActive && (
+                <Button variant="secondary" onClick={handleCopierMoisPrecedent} disabled={isPending} className="gap-2">
+                  <Copy className="w-4 h-4" /> Copier mois précédent
+                </Button>
+              )}
+              {salarieActive && resultat && (
+                <Button variant="secondary" onClick={() => setIsDrawerOpen(true)} className="gap-2">
+                  <Activity className="w-4 h-4 text-purple-600" /> Inspecter le calcul
+                </Button>
+              )}
+            </>
+          }
+        />
       </div>
 
-      {/* Messages et Alertes */}
+      {/* Messages */}
       {erreur && (
-        <div className="p-3 text-xs font-semibold rounded bg-red-50 text-red-700 border border-red-200">
-          ⚠️ {erreur}
+        <div className="p-4 rounded-lg flex items-center gap-3 text-sm font-medium border bg-red-50 text-red-800 border-red-200">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          {erreur}
+        </div>
+      )}
+      {messageCharge && (
+        <div className="p-4 rounded-lg flex items-center gap-3 text-sm font-medium border bg-teal-50 text-teal-800 border-teal-200">
+          <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+          {messageCharge}
         </div>
       )}
 
-      {messageCharge && (
-        <div className="p-3 text-xs font-semibold rounded bg-teal-50 text-teal-800 border border-teal-200">
-          ✓ {messageCharge}
-        </div>
-      )}
+      {/* Selector & Pager */}
+      <Card className="bg-[#F8FAFC] border-[#E2E8F0]">
+        <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Collaborateur</label>
+              <select
+                value={salarieId}
+                onChange={handleChangerSalarie}
+                className="h-9 px-3 rounded-md border border-[#E2E8F0] bg-white text-sm font-medium focus:ring-2 focus:ring-[#4F46E5] focus:outline-none min-w-[220px]"
+              >
+                <option value="">Choisir un salarié…</option>
+                {salaries.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.nom_prenom} {s.matricule ? `(${s.matricule})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Période</label>
+              <div className="flex items-center gap-2">
+                <select
+                  value={mois}
+                  onChange={handleChangerMois}
+                  className="h-9 px-3 rounded-md border border-[#E2E8F0] bg-white text-sm font-medium focus:ring-2 focus:ring-[#4F46E5] focus:outline-none w-32"
+                >
+                  {MOIS.map((m, i) => (
+                    <option key={i} value={i + 1}>{m}</option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  value={annee}
+                  onChange={handleChangerAnnee}
+                  className="h-9 px-3 rounded-md border border-[#E2E8F0] bg-white text-sm font-medium focus:ring-2 focus:ring-[#4F46E5] focus:outline-none w-24"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            {saveStatus === "saving" && <span className="text-xs font-medium text-amber-600 animate-pulse flex items-center gap-1.5"><Activity className="w-3.5 h-3.5" /> Enregistrement…</span>}
+            {saveStatus === "saved" && <span className="text-xs font-medium text-teal-600 flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Enregistré</span>}
+            {saveStatus === "modified" && <span className="text-xs font-medium text-amber-600 flex items-center gap-1.5"><Info className="w-3.5 h-3.5" /> Modifié (non validé)</span>}
+            
+            <div className="h-6 w-px bg-[#E2E8F0]" />
+            
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={!salarieActive} className="gap-1.5 h-8 text-xs font-medium">
+                <Download className="w-3.5 h-3.5" /> Export
+              </Button>
+              <div className="relative">
+                <Input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleImportCSV}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                />
+                <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs font-medium" disabled={!salarieActive}>
+                  <Upload className="w-3.5 h-3.5" /> Import
+                </Button>
+              </div>
+            </div>
+
+            {pagerInfo && (
+              <>
+                <div className="h-6 w-px bg-[#E2E8F0]" />
+                <div className="flex items-center gap-1">
+                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={!pagerInfo.prevId} onClick={handlePrevEmployee}>
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                  <span className="text-xs font-medium text-[#64748B] w-12 text-center">
+                    {pagerInfo.current} / {pagerInfo.total}
+                  </span>
+                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={!pagerInfo.nextId} onClick={handleNextEmployee}>
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {validationWarnings.length > 0 && (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           {validationWarnings.map((w, idx) => (
-            <div key={idx} className="p-2 text-xs font-semibold rounded bg-amber-50 text-amber-800 border border-amber-200">
-              ⚡ {w}
+            <div key={idx} className="p-3 rounded-lg border bg-amber-50 text-amber-800 border-amber-200 text-sm font-medium flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" /> {w}
             </div>
           ))}
         </div>
       )}
 
-      {/* 3. ODOO FORM SHEET (Fiche Document Centrale) */}
+      {/* Main Content Area */}
       {salarieActive ? (
-        <OdooSheet
-          statusbar={
-            <OdooStatusbar
-              steps={[
-                { id: "draft", label: "1. Brouillon" },
-                { id: "computed", label: "2. Calculé en direct" },
-                { id: "saved", label: "3. Validé & Enregistré" },
-              ]}
-              currentStep={estEnregistre ? "saved" : resultat ? "computed" : "draft"}
-              actions={
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => formRef.current?.requestSubmit()}
-                    disabled={isPending}
-                    className="btn btn-primary text-xs font-bold px-3 py-1.5 rounded"
-                  >
-                    Valider le bulletin
-                  </button>
-                  {initialBulletin?.bulletin_id && (
-                    <button
-                      type="button"
-                      onClick={handleSupprimer}
-                      disabled={isPending}
-                      className="text-xs font-semibold text-red-600 hover:underline px-2"
-                    >
-                      Supprimer
-                    </button>
-                  )}
-                </div>
-              }
-            />
-          }
-          avatar={
-            <div
-              className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold shadow-sm"
-              style={{
-                background: "var(--accent-bg)",
-                color: "var(--accent-ink)",
-                border: "2px solid var(--accent)",
-              }}
-            >
-              {salarieActive.nom_prenom.slice(0, 2).toUpperCase()}
+        <form ref={formRef} action={onSubmit} className="flex flex-col gap-6" onKeyDown={handleKeyDown}>
+          {/* Status Bar style */}
+          <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
+            <div className="flex items-center gap-3">
+              <div className={`px-3 py-1 rounded-full text-xs font-bold ${estEnregistre ? 'bg-teal-100 text-teal-800' : 'bg-slate-100 text-[#64748B]'}`}>
+                {estEnregistre ? '3. Validé & Enregistré' : (resultat ? '2. Calculé en direct' : '1. Brouillon')}
+              </div>
             </div>
-          }
-          title={salarieActive.nom_prenom}
-          subtitle={`Matricule : ${salarieActive.matricule || "—"} • Fonction : ${salarieActive.fonction || "Non renseigné"} • Période : ${MOIS[mois - 1]} ${annee}`}
-          smartButtons={[
-            {
-              id: "sb-base",
-              label: "Salaire de base",
-              count: formatDA(initialValues["salaire_base_theorique"] ?? salarieActive.salaire_base_theorique),
-            },
-            {
-              id: "sb-brut",
-              label: "Total Brut (Gains)",
-              count: formatDA(resultat ? resultat.total_gains : 0),
-            },
-            {
-              id: "sb-cnas",
-              label: "Retenue CNAS (9%)",
-              count: formatDA(resultat ? resultat.retenue_cnas : 0),
-            },
-            {
-              id: "sb-net",
-              label: "NET À PAYER",
-              count: formatDA(resultat ? resultat.net_a_payer : 0),
-            },
-          ]}
-        >
-          {/* Formulaire englobant avec Onglets Odoo */}
-          <form
-            key={formKey}
-            ref={formRef}
-            onSubmit={onSubmit}
-            onKeyDown={handleKeyDown}
-            onChange={debouncedCalcul}
-            className="flex flex-col gap-6"
-          >
-            <input type="hidden" name="annee" value={annee} />
-            <input type="hidden" name="mois" value={mois} />
+            {initialBulletin?.bulletin_id && (
+              <Button type="button" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50 gap-2 h-8" onClick={handleSupprimer}>
+                <Trash2 className="w-4 h-4" /> Supprimer ce bulletin
+              </Button>
+            )}
+          </div>
 
-            {/* Champs masqués pour compatibilité existante */}
-            {CHAMPS_PRIMES_MONTANT.map((c) => (
-              <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
-            ))}
-            {CHAMPS_PRIMES_POURCENTAGE.map((c) => (
-              <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
-            ))}
-            {CHAMPS_RETENUES.map((c) => (
-              <input key={c.name} type="hidden" name={c.name} value={initialValues[c.name] ?? 0} />
-            ))}
+          <Tabs defaultValue="base" className="w-full">
+            <TabsList className="bg-[#F8FAFC] border border-[#E2E8F0] p-1 w-full justify-start rounded-lg h-auto flex-wrap gap-1">
+              <TabsTrigger value="base" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-[#4F46E5] data-[state=active]:shadow-sm rounded-md py-2 px-4">
+                <FileText className="w-4 h-4" /> Données de Base
+              </TabsTrigger>
+              <TabsTrigger value="variables" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-[#4F46E5] data-[state=active]:shadow-sm rounded-md py-2 px-4">
+                <Activity className="w-4 h-4" /> Variables du Mois
+              </TabsTrigger>
+              <TabsTrigger value="cotisations" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-[#4F46E5] data-[state=active]:shadow-sm rounded-md py-2 px-4">
+                <Calculator className="w-4 h-4" /> Cotisations & Synthèse
+              </TabsTrigger>
+            </TabsList>
 
-            {/* SYSTÈME D'ONGLETS ODOO NOTEBOOK */}
-            <OdooNotebook
-              tabs={[
-                {
-                  id: "lignes_paie",
-                  label: "Rubriques & Lignes de Paie",
-                  count: lignes.length,
-                  content: (
-                    <div className="flex flex-col gap-4">
-                      {/* Salaire de base théorique */}
-                      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg" style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold" style={{ color: "var(--text)" }}>
-                            Salaire de base théorique contractuel
-                          </span>
-                          <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-                            Base mensuelle légale (173.33 h)
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            name="salaire_base_theorique"
+            <div className="mt-6">
+              {/* TAB 1 : Données de Base */}
+              <TabsContent value="base" className="m-0 focus:outline-none">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Profil et Contrat */}
+                  <Card>
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-sm flex items-center gap-2 text-[#0F172A]"><User className="w-4 h-4 text-[#4F46E5]" /> Profil & Contrat</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-4 text-sm">
+                      <div className="flex justify-between pb-2 border-b border-[#E2E8F0]">
+                        <span className="text-[#64748B]">Matricule</span>
+                        <span className="font-semibold text-[#0F172A]">{salarieActive.matricule || "-"}</span>
+                      </div>
+                      <div className="flex justify-between pb-2 border-b border-[#E2E8F0]">
+                        <span className="text-[#64748B]">Type de contrat</span>
+                        <span className="font-semibold text-[#0F172A]">{salarieActive.type_contrat}</span>
+                      </div>
+                      <div className="flex justify-between pb-2 border-b border-[#E2E8F0]">
+                        <span className="text-[#64748B]">Fonction</span>
+                        <span className="font-semibold text-[#0F172A]">{salarieActive.fonction || "-"}</span>
+                      </div>
+                      <div className="flex justify-between pb-2 border-b border-[#E2E8F0]">
+                        <span className="text-[#64748B]">Date de naissance</span>
+                        <span className="font-semibold text-[#0F172A]">
+                          {salarieActive.date_naissance ? new Date(salarieActive.date_naissance).toLocaleDateString('fr-FR') : "-"}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Paramètres Salariaux */}
+                  <Card>
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-sm flex items-center gap-2 text-[#0F172A]"><Wallet className="w-4 h-4 text-emerald-600" /> Paramètres Salariaux</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-[#0F172A]">Salaire de base (DA)</label>
+                        <Input
+                          name="salaire_base_theorique"
+                          type="number"
+                          step="0.01"
+                          defaultValue={initialValues["salaire_base_theorique"] ?? salarieActive.salaire_base_theorique}
+                          onChange={debounceCalcul}
+                          className="font-mono font-bold"
+                        />
+                      </div>
+                      <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0] mt-2 text-sm">
+                        <span className="text-[#64748B]">Situation familiale</span>
+                        <Badge variant="outline" className="font-medium bg-[#F8FAFC]">
+                          {salarieActive.situation_familiale} {salarieActive.nombre_enfants > 0 ? `(${salarieActive.nombre_enfants})` : ""}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0] text-sm">
+                        <span className="text-[#64748B]">Travailleur handicapé</span>
+                        <span className="font-semibold">{salarieActive.est_handicape ? "Oui" : "Non"}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* TAB 2 : Variables du Mois */}
+              <TabsContent value="variables" className="m-0 focus:outline-none flex flex-col gap-8">
+                
+                {/* 2.1 Absences & HS */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Absences */}
+                  <Card className="border-red-100">
+                    <CardHeader className="pb-4 bg-red-50/50 border-b border-red-100">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-red-600" />
+                        <CardTitle className="text-sm text-red-900">Absences & Retards</CardTitle>
+                        <Badge variant="secondary" className="ml-auto bg-red-100 text-red-700 hover:bg-red-100 border-none">Déduit du base</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {CHAMPS_ABSENCES.map((c) => (
+                        <div key={c.name} className="flex flex-col gap-1.5">
+                          <label className="text-[11px] font-semibold text-[#64748B]">{c.label}</label>
+                          <Input
+                            name={c.name}
                             type="number"
                             step="0.01"
-                            defaultValue={initialValues["salaire_base_theorique"] ?? salarieActive.salaire_base_theorique}
+                            defaultValue={initialValues[c.name] ?? 0}
+                            onChange={debounceCalcul}
                             onFocus={(e) => e.target.select()}
-                            className="font-bold text-sm px-3 py-1.5 rounded border text-right w-44"
-                            style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                            className="text-center font-mono"
                           />
-                          <span className="text-xs font-bold" style={{ color: "var(--text-muted)" }}>DA</span>
+                          {prevMonthValues[c.name] !== undefined && prevMonthValues[c.name] > 0 && (
+                            <span className="text-[10px] text-center text-[#64748B]">Mois préc: {prevMonthValues[c.name]}h</span>
+                          )}
                         </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Heures Sup */}
+                  <Card className="border-teal-100">
+                    <CardHeader className="pb-4 bg-teal-50/50 border-b border-teal-100">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-teal-600" />
+                        <CardTitle className="text-sm text-teal-900">Heures Supplémentaires</CardTitle>
+                        <Badge variant="secondary" className="ml-auto bg-teal-100 text-teal-800 hover:bg-teal-100 border-none">Majorations</Badge>
                       </div>
+                    </CardHeader>
+                    <CardContent className="p-4 grid grid-cols-3 gap-4">
+                      {CHAMPS_HEURES_SUP.map((c) => (
+                        <div key={c.name} className="flex flex-col gap-1.5">
+                          <label className="text-[11px] font-semibold text-[#64748B]">{c.label}</label>
+                          <Input
+                            name={c.name}
+                            type="number"
+                            step="0.01"
+                            defaultValue={initialValues[c.name] ?? 0}
+                            onChange={debounceCalcul}
+                            onFocus={(e) => e.target.select()}
+                            className="text-center font-mono"
+                          />
+                          {prevMonthValues[c.name] !== undefined && prevMonthValues[c.name] > 0 && (
+                            <span className="text-[10px] text-center text-[#64748B]">Mois préc: {prevMonthValues[c.name]}h</span>
+                          )}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
 
-                      {/* TABLE DES RUBRIQUES FAÇON ODOO */}
-                      <div className="table-wrap rounded-lg border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-                        <table className="w-full text-left border-collapse text-xs">
-                          <thead>
-                            <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--border)" }}>
-                              <th className="py-2.5 px-3 font-bold w-20">Code</th>
-                              <th className="py-2.5 px-3 font-bold">Désignation de la rubrique</th>
-                              <th className="py-2.5 px-3 font-bold w-28">Type</th>
-                              <th className="py-2.5 px-3 font-bold w-28 text-center">Catégorie</th>
-                              <th className="py-2.5 px-3 font-bold w-48 text-right">Valeur / Taux</th>
-                              <th className="py-2.5 px-3 font-bold w-12 text-center"></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {lignes.map((ligne) => {
-                              const isGain = ligne.type_valeur === "Gain (+)";
-                              return (
-                                <tr
-                                  key={ligne.code}
-                                  className="border-b transition-colors hover:bg-slate-50/50"
-                                  style={{ borderColor: "var(--border-soft)" }}
-                                >
-                                  {/* Code */}
-                                  <td className="py-2.5 px-3 font-mono font-bold" style={{ color: "var(--accent)" }}>
-                                    {ligne.code}
-                                  </td>
-
-                                  {/* Libellé */}
-                                  <td className="py-2.5 px-3 font-medium">
-                                    {ligne.libelle}
-                                  </td>
-
-                                  {/* Type */}
-                                  <td className="py-2.5 px-3">
-                                    <span
-                                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                        isGain ? "bg-teal-100 text-teal-800" : "bg-red-100 text-red-800"
-                                      }`}
-                                    >
-                                      {isGain ? "Gain (+)" : "Retenue (-)"}
-                                    </span>
-                                  </td>
-
-                                  {/* Catégorie */}
-                                  <td className="py-2.5 px-3 text-center text-muted-foreground font-mono">
-                                    {LABELS_CATEGORIE[ligne.categorie] || "DA"}
-                                  </td>
-
-                                  {/* Inputs Valeurs */}
-                                  <td className="py-2.5 px-3 text-right">
-                                    {ligne.categorie === "nombre_x_taux" ? (
-                                      <div className="flex items-center justify-end gap-1.5">
-                                        <input
-                                          name={`dyn_${ligne.code}_v1`}
-                                          type="number"
-                                          step="0.01"
-                                          defaultValue={ligne.valeur_1}
-                                          onFocus={(e) => e.target.select()}
-                                          className="w-16 px-2 py-1 text-right text-xs rounded border"
-                                          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-                                          placeholder="Nbr"
-                                        />
-                                        <span className="text-muted-foreground">×</span>
-                                        <input
-                                          name={`dyn_${ligne.code}_v2`}
-                                          type="number"
-                                          step="0.01"
-                                          defaultValue={ligne.valeur_2}
-                                          onFocus={(e) => e.target.select()}
-                                          className="w-20 px-2 py-1 text-right text-xs rounded border font-semibold"
-                                          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-                                          placeholder="Taux"
-                                        />
-                                      </div>
-                                    ) : (
-                                      <div className="flex items-center justify-end gap-1">
-                                        <input
-                                          name={`dyn_${ligne.code}_v1`}
-                                          type="number"
-                                          step="0.01"
-                                          defaultValue={ligne.valeur_1}
-                                          onFocus={(e) => e.target.select()}
-                                          className="w-28 px-2 py-1 text-right text-xs rounded border font-semibold"
-                                          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-                                        />
-                                        <span className="text-muted-foreground text-[11px]">
-                                          {ligne.categorie === "pourcentage" ? "%" : "DA"}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </td>
-
-                                  {/* Supprimer */}
-                                  <td className="py-2.5 px-3 text-center">
-                                    <button
-                                      type="button"
-                                      onClick={() => retirerRubrique(ligne.code)}
-                                      title="Supprimer la ligne"
-                                      className="text-gray-400 hover:text-red-600 transition-colors p-1"
-                                    >
-                                      ✕
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-
-                            {lignes.length === 0 && (
-                              <tr>
-                                <td colSpan={6} className="py-6 text-center text-muted-foreground">
-                                  Aucune rubrique additionnelle ajoutée. Cliquez sur le bouton ci-dessous pour ajouter une prime ou retenue.
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* LE BOUTON ICONIQUE ODOO : « + Ajouter une ligne » */}
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition-colors"
-                          style={{
-                            color: "var(--accent)",
-                            background: "var(--accent-bg)",
-                            border: "1px dashed var(--accent)",
-                          }}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19" />
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                          </svg>
-                          <span>Ajouter une ligne</span>
-                        </button>
-
-                        {/* Menu de sélection Odoo déroulant instantané */}
-                        {isAddMenuOpen && (
-                          <div
-                            className="absolute left-0 top-full mt-2 w-full max-w-md rounded-lg shadow-xl border p-2 z-30"
-                            style={{
-                              background: "var(--surface)",
-                              borderColor: "var(--border)",
-                            }}
-                          >
+                {/* 2.2 Primes & Rubriques Dynamiques */}
+                <Card>
+                  <CardHeader className="pb-4 flex flex-row items-center justify-between border-b border-[#E2E8F0]">
+                    <div className="flex items-center gap-2">
+                      <Calculator className="w-4 h-4 text-[#4F46E5]" />
+                      <CardTitle className="text-sm">Primes, Indemnités & Retenues (Rubriques)</CardTitle>
+                    </div>
+                    <div className="relative">
+                      {isAddMenuOpen ? (
+                        <div className="absolute right-0 top-0 z-10 w-72 bg-white rounded-lg shadow-xl border border-[#E2E8F0] flex flex-col">
+                          <div className="p-2 border-b border-[#E2E8F0] flex items-center gap-2">
+                            <Search className="w-4 h-4 text-[#64748B]" />
                             <input
-                              type="text"
                               autoFocus
+                              type="text"
                               value={recherche}
                               onChange={(e) => setRecherche(e.target.value)}
-                              placeholder="Rechercher une prime, indemnité ou retenue..."
-                              className="w-full text-xs px-3 py-2 rounded border mb-2"
-                              style={{ borderColor: "var(--border)", background: "var(--surface-2)" }}
+                              placeholder="Rechercher une rubrique..."
+                              className="text-sm flex-1 outline-none"
                             />
-
-                            <div className="max-h-56 overflow-y-auto flex flex-col gap-1">
-                              {resultatsRecherche.map((r) => {
-                                const isGain = r.type_valeur === "Gain (+)";
-                                return (
-                                  <button
-                                    key={r.code}
-                                    type="button"
-                                    onClick={() => ajouterRubrique(r)}
-                                    className="flex items-center justify-between p-2 rounded hover:bg-slate-100 text-left text-xs transition-colors"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-mono font-bold" style={{ color: "var(--accent)" }}>
-                                        {r.code}
-                                      </span>
-                                      <span className="font-medium" style={{ color: "var(--text)" }}>
-                                        {r.libelle}
-                                      </span>
-                                    </div>
-                                    <span
-                                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                                        isGain ? "bg-teal-100 text-teal-800" : "bg-red-100 text-red-800"
-                                      }`}
-                                    >
-                                      {isGain ? "Gain" : "Retenue"}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                              {resultatsRecherche.length === 0 && (
-                                <span className="p-3 text-center text-xs text-muted-foreground">
-                                  Toutes les rubriques correspondantes sont déjà ajoutées.
-                                </span>
-                              )}
-                            </div>
+                            <button type="button" onClick={() => setIsAddMenuOpen(false)} className="text-[#64748B] hover:text-[#0F172A]"><X className="w-4 h-4" /></button>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  ),
-                },
-                {
-                  id: "absences_heures",
-                  label: "Absences & Heures Supplémentaires",
-                  content: (
-                    <div className="flex flex-col gap-6">
-                      {/* Section Absences */}
-                      <div>
-                        <div className="flex items-center gap-2 mb-3">
-                          <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text)" }}>
-                            DÉCOMPTE DES ABSENCES (HEURES)
-                          </h4>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-700">
-                            Déduites du salaire de base
-                          </span>
+                          <div className="max-h-60 overflow-y-auto">
+                            {resultatsRecherche.length === 0 ? (
+                              <div className="p-3 text-sm text-[#64748B] text-center">Aucune rubrique disponible</div>
+                            ) : (
+                              resultatsRecherche.map((r) => (
+                                <button
+                                  key={r.code}
+                                  type="button"
+                                  className="w-full text-left px-4 py-2 text-sm hover:bg-[#F8FAFC] border-b border-[#E2E8F0] last:border-0"
+                                  onClick={() => ajouterRubrique(r)}
+                                >
+                                  <div className="font-semibold text-[#0F172A]">{r.code} - {r.libelle}</div>
+                                  <div className="text-[10px] text-[#64748B] uppercase">{r.categorie}</div>
+                                </button>
+                              ))
+                            )}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                          {CHAMPS_ABSENCES.map((c) => (
-                            <div key={c.name} className="flex flex-col gap-1 p-2.5 rounded border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
-                              <label className="text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
-                                {c.label}
-                              </label>
-                              <input
-                                name={c.name}
-                                type="number"
-                                step="0.01"
-                                defaultValue={initialValues[c.name] ?? 0}
-                                onFocus={(e) => e.target.select()}
-                                className="text-xs font-bold text-center px-2 py-1 rounded border"
-                                style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-                              />
-                              {prevMonthValues[c.name] !== undefined && prevMonthValues[c.name] > 0 && (
-                                <span className="text-[10px] text-center text-muted-foreground">
-                                  Mois dernier: {prevMonthValues[c.name]} h
-                                </span>
-                              )}
-                            </div>
+                      ) : (
+                        <Button type="button" variant="outline" size="sm" onClick={() => setIsAddMenuOpen(true)} className="gap-2 h-8">
+                          <Plus className="w-4 h-4" /> Ajouter une rubrique
+                        </Button>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-left">
+                        <thead>
+                          <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                            <th className="p-3 font-semibold text-[#64748B] w-24">Code</th>
+                            <th className="p-3 font-semibold text-[#64748B]">Rubrique</th>
+                            <th className="p-3 font-semibold text-[#64748B] w-48 text-right">Valeur 1</th>
+                            <th className="p-3 font-semibold text-[#64748B] w-48 text-right">Valeur 2</th>
+                            <th className="p-3 font-semibold text-[#64748B] w-12 text-center">Act.</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E2E8F0]">
+                          {lignes.length === 0 && (
+                            <tr>
+                              <td colSpan={5} className="p-8 text-center text-[#64748B]">Aucune rubrique assignée.</td>
+                            </tr>
+                          )}
+                          {lignes.map((l, idx) => (
+                            <tr key={l.code} className="hover:bg-[#F8FAFC]/50 transition-colors">
+                              <td className="p-3 font-mono font-medium text-[#0F172A]">{l.code}</td>
+                              <td className="p-3">
+                                <div className="font-medium text-[#0F172A]">{l.libelle}</div>
+                                <div className="text-[10px] text-[#64748B] uppercase">{LABELS_CATEGORIE[l.categorie]}</div>
+                              </td>
+                              <td className="p-3 text-right">
+                                {l.categorie !== "nombre_x_taux" || (l.categorie === "nombre_x_taux" && l.type_valeur !== "fixe") ? (
+                                  <div className="flex items-center justify-end gap-2">
+                                    <Input
+                                      name={`dyn_${l.code}_v1`}
+                                      type="number"
+                                      step="0.01"
+                                      value={l.valeur_1}
+                                      onChange={(e) => {
+                                        const nl = [...lignes];
+                                        nl[idx].valeur_1 = parseFloat(e.target.value) || 0;
+                                        setLignes(nl);
+                                        debounceCalcul();
+                                      }}
+                                      onFocus={(e) => e.target.select()}
+                                      className="w-32 text-right font-mono"
+                                    />
+                                  </div>
+                                ) : (
+                                  <span className="text-[#64748B] text-xs">Calculé auto</span>
+                                )}
+                              </td>
+                              <td className="p-3 text-right">
+                                {l.categorie === "nombre_x_taux" && (
+                                  <div className="flex items-center justify-end gap-2">
+                                    <Input
+                                      name={`dyn_${l.code}_v2`}
+                                      type="number"
+                                      step="0.01"
+                                      value={l.valeur_2}
+                                      onChange={(e) => {
+                                        const nl = [...lignes];
+                                        nl[idx].valeur_2 = parseFloat(e.target.value) || 0;
+                                        setLignes(nl);
+                                        debounceCalcul();
+                                      }}
+                                      onFocus={(e) => e.target.select()}
+                                      className="w-32 text-right font-mono"
+                                    />
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-3 text-center">
+                                <Button type="button" variant="ghost" size="icon" onClick={() => retirerRubrique(l.code)} className="h-8 w-8 text-[#64748B] hover:text-red-600 hover:bg-red-50">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </td>
+                            </tr>
                           ))}
-                        </div>
-                      </div>
-
-                      {/* Section Heures Sup */}
-                      <div>
-                        <div className="flex items-center gap-2 mb-3">
-                          <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text)" }}>
-                            HEURES SUPPLÉMENTAIRES
-                          </h4>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-teal-100 text-teal-800">
-                            Majorations légales
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          {CHAMPS_HEURES_SUP.map((c) => (
-                            <div key={c.name} className="flex flex-col gap-1 p-2.5 rounded border" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
-                              <label className="text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
-                                {c.label}
-                              </label>
-                              <input
-                                name={c.name}
-                                type="number"
-                                step="0.01"
-                                defaultValue={initialValues[c.name] ?? 0}
-                                onFocus={(e) => e.target.select()}
-                                className="text-xs font-bold text-center px-2 py-1 rounded border"
-                                style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-                              />
-                              {prevMonthValues[c.name] !== undefined && prevMonthValues[c.name] > 0 && (
-                                <span className="text-[10px] text-center text-muted-foreground">
-                                  Mois dernier: {prevMonthValues[c.name]} h
-                                </span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                        </tbody>
+                      </table>
                     </div>
-                  ),
-                },
-                {
-                  id: "cotisations_synthese",
-                  label: "Cotisations Sociales & Charges Patronales",
-                  content: (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Synthèse Retenues Salariales */}
-                      <div className="p-4 rounded-lg border flex flex-col gap-3" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
-                        <h4 className="text-xs font-bold uppercase tracking-wider pb-2 border-b" style={{ color: "var(--text)", borderColor: "var(--border-soft)" }}>
-                          Retenues Salariales & Fiscales
-                        </h4>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Assiette CNAS cotisable</span>
-                          <span className="font-semibold">{formatDA(resultat ? resultat.base_cnas : 0)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Retenue CNAS Salarié (9%)</span>
-                          <span className="font-bold text-red-600">{formatDA(resultat ? resultat.retenue_cnas : 0)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Base Imposable IRG</span>
-                          <span className="font-semibold">{formatDA(resultat ? resultat.base_imposable_irg : 0)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">IRG Net prélevé</span>
-                          <span className="font-bold text-red-600">{formatDA(resultat ? resultat.retenue_irg_nette : 0)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs font-bold pt-2 border-t" style={{ borderColor: "var(--border-soft)" }}>
-                          <span>Total Retenues Salarié</span>
-                          <span className="text-red-700">{formatDA(resultat ? resultat.total_retenues : 0)}</span>
-                        </div>
-                      </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                      {/* Charges Patronales Employeur */}
-                      <div className="p-4 rounded-lg border flex flex-col gap-3" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
-                        <h4 className="text-xs font-bold uppercase tracking-wider pb-2 border-b" style={{ color: "var(--text)", borderColor: "var(--border-soft)" }}>
-                          Charges & Coût Total Employeur
-                        </h4>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Salaire Brut (Total gains)</span>
-                          <span className="font-semibold">{formatDA(resultat ? resultat.total_gains : 0)}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Cotisation CNAS Employeur (26%)</span>
-                          <span className="font-bold text-amber-700">
-                            {formatDA(resultat ? resultat.base_cnas * 0.26 : 0)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-xs font-bold pt-2 border-t" style={{ borderColor: "var(--border-soft)" }}>
-                          <span>Coût Global Employeur</span>
-                          <span className="text-base font-bold" style={{ color: "var(--accent)" }}>
-                            {formatDA(resultat ? resultat.cout_total_employeur : 0)}
-                          </span>
-                        </div>
-                        <div className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
-                          La part patronale CNAS de 26% s&apos;applique directement sur la totalité de l&apos;assiette cotisable de l&apos;entreprise.
-                        </div>
+              {/* TAB 3 : Cotisations & Synthèse */}
+              <TabsContent value="cotisations" className="m-0 focus:outline-none">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Synthèse Retenues */}
+                  <Card>
+                    <CardHeader className="pb-4 border-b border-[#E2E8F0]">
+                      <CardTitle className="text-sm">Retenues Salariales & Fiscales</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 flex flex-col gap-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">Assiette CNAS cotisable</span>
+                        <span className="font-semibold font-mono">{formatDA(resultat ? resultat.base_cnas : 0)}</span>
                       </div>
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          </form>
-        </OdooSheet>
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">Retenue CNAS Salarié (9%)</span>
+                        <span className="font-bold text-red-600 font-mono">{formatDA(resultat ? resultat.retenue_cnas : 0)}</span>
+                      </div>
+                      <div className="flex justify-between mt-2 pt-2 border-t border-[#E2E8F0]">
+                        <span className="text-[#64748B]">Base Imposable IRG</span>
+                        <span className="font-semibold font-mono">{formatDA(resultat ? resultat.base_imposable_irg : 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">IRG Net prélevé</span>
+                        <span className="font-bold text-red-600 font-mono">{formatDA(resultat ? resultat.retenue_irg_nette : 0)}</span>
+                      </div>
+                      <div className="flex justify-between pt-3 mt-1 border-t border-[#E2E8F0] font-bold">
+                        <span>Total Retenues Salarié</span>
+                        <span className="text-red-700 font-mono">{formatDA(resultat ? resultat.total_retenues : 0)}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Charges Patronales */}
+                  <Card>
+                    <CardHeader className="pb-4 border-b border-[#E2E8F0]">
+                      <CardTitle className="text-sm">Charges & Coût Total Employeur</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 flex flex-col gap-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">Salaire Brut (Total gains)</span>
+                        <span className="font-semibold font-mono">{formatDA(resultat ? resultat.total_gains : 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#64748B]">Cotisation CNAS Employeur (26%)</span>
+                        <span className="font-bold text-amber-700 font-mono">{formatDA(resultat ? resultat.base_cnas * 0.26 : 0)}</span>
+                      </div>
+                      <div className="flex justify-between pt-3 mt-1 border-t border-[#E2E8F0] font-bold">
+                        <span>Coût Global Employeur</span>
+                        <span className="text-base text-[#4F46E5] font-mono">{formatDA(resultat ? resultat.cout_total_employeur : 0)}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </div>
+          </Tabs>
+        </form>
       ) : (
-        <div className="p-12 text-center rounded-lg border border-dashed text-muted-foreground" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-          Sélectionnez un salarié dans la barre supérieure pour afficher sa fiche de paie.
-        </div>
+        <Card className="border-dashed">
+          <CardContent className="p-12 text-center text-[#64748B]">
+            <Users className="w-12 h-12 mx-auto text-[#CBD5E1] mb-4" />
+            <p>Sélectionnez un salarié dans la barre supérieure pour afficher sa fiche de paie.</p>
+          </CardContent>
+        </Card>
       )}
 
-      {/* 4. MODAL DRAWER D'INSPECTION MATHÉMATIQUE EN DIRECT */}
+      {/* DRAWER INSPECTEUR */}
       {isDrawerOpen && salarieActive && resultat && (
-        <div
-          className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs"
-          onClick={() => setIsDrawerOpen(false)}
-        >
-          <div
-            className="w-full max-w-lg h-full overflow-y-auto p-6 flex flex-col gap-4 shadow-2xl transition-transform"
-            style={{ background: "var(--surface)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: "var(--border)" }}>
-              <h3 className="font-bold text-base" style={{ color: "var(--text)" }}>
-                Détails du calcul (Live Engine)
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm" onClick={() => setIsDrawerOpen(false)}>
+          <div className="w-full max-w-lg h-full overflow-y-auto bg-white p-6 flex flex-col gap-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0]">
+              <h3 className="font-bold text-lg text-[#0F172A] flex items-center gap-2">
+                <Activity className="w-5 h-5 text-purple-600" /> Détails du calcul
               </h3>
-              <button
-                type="button"
-                onClick={() => setIsDrawerOpen(false)}
-                className="text-gray-400 hover:text-gray-700 text-lg font-bold"
-              >
-                ✕
-              </button>
+              <Button variant="ghost" size="icon" onClick={() => setIsDrawerOpen(false)}><X className="w-5 h-5" /></Button>
             </div>
 
-            <div className="flex flex-col gap-4 text-xs font-mono">
-              <div className="p-3 rounded bg-slate-50 border leading-relaxed">
-                <strong className="text-[11px] uppercase text-purple-700 block mb-1">1. Base & Absences</strong>
-                Base théorique : {formatDA(resultat.salaire_base_reel + (resultat.total_heures_absence * (resultat.salaire_base_reel / 173.33)))}<br />
-                Heures déduites : {resultat.total_heures_absence} h<br />
-                <strong>Base réelle : {formatDA(resultat.salaire_base_reel)}</strong>
+            <div className="flex flex-col gap-4 text-sm font-mono">
+              <div className="p-4 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex flex-col gap-2">
+                <div className="text-xs font-bold uppercase text-purple-700 tracking-wider">1. Base & Absences</div>
+                <div className="flex justify-between text-[#64748B]"><span>Base théorique</span><span>{formatDA(resultat.salaire_base_reel + (resultat.total_heures_absence * (resultat.salaire_base_reel / 173.33)))}</span></div>
+                <div className="flex justify-between text-[#64748B]"><span>Heures déduites</span><span>{resultat.total_heures_absence} h</span></div>
+                <div className="flex justify-between font-bold text-[#0F172A] pt-2 border-t border-[#E2E8F0]"><span>Base réelle</span><span>{formatDA(resultat.salaire_base_reel)}</span></div>
               </div>
 
-              <div className="p-3 rounded bg-slate-50 border leading-relaxed">
-                <strong className="text-[11px] uppercase text-purple-700 block mb-1">2. Primes & Heures Sup</strong>
-                Heures supplémentaires : {formatDA(resultat.total_heures_sup_da)}<br />
-                <strong>Total Brut : {formatDA(resultat.total_gains)}</strong>
+              <div className="p-4 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex flex-col gap-2">
+                <div className="text-xs font-bold uppercase text-purple-700 tracking-wider">2. Primes & Heures Sup</div>
+                <div className="flex justify-between text-[#64748B]"><span>Heures supplémentaires</span><span>{formatDA(resultat.total_heures_sup_da)}</span></div>
+                <div className="flex justify-between font-bold text-[#0F172A] pt-2 border-t border-[#E2E8F0]"><span>Total Brut</span><span>{formatDA(resultat.total_gains)}</span></div>
               </div>
 
-              <div className="p-3 rounded bg-slate-50 border leading-relaxed">
-                <strong className="text-[11px] uppercase text-purple-700 block mb-1">3. Cotisations CNAS</strong>
-                Assiette CNAS : {formatDA(resultat.base_cnas)}<br />
-                Part salariale 9% : {formatDA(resultat.retenue_cnas)}<br />
-                Part patronale 26% : {formatDA(resultat.base_cnas * 0.26)}
+              <div className="p-4 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex flex-col gap-2">
+                <div className="text-xs font-bold uppercase text-purple-700 tracking-wider">3. Cotisations CNAS</div>
+                <div className="flex justify-between text-[#64748B]"><span>Assiette CNAS</span><span>{formatDA(resultat.base_cnas)}</span></div>
+                <div className="flex justify-between text-[#64748B]"><span>Part salariale 9%</span><span>{formatDA(resultat.retenue_cnas)}</span></div>
+                <div className="flex justify-between text-[#64748B]"><span>Part patronale 26%</span><span>{formatDA(resultat.base_cnas * 0.26)}</span></div>
               </div>
 
-              <div className="p-3 rounded bg-slate-50 border leading-relaxed">
-                <strong className="text-[11px] uppercase text-purple-700 block mb-1">4. Barème IRG 2022/2026</strong>
-                Base IRG : {formatDA(resultat.base_imposable_irg)}<br />
-                IRG Brut : {formatDA(resultat.irg_brut)}<br />
-                Abattement 40% : {formatDA(resultat.abattement_irg)}<br />
-                <strong>IRG Net : {formatDA(resultat.retenue_irg_nette)}</strong>
+              <div className="p-4 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] flex flex-col gap-2">
+                <div className="text-xs font-bold uppercase text-purple-700 tracking-wider">4. Barème IRG 2022/2026</div>
+                <div className="flex justify-between text-[#64748B]"><span>Base IRG</span><span>{formatDA(resultat.base_imposable_irg)}</span></div>
+                <div className="flex justify-between text-[#64748B]"><span>IRG Brut</span><span>{formatDA(resultat.irg_brut)}</span></div>
+                <div className="flex justify-between text-[#64748B]"><span>Abattement 40%</span><span>{formatDA(resultat.abattement_irg)}</span></div>
+                <div className="flex justify-between font-bold text-[#0F172A] pt-2 border-t border-[#E2E8F0]"><span>IRG Net</span><span>{formatDA(resultat.retenue_irg_nette)}</span></div>
               </div>
 
-              <div className="p-3 rounded bg-purple-50 border border-purple-200 leading-relaxed font-bold text-sm">
-                NET À PAYER : {formatDA(resultat.net_a_payer)}
+              <div className="p-5 rounded-lg bg-purple-50 border border-purple-200 text-[#0F172A] flex justify-between items-center text-base font-bold">
+                <span>NET À PAYER</span>
+                <span className="text-purple-700 text-lg">{formatDA(resultat.net_a_payer)}</span>
               </div>
             </div>
           </div>

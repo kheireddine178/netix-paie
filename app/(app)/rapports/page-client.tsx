@@ -10,8 +10,11 @@ import {
   type LigneVirement,
 } from "./actions";
 import { type RubriqueCatalogue } from "../salaries/actions";
-import OdooControlPanel from "@/components/odoo/OdooControlPanel";
-import OdooSheet from "@/components/odoo/OdooSheet";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { RefreshCw, Printer, Download } from "lucide-react";
 
 const MOIS = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -144,90 +147,42 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
   };
 
   return (
-    <div className="flex flex-col gap-4 print-container">
-      {/* 1. ODOO CONTROL PANEL (Masqué à l'impression) */}
+    <div className="flex flex-col gap-6 max-w-[1200px] mx-auto w-full print-container">
       <div className="no-print">
-        <OdooControlPanel
-          breadcrumbs={[
-            { label: "États de Paie & Centralisation" },
-            { label: `${MOIS[mois - 1]} ${annee}` },
-          ]}
-          primaryAction={{
-            label: isPending ? "Génération en cours…" : "Générer le rapport",
-            onClick: handleGenerer,
-            icon: (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="23 4 23 10 17 10" />
-                <polyline points="1 20 1 14 7 14" />
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-              </svg>
-            ),
-          }}
-          secondaryActions={[
-            {
-              label: "Imprimer le rapport",
-              onClick: printReport,
-              icon: (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 6 2 18 2 18 9" />
-                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                  <rect x="6" y="14" width="12" height="8" />
-                </svg>
-              ),
-            },
-          ]}
+        <PageHeader
+          title="États de Paie & Centralisation"
+          subtitle={`Période : ${MOIS[mois - 1]} ${annee}`}
+          primaryAction={
+            <Button onClick={handleGenerer} disabled={isPending} className="gap-2">
+              <RefreshCw className={`w-4 h-4 ${isPending ? "animate-spin" : ""}`} />
+              {isPending ? "Génération..." : "Générer le rapport"}
+            </Button>
+          }
+          secondaryActions={
+            <Button variant="secondary" onClick={printReport} className="gap-2">
+              <Printer className="w-4 h-4" /> Imprimer
+            </Button>
+          }
         />
       </div>
 
-      {/* 2. BARRE DE FILTRES ODOO */}
-      <div
-        className="no-print px-4 py-3 rounded-lg flex flex-wrap items-center justify-between gap-3 text-xs"
-        style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-        }}
-      >
-        <div className="flex items-center gap-3 flex-wrap">
+      {/* Barre de filtres */}
+      <Card className="no-print">
+        <CardContent className="p-4 flex flex-wrap items-end gap-4">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">
-              Période
-            </span>
-            <select
-              value={mois}
-              onChange={(e) => setMois(parseInt(e.target.value))}
-              className="text-xs px-2 py-1.5 rounded border"
-              style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}
-            >
-              {MOIS.map((m, i) => (
-                <option key={i} value={i + 1}>
-                  {m}
-                </option>
-              ))}
+            <span className="text-sm font-medium text-[#64748B]">Période</span>
+            <select value={mois} onChange={e => setMois(parseInt(e.target.value))}
+              className="p-2 rounded-md border border-[#E2E8F0] text-sm bg-white focus:ring-1 focus:ring-[#4F46E5] focus:outline-none">
+              {MOIS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
             </select>
-            <input
-              type="number"
-              value={annee}
-              onChange={(e) => setAnnee(parseInt(e.target.value) || now.getFullYear())}
-              className="text-xs px-2 py-1.5 rounded border w-20 text-center"
-              style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}
-            />
+            <Input type="number" value={annee} onChange={e => setAnnee(parseInt(e.target.value) || now.getFullYear())}
+              className="w-20 text-center" />
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">
-              Rapport
-            </span>
-            <select
-              value={onglet}
-              onChange={(e) => {
-                setOnglet(e.target.value as any);
-                setRecap(null);
-                setNominatifList([]);
-                setVirementList([]);
-              }}
-              className="text-xs px-2.5 py-1.5 rounded border font-semibold"
-              style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}
-            >
+            <span className="text-sm font-medium text-[#64748B]">Rapport</span>
+            <select value={onglet} onChange={e => { setOnglet(e.target.value as any); setRecap(null); setNominatifList([]); setVirementList([]); }}
+              className="p-2 rounded-md border border-[#E2E8F0] text-sm bg-white focus:ring-1 focus:ring-[#4F46E5] focus:outline-none font-medium">
               <option value="centralisateur">Centralisateur Général (Mois)</option>
               <option value="nominatif">État nominatif par rubrique</option>
               <option value="g50">Synthèse G50 (IRG Salariés)</option>
@@ -237,50 +192,29 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
 
           {onglet === "nominatif" && (
             <div className="flex items-center gap-2">
-              <span className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground">
-                Rubrique
-              </span>
-              <select
-                value={selectedRubrique}
-                onChange={(e) => {
-                  setSelectedRubrique(e.target.value);
-                  setNominatifList([]);
-                }}
-                className="text-xs px-2 py-1.5 rounded border"
-                style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}
-              >
-                {codeRubriquesOptions.map((o) => (
-                  <option key={o.code} value={o.code}>
-                    {o.code} — {o.name}
-                  </option>
-                ))}
+              <span className="text-sm font-medium text-[#64748B]">Rubrique</span>
+              <select value={selectedRubrique} onChange={e => { setSelectedRubrique(e.target.value); setNominatifList([]); }}
+                className="p-2 rounded-md border border-[#E2E8F0] text-sm bg-white focus:ring-1 focus:ring-[#4F46E5] focus:outline-none">
+                {codeRubriquesOptions.map(o => <option key={o.code} value={o.code}>{o.code} — {o.name}</option>)}
               </select>
             </div>
           )}
-        </div>
 
-        <button
-          type="button"
-          onClick={handleGenerer}
-          disabled={isPending}
-          className="btn btn-primary text-xs font-bold px-3 py-1.5 rounded ml-auto"
-        >
-          {isPending ? "Génération…" : "Obtenir l'état"}
-        </button>
-      </div>
+          <Button onClick={handleGenerer} disabled={isPending} className="ml-auto">
+            {isPending ? "Génération..." : "Obtenir l'état"}
+          </Button>
+        </CardContent>
+      </Card>
 
       {erreur && (
-        <div className="card" style={{ borderLeft: "4px solid var(--red)", color: "var(--red)" }}>
-          {erreur}
-        </div>
+        <div className="p-4 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm">{erreur}</div>
       )}
 
-      {/* Impression Bouton (Masqué à l'impression) */}
       {(recap || nominatifList.length > 0) && (
-        <div className="no-print" style={{ display: "flex", justifyContent: "flex-end" }}>
-          <button onClick={printReport} className="btn btn-secondary">
-            Imprimer le rapport
-          </button>
+        <div className="no-print flex justify-end">
+          <Button variant="secondary" onClick={printReport} className="gap-2">
+            <Printer className="w-4 h-4" /> Imprimer le rapport
+          </Button>
         </div>
       )}
 
@@ -288,18 +222,15 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
       
       {/* 1. CENTRALISATEUR */}
       {onglet === "centralisateur" && recap && (
-        <div className="card print-report-box" style={{ border: "1px solid var(--border)", padding: "var(--s5)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--s4)" }}>
-            <div>
-              <h3 style={{ fontSize: "var(--tlg)" }}>CENTRALISATEUR GÉNÉRAL DE LA PAIE</h3>
-              <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)", marginTop: 4 }}>
-                Unité : Chaabat El Leham — Période : {MOIS[mois - 1].toUpperCase()} {annee}
-              </p>
+        <Card className="print-report-box">
+          <CardContent className="p-6">
+            <div className="flex justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-[#0F172A]">CENTRALISATEUR GÉNÉRAL DE LA PAIE</h3>
+                <p className="text-sm text-[#64748B] mt-1">Unité : Chaabat El Leham — Période : {MOIS[mois - 1].toUpperCase()} {annee}</p>
+              </div>
+              <div className="text-sm text-[#64748B] text-right">Effectif : {recap.nombreSalaries} salariés</div>
             </div>
-            <div style={{ textAlign: "right", fontSize: "var(--txs)", color: "var(--text-muted)" }}>
-              <span>Effectif total : {recap.nombreSalaries} salariés</span>
-            </div>
-          </div>
 
           <table className="table" style={{ width: "100%", fontSize: "var(--txs)" }}>
             <thead>
@@ -388,25 +319,23 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
               <p style={{ fontSize: "var(--tlg)", fontWeight: "bold", color: "var(--text)" }}>{formatDA(recap.masseSalariale)}</p>
             </div>
           </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* 2. ÉTAT NOMINATIF PAR RUBRIQUE */}
       {onglet === "nominatif" && nominatifList.length > 0 && (
-        <div className="card print-report-box" style={{ border: "1px solid var(--border)", padding: "var(--s5)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--s4)" }}>
-            <div>
-              <h3 style={{ fontSize: "var(--tlg)" }}>
-                ÉTA NOMINATIF PAR RUBRIQUE : {selectedRubrique} - {NOMS_NATIONAUX[selectedRubrique] || catalogue.find(c => c.code === selectedRubrique)?.libelle}
-              </h3>
-              <p style={{ color: "var(--text-muted)", fontSize: "var(--tsm)", marginTop: 4 }}>
-                Unité : Chaabat El Leham — Période : {MOIS[mois - 1].toUpperCase()} {annee}
-              </p>
+        <Card className="print-report-box">
+          <CardContent className="p-6">
+            <div className="flex justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-[#0F172A]">
+                  ÉTAT NOMINATIF : {selectedRubrique} - {NOMS_NATIONAUX[selectedRubrique] || catalogue.find(c => c.code === selectedRubrique)?.libelle}
+                </h3>
+                <p className="text-sm text-[#64748B] mt-1">Unité : Chaabat El Leham — Période : {MOIS[mois - 1].toUpperCase()} {annee}</p>
+              </div>
+              <div className="text-sm text-[#64748B] text-right">Salariés concernés : {nominatifList.length}</div>
             </div>
-            <div style={{ textAlign: "right", fontSize: "var(--txs)", color: "var(--text-muted)" }}>
-              <span>Salariés concernés : {nominatifList.length}</span>
-            </div>
-          </div>
 
           <table className="table" style={{ width: "100%", fontSize: "var(--txs)" }}>
             <thead>
@@ -438,7 +367,8 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
               </tr>
             </tbody>
           </table>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* 3. SYNTHÈSE G50 */}
@@ -457,7 +387,8 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
           const totalImpotsRetenusG50 = montantIrgStandard + montantIrgContract;
 
           return (
-            <div className="card print-report-box" style={{ border: "1px solid var(--border)", padding: "var(--s5)" }}>
+            <Card className="print-report-box">
+              <CardContent className="p-6">
               <div style={{ borderBottom: "2px solid var(--text)", paddingBottom: "var(--s3)", marginBottom: "var(--s4)" }}>
                 <h3 style={{ fontSize: "var(--tlg)", textAlign: "center", fontWeight: "bold" }}>RÉPUBLIQUE ALGÉRIENNE DÉMOCRATIQUE ET POPULAIRE</h3>
                 <h4 style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "var(--tsm)", marginTop: 4 }}>MINISTÈRE DES FINANCES — DIRECTION GÉNÉRALE DES IMPÔTS</h4>
@@ -513,72 +444,57 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
                   💡 <strong>Note de déclaration :</strong> Les montants ci-dessus correspondent aux retenues à la source effectuées au titre du mois de {MOIS[mois - 1]} {annee} et doivent être déclarés et acquittés auprès de la recette des impôts avant le 20 du mois suivant.
                 </p>
               </div>
-            </div>
+              </CardContent>
+            </Card>
           );
         })()
       )}
 
       {onglet === "g50" && !recap && !isPending && (
-        <div className="card" style={{ textAlign: "center", color: "var(--text-muted)" }}>
-          Aucune donnée chargée. Cliquez sur "Obtenir l'état" pour générer la synthèse G50 de ce mois.
-        </div>
+        <Card>
+          <CardContent className="p-12 text-center text-sm text-[#94A3B8]">
+            Aucune donnée chargée. Cliquez sur "Obtenir l'état" pour générer la synthèse G50.
+          </CardContent>
+        </Card>
       )}
 
       {/* 4. VIREMENT DE MASSE */}
       {onglet === "virement" && virementList.length > 0 && (
         <div className="space-y-6">
-          <div className="card no-print" style={{ border: "1px solid var(--border)", padding: "var(--s4)" }}>
-            <h3>Configuration de l'ordre de virement</h3>
-            <div className="grid md:grid-cols-4 gap-4" style={{ marginTop: "var(--s3)" }}>
-              <div className="field" style={{ marginBottom: 0 }}>
-                <label>Compte Débit (CCP / RIB Employeur)</label>
-                <input
-                  type="text"
-                  value={empCcpRib}
-                  onChange={(e) => setEmpCcpRib(e.target.value)}
-                  placeholder="Ex: 00799999000012345678"
-                />
+          <Card className="no-print">
+            <CardContent className="p-6">
+              <h3 className="text-base font-semibold text-[#0F172A] mb-4">Configuration de l'ordre de virement</h3>
+              <div className="grid md:grid-cols-4 gap-4">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-[#0F172A]">Compte Débit (CCP / RIB Employeur)</label>
+                  <Input type="text" value={empCcpRib} onChange={e => setEmpCcpRib(e.target.value)} placeholder="Ex: 00799999000012345678" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-[#0F172A]">Raison Sociale Employeur</label>
+                  <Input type="text" value={empRaisonSociale} onChange={e => setEmpRaisonSociale(e.target.value)} placeholder="Nom de l'entreprise" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-[#0F172A]">Date d'exécution</label>
+                  <Input type="date" value={virementDate} onChange={e => setVirementDate(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-[#0F172A]">Format de fichier</label>
+                  <select value={virementFormat} onChange={e => setVirementFormat(e.target.value as any)}
+                    className="w-full p-2 rounded-lg border border-[#E2E8F0] text-sm focus:ring-1 focus:ring-[#4F46E5] focus:outline-none">
+                    <option value="ccp">Algérie Poste (CCP - CSV)</option>
+                    <option value="rib">RIB Bancaire (Largeur Fixe)</option>
+                    <option value="csv">Standard CSV</option>
+                  </select>
+                </div>
               </div>
-              <div className="field" style={{ marginBottom: 0 }}>
-                <label>Raison Sociale Employeur</label>
-                <input
-                  type="text"
-                  value={empRaisonSociale}
-                  onChange={(e) => setEmpRaisonSociale(e.target.value)}
-                  placeholder="Nom de l'entreprise"
-                />
-              </div>
-              <div className="field" style={{ marginBottom: 0 }}>
-                <label>Date d'exécution</label>
-                <input
-                  type="date"
-                  value={virementDate}
-                  onChange={(e) => setVirementDate(e.target.value)}
-                />
-              </div>
-              <div className="field" style={{ marginBottom: 0 }}>
-                <label>Format de fichier</label>
-                <select
-                  value={virementFormat}
-                  onChange={(e) => setVirementFormat(e.target.value as any)}
-                >
-                  <option value="ccp">Algérie Poste (CCP - CSV)</option>
-                  <option value="rib">RIB Bancaire (Largeur Fixe)</option>
-                  <option value="csv">Standard CSV</option>
-                </select>
-              </div>
-            </div>
-            
-            <button
-              onClick={handleDownload}
-              className="btn btn-primary"
-              style={{ marginTop: "var(--s4)", width: "fit-content" }}
-            >
-              ⬇ Télécharger le fichier de virement de masse
-            </button>
-          </div>
+              <Button onClick={handleDownload} className="mt-4 gap-2">
+                <Download className="w-4 h-4" /> Télécharger le fichier de virement
+              </Button>
+            </CardContent>
+          </Card>
 
-          <div className="card print-report-box" style={{ border: "1px solid var(--border)", padding: "var(--s5)" }}>
+          <Card className="print-report-box">
+            <CardContent className="p-6">
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--s4)" }}>
               <div>
                 <h3 style={{ fontSize: "var(--tlg)" }}>ORDRE DE VIREMENT COLLECTIF DE LA PAIE</h3>
@@ -629,41 +545,27 @@ export default function PageClient({ catalogue }: { catalogue: RubriqueCatalogue
                 </tr>
               </tbody>
             </table>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Fichier de prévisualisation brute */}
-          <div className="card no-print" style={{ border: "1px solid var(--border)", padding: "var(--s4)" }}>
-            <h3>Prévisualisation brute du fichier</h3>
-            <pre
-              style={{
-                background: "var(--surface-2)",
-                padding: "var(--s3)",
-                borderRadius: "var(--radius-sm)",
-                fontSize: "var(--txs)",
-                overflowX: "auto",
-                fontFamily: "var(--mono)",
-                marginTop: "var(--s2)",
-                maxHeight: "200px",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-all"
-              }}
-            >
+          <Card className="no-print">
+            <CardContent className="p-5">
+              <h3 className="text-sm font-semibold text-[#0F172A] mb-3">Prévisualisation brute du fichier</h3>
+              <pre className="bg-[#F8FAFC] p-3 rounded-lg text-xs font-mono overflow-x-auto max-h-48 whitespace-pre-wrap break-all mt-2">
               {generateFileContent()}
-            </pre>
-          </div>
+              </pre>
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {onglet === "virement" && virementList.length === 0 && !isPending && (
-        <div className="card" style={{ textAlign: "center", color: "var(--text-muted)" }}>
-          Aucune donnée disponible pour ce mois. Cliquez sur "Obtenir l'état" pour générer la liste.
-        </div>
+        <Card><CardContent className="p-12 text-center text-sm text-[#94A3B8]">Aucune donnée disponible pour ce mois.</CardContent></Card>
       )}
 
       {onglet === "nominatif" && nominatifList.length === 0 && !isPending && (
-        <div className="card" style={{ textAlign: "center", color: "var(--text-muted)" }}>
-          Aucune donnée disponible pour cette rubrique sur cette période. Cliquez sur "Obtenir l'état" pour charger.
-        </div>
+        <Card><CardContent className="p-12 text-center text-sm text-[#94A3B8]">Aucune donnée disponible pour cette rubrique sur cette période.</CardContent></Card>
       )}
     </div>
   );

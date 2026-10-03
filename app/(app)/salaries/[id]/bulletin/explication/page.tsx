@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBulletinPourPdf } from "../../../actions";
 import { genererExplicationDonnees, fmtDa, fmtPct, fmtH } from "@/lib/paieExplication";
-import OdooControlPanel from "@/components/odoo/OdooControlPanel";
+
 
 export const dynamic = "force-dynamic";
 
@@ -45,19 +45,9 @@ export default async function ExplicationPage({ params, searchParams }: PageProp
   return (
     <div className="flex flex-col gap-4 max-w-5xl mx-auto w-full">
       {/* ODOO CONTROL PANEL */}
-      <OdooControlPanel
-        breadcrumbs={[
-          { label: "Collaborateurs", href: "/salaries" },
-          { label: d.nom, href: `/salaries/${salarieId}` },
-          { label: "Historique", href: `/salaries/${salarieId}/historique` },
-          { label: `Explication (${d.moisNom} ${d.annee})` },
-        ]}
-        primaryAction={{
-          label: "Télécharger le PDF d'explication",
-          href: `/salaries/${salarieId}/bulletin/explication/pdf?annee=${annee}&mois=${mois}`,
-          icon: (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <PageHeader
+        title="Télécharger le PDF d'explication"
+      />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>

@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { getSalarie, listerCatalogueRubriques, listerRubriquesSalarie } from "../../actions";
 import RubriquesForm from "./RubriquesForm";
-import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -21,20 +20,8 @@ export default async function RubriquesPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <OdooControlPanel
-        breadcrumbs={[
-          { label: "Collaborateurs", href: "/salaries" },
-          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
-          { label: "Rubriques du catalogue" },
-        ]}
-        primaryAction={{
-          label: "💰 Calculer la paie",
-          href: `/saisie?salarieId=${salarie.id}`,
-        }}
-        secondaryActions={[
-          { label: "← Fiche Salarié", href: `/salaries/${salarie.id}` },
-          { label: "Catalogue général", href: "/rubriques" },
-        ]}
+      <PageHeader
+        title="Catalogue général"
       />
 
       <RubriquesForm salarieId={salarie.id} catalogue={catalogue} assignees={assignees} />
