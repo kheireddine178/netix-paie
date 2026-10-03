@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBulletinPourPdf } from "../../../actions";
 import { genererExplicationDonnees, fmtDa, fmtPct, fmtH } from "@/lib/paieExplication";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -42,37 +43,37 @@ export default async function ExplicationPage({ params, searchParams }: PageProp
   );
 
   return (
-    <div style={{ maxWidth: 840, margin: "0 auto" }}>
-      {/* En-tête */}
-      <div
-        className="page-header"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          flexWrap: "wrap",
-          gap: "var(--s4)",
+    <div className="flex flex-col gap-4 max-w-5xl mx-auto w-full">
+      {/* ODOO CONTROL PANEL */}
+      <OdooControlPanel
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: d.nom, href: `/salaries/${salarieId}` },
+          { label: "Historique", href: `/salaries/${salarieId}/historique` },
+          { label: `Explication (${d.moisNom} ${d.annee})` },
+        ]}
+        primaryAction={{
+          label: "Télécharger le PDF d'explication",
+          href: `/salaries/${salarieId}/bulletin/explication/pdf?annee=${annee}&mois=${mois}`,
+          icon: (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          ),
         }}
-      >
-        <div>
-          <h1>Explication du calcul — {d.nom}</h1>
-          <p>
-            Période : <strong>{d.moisNom} {d.annee}</strong> · Fonction : {d.fonction || "—"}
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: "var(--s2)" }}>
-          <Link
-            href={`/salaries/${salarieId}/bulletin/explication/pdf?annee=${annee}&mois=${mois}`}
-            target="_blank"
-            className="btn btn-primary"
-          >
-            Télécharger le PDF d'explication
-          </Link>
-          <Link href={`/salaries/${salarieId}/historique`} className="btn btn-secondary">
-            ← Historique
-          </Link>
-        </div>
-      </div>
+        secondaryActions={[
+          {
+            label: "← Retour à l'historique",
+            href: `/salaries/${salarieId}/historique`,
+          },
+          {
+            label: "Fiche salarié",
+            href: `/salaries/${salarieId}`,
+          },
+        ]}
+      />
 
       {/* Grid d'explication */}
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--s6)" }}>

@@ -26,6 +26,7 @@ import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 import OdooSheet from "@/components/odoo/OdooSheet";
 import OdooStatusbar from "@/components/odoo/OdooStatusbar";
 import OdooNotebook from "@/components/odoo/OdooNotebook";
+import OdooSubNav from "@/components/odoo/OdooSubNav";
 
 const MOIS = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -613,6 +614,15 @@ export default function SaisieFormulaireConsolide({
 
   return (
     <div className="odoo-saisie-wrapper flex flex-col gap-4">
+      {/* 0. ODOO SUBNAV TABS */}
+      <OdooSubNav
+        items={[
+          { label: "👤 Saisie individuelle", href: "/saisie" },
+          { label: "📊 Grille collective en masse", href: "/saisie/collective" },
+          { label: "💳 Acomptes & Avances", href: "/saisie/avances" },
+        ]}
+      />
+
       {/* 1. ODOO CONTROL PANEL (Breadcrumbs, Actions & Switcher Pager) */}
       <OdooControlPanel
         breadcrumbs={[

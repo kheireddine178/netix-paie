@@ -48,21 +48,17 @@ export default function ParametresForm({ initial }: { initial: Parametres }) {
 
   return (
     <>
-      <div
-        className="page-header"
-        style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}
-      >
-        <div>
-          <h1>Paramètres</h1>
-          <p>Taux légaux et informations employeur. Modifiez ici en cas de changement de loi de finances.</p>
-        </div>
+      <div className="flex items-center justify-between gap-3 pb-2 border-b" style={{ borderColor: "var(--border)" }}>
+        <p className="text-xs text-muted-foreground m-0">
+          Taux légaux et informations employeur. Modifiez ici en cas de changement de loi de finances (LF 2024 / LF 2026).
+        </p>
         <button
           type="button"
-          className="btn btn-secondary"
+          className="btn btn-secondary btn-sm text-xs font-semibold whitespace-nowrap"
           onClick={handleReset}
           disabled={isPending}
         >
-          ↺ Réinitialiser les défauts
+          ↺ Réinitialiser aux défauts légaux
         </button>
       </div>
 

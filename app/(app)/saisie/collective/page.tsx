@@ -1,8 +1,14 @@
-import Link from "next/link";
 import { listerSalaries, listerBulletinsPourPeriode } from "../../salaries/actions";
 import SaisieCollectiveClient from "./saisie-collective-client";
+import OdooSubNav from "@/components/odoo/OdooSubNav";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 export const dynamic = "force-dynamic";
+
+const MOIS = [
+  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+];
 
 interface Props {
   searchParams: Promise<{
@@ -40,23 +46,47 @@ export default async function SaisieCollectivePage({ searchParams }: Props) {
   }));
 
   return (
-    <>
-      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h1>Saisie collective de masse</h1>
-          <p>Saisissez les variables de paie de tous les salariés sur une grille unique style Excel.</p>
-        </div>
-        <Link href="/saisie" className="btn btn-secondary btn-sm">
-          ← Retour à la saisie individuelle
-        </Link>
-      </div>
+    <div className="flex flex-col gap-4">
+      {/* 0. ODOO SUBNAV TABS */}
+      <OdooSubNav
+        items={[
+          { label: "👤 Saisie individuelle", href: "/saisie" },
+          { label: "📊 Grille collective en masse", href: "/saisie/collective" },
+          { label: "💳 Acomptes & Avances", href: "/saisie/avances" },
+        ]}
+      />
 
+      {/* 1. ODOO CONTROL PANEL */}
+      <OdooControlPanel
+        breadcrumbs={[
+          { label: "Saisie Mensuelle", href: "/saisie" },
+          { label: "Grille collective de masse" },
+          { label: `${MOIS[selectedMois - 1]} ${selectedAnnee}` },
+        ]}
+        secondaryActions={[
+          {
+            label: "← Saisie individuelle",
+            href: "/saisie",
+          },
+          {
+            label: "Avances & Acomptes",
+            href: "/saisie/avances",
+          },
+        ]}
+        extraRight={
+          <span className="text-xs font-semibold px-2.5 py-1 rounded bg-slate-100 text-slate-700">
+            👥 {activeSalaries.length} salariés actifs
+          </span>
+        }
+      />
+
+      {/* 2. GRILLE CLIENT */}
       <SaisieCollectiveClient
         salaries={activeSalaries}
         initialBulletins={initialBulletins}
         anneeActive={selectedAnnee}
         moisActive={selectedMois}
       />
-    </>
+    </div>
   );
 }

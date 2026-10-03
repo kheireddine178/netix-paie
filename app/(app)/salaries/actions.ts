@@ -1243,14 +1243,43 @@ export async function supprimerContratSalarie(contratId: number, salarieId: numb
   revalidatePath(`/salaries/${salarieId}/contrat`);
 }
 
-export async function listerTousContrats(): Promise<(ContratRow & { salaries?: { nom_prenom: string } })[]> {
+export interface ContratGlobalRow extends ContratRow {
+  salaries?: {
+    id: number;
+    nom_prenom: string;
+    matricule: string | null;
+    fonction: string | null;
+  } | null;
+}
+
+export async function listerTousContrats(): Promise<ContratGlobalRow[]> {
   const { data, error } = await supabase
     .from("contrats")
-    .select("*, salaries(nom_prenom)")
+    .select("*, salaries(id, nom_prenom, matricule, fonction)")
     .order("date_debut", { ascending: false });
 
   if (error) throw new Error(error.message);
   return data ?? [];
+}
+
+export async function changerStatutContratGlobal(contratId: number, statut: string): Promise<void> {
+  const { error } = await supabase
+    .from("contrats")
+    .update({ statut })
+    .eq("id", contratId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/contrats");
+}
+
+export async function supprimerContratGlobal(contratId: number): Promise<void> {
+  const { error } = await supabase
+    .from("contrats")
+    .delete()
+    .eq("id", contratId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/contrats");
 }
 
 export async function creerDocumentSalarie(
@@ -1351,6 +1380,49 @@ export async function supprimerCongeSalarie(congeId: number, salarieId: number):
   if (error) throw new Error(error.message);
   revalidatePath(`/salaries/${salarieId}/conges`);
 }
+
+export interface CongeGlobalRow extends CongeRow {
+  salaries?: {
+    id: number;
+    nom_prenom: string;
+    matricule: string | null;
+    fonction: string | null;
+  } | null;
+}
+
+export async function listerTousLesConges(): Promise<CongeGlobalRow[]> {
+  const { data, error } = await supabase
+    .from("conges")
+    .select("*, salaries(id, nom_prenom, matricule, fonction)")
+    .order("date_debut", { ascending: false });
+
+  if (error) {
+    console.error("Erreur listerTousLesConges:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function changerStatutCongeGlobal(congeId: number, statut: string): Promise<void> {
+  const { error } = await supabase
+    .from("conges")
+    .update({ statut })
+    .eq("id", congeId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/conges");
+}
+
+export async function supprimerCongeGlobal(congeId: number): Promise<void> {
+  const { error } = await supabase
+    .from("conges")
+    .delete()
+    .eq("id", congeId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/conges");
+}
+
 
 export async function changerStatutConge(congeId: number, statut: string, salarieId: number): Promise<void> {
   const { error } = await supabase
@@ -1942,4 +2014,88 @@ export async function enregistrerBulletinsCollectifs(
 
   revalidatePath("/saisie");
   revalidatePath("/saisie/collective");
+}
+
+export interface MissionGlobalRow extends MissionRow {
+  salaries?: {
+    id: number;
+    nom_prenom: string;
+    matricule: string | null;
+    fonction: string | null;
+  } | null;
+}
+
+export async function listerToutesMissions(): Promise<MissionGlobalRow[]> {
+  const { data, error } = await supabase
+    .from("missions")
+    .select("*, salaries(id, nom_prenom, matricule, fonction)")
+    .order("date_debut", { ascending: false });
+
+  if (error) {
+    console.error("Erreur listerToutesMissions:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function changerStatutMissionGlobal(missionId: number, statut: string): Promise<void> {
+  const { error } = await supabase
+    .from("missions")
+    .update({ statut })
+    .eq("id", missionId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/missions");
+}
+
+export async function supprimerMissionGlobal(missionId: number): Promise<void> {
+  const { error } = await supabase
+    .from("missions")
+    .delete()
+    .eq("id", missionId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/missions");
+}
+
+export interface PromotionGlobalRow extends PromotionRow {
+  salaries?: {
+    id: number;
+    nom_prenom: string;
+    matricule: string | null;
+  } | null;
+}
+
+export async function listerToutesPromotions(): Promise<PromotionGlobalRow[]> {
+  const { data, error } = await supabase
+    .from("promotions")
+    .select("*, salaries(id, nom_prenom, matricule)")
+    .order("date_effet", { ascending: false });
+
+  if (error) {
+    console.error("Erreur listerToutesPromotions:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+export interface SanctionGlobalRow extends SanctionRow {
+  salaries?: {
+    id: number;
+    nom_prenom: string;
+    matricule: string | null;
+  } | null;
+}
+
+export async function listerToutesSanctions(): Promise<SanctionGlobalRow[]> {
+  const { data, error } = await supabase
+    .from("sanctions")
+    .select("*, salaries(id, nom_prenom, matricule)")
+    .order("date_sanction", { ascending: false });
+
+  if (error) {
+    console.error("Erreur listerToutesSanctions:", error.message);
+    return [];
+  }
+  return data ?? [];
 }

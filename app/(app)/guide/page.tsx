@@ -31,6 +31,7 @@ import {
   Folder,
   ChevronDown
 } from "lucide-react";
+import OdooControlPanel from "@/components/odoo/OdooControlPanel";
 
 const IconMap: Record<string, React.ComponentType<any>> = {
   Calculator,
@@ -407,11 +408,15 @@ export default function GuidePage() {
   };
 
   return (
-    <div className="rh-guide-root">
-      <div className="page-header">
-        <h1>Guide RH &amp; Réglementaire</h1>
-        <p>Référentiel complet des Ressources Humaines et de la paie en Algérie</p>
-      </div>
+    <div className="rh-guide-root flex flex-col gap-4">
+      <OdooControlPanel
+        breadcrumbs={[{ label: "Guide RH & Réglementaire" }]}
+        subtitle="Référentiel complet des Ressources Humaines et du droit du travail en Algérie (Loi 90-11 & CIDTA)"
+        secondaryActions={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: "Saisie de paie", href: "/saisie" },
+        ]}
+      />
 
       <div className="stats">
         <div className="stat">
