@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getSalarie, listerBulletinsSalarie } from "../../actions";
 import BulletinRowActions from "./BulletinRowActions";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +28,28 @@ export default async function HistoriquePage({
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title="Journal de paie global"
+        title={`Historique des bulletins — ${salarie.nom_prenom}`}
+        subtitle="Consultation et réédition des bulletins de paie calculés"
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
+          { label: "Historique des bulletins" },
+        ]}
+        primaryAction={
+          <Link href={`/saisie?salarieId=${salarie.id}`}>
+            <Button variant="primary">Calculer la paie</Button>
+          </Link>
+        }
+        secondaryActions={
+          <div className="flex items-center gap-2">
+            <Link href={`/salaries/${salarie.id}`}>
+              <Button variant="secondary">← Fiche Salarié</Button>
+            </Link>
+            <Link href="/historique">
+              <Button variant="secondary">Journal global</Button>
+            </Link>
+          </div>
+        }
       />
 
       {bulletins.length === 0 ? (

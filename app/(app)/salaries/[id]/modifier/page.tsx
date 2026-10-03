@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getSalarie, modifierSalarie } from "../../actions";
 import SalarieForm from "../../salarie-form";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +22,18 @@ export default async function ModifierSalariePage({
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title="Annuler et voir la fiche"
+        title={`Modifier le collaborateur — ${salarie.nom_prenom}`}
+        subtitle="Mise à jour des coordonnées et paramètres contractuels"
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
+          { label: "Modifier la fiche" },
+        ]}
+        secondaryActions={
+          <Link href={`/salaries/${salarie.id}`}>
+            <Button variant="secondary">Annuler et voir la fiche</Button>
+          </Link>
+        }
       />
 
       <SalarieForm

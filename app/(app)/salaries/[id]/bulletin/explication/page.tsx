@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBulletinPourPdf } from "../../../actions";
 import { genererExplicationDonnees, fmtDa, fmtPct, fmtH } from "@/lib/paieExplication";
-
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
@@ -44,28 +45,38 @@ export default async function ExplicationPage({ params, searchParams }: PageProp
 
   return (
     <div className="flex flex-col gap-4 max-w-5xl mx-auto w-full">
-      {/* ODOO CONTROL PANEL */}
       <PageHeader
-        title="Télécharger le PDF d'explication"
-      />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-          ),
-        }}
-        secondaryActions={[
-          {
-            label: "← Retour à l'historique",
-            href: `/salaries/${salarieId}/historique`,
-          },
-          {
-            label: "Fiche salarié",
-            href: `/salaries/${salarieId}`,
-          },
+        title={`Explication du bulletin (${d.moisNom} ${d.annee})`}
+        subtitle={`Salarié : ${d.nom}`}
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: d.nom, href: `/salaries/${salarieId}` },
+          { label: "Historique", href: `/salaries/${salarieId}/historique` },
+          { label: `Explication (${d.moisNom} ${d.annee})` },
         ]}
+        primaryAction={
+          <a
+            href={`/salaries/${salarieId}/bulletin/explication/pdf?annee=${annee}&mois=${mois}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button variant="primary">Télécharger le PDF d'explication</Button>
+          </a>
+        }
+        secondaryActions={
+          <div className="flex items-center gap-2">
+            <Link href={`/salaries/${salarieId}/historique`}>
+              <Button variant="secondary">← Retour à l'historique</Button>
+            </Link>
+            <Link href={`/salaries/${salarieId}`}>
+              <Button variant="secondary">Fiche salarié</Button>
+            </Link>
+          </div>
+        }
       />
 
       {/* Grid d'explication */}
+      
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--s6)" }}>
         
         {/* Section 1: Salaire de base réel */}

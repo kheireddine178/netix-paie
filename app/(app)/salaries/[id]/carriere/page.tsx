@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getSalarie, listerPromotionsSalarie, listerSanctionsSalarie, listerObjectifsSalarie } from "../../actions";
 import CarriereClientPage from "./CarriereClientPage";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +28,23 @@ export default async function Page({ params }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title="Formations"
+        title={`Carrière & Évolution — ${salarie.nom_prenom}`}
+        subtitle="Suivi des promotions, sanctions et objectifs professionnels"
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
+          { label: "Carrière & Discipline" },
+        ]}
+        primaryAction={
+          <Link href={`/saisie?salarieId=${salarie.id}`}>
+            <Button variant="primary">Calculer la paie</Button>
+          </Link>
+        }
+        secondaryActions={
+          <Link href={`/salaries/${salarie.id}`}>
+            <Button variant="secondary">← Fiche Salarié</Button>
+          </Link>
+        }
       />
 
       <CarriereClientPage

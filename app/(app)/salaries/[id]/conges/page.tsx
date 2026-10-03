@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getSalarie, listerCongesSalarie, listerContratsSalarie } from "../../actions";
 import CongesClientPage from "./CongesClientPage";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +25,23 @@ export default async function Page({ params }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title="Formations"
+        title={`Congés & Absences — ${salarie.nom_prenom}`}
+        subtitle="Solde de congés, historique des absences et demandes"
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
+          { label: "Congés & Absences" },
+        ]}
+        primaryAction={
+          <Link href={`/saisie?salarieId=${salarie.id}`}>
+            <Button variant="primary">Calculer la paie</Button>
+          </Link>
+        }
+        secondaryActions={
+          <Link href={`/salaries/${salarie.id}`}>
+            <Button variant="secondary">← Fiche Salarié</Button>
+          </Link>
+        }
       />
 
       <CongesClientPage salarie={salarie} conges={conges} contrats={contrats} />

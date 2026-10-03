@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getSalarie, listerMissionsSalarie } from "../../actions";
 import MissionsClientPage from "./MissionsClientPage";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +24,23 @@ export default async function Page({ params }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title="Formations"
+        title={`Missions & Déplacements — ${salarie.nom_prenom}`}
+        subtitle="Ordres de mission, frais professionnels et indemnités kilométriques"
+        breadcrumbs={[
+          { label: "Collaborateurs", href: "/salaries" },
+          { label: salarie.nom_prenom, href: `/salaries/${salarie.id}` },
+          { label: "Missions & Déplacements" },
+        ]}
+        primaryAction={
+          <Link href={`/saisie?salarieId=${salarie.id}`}>
+            <Button variant="primary">Calculer la paie</Button>
+          </Link>
+        }
+        secondaryActions={
+          <Link href={`/salaries/${salarie.id}`}>
+            <Button variant="secondary">← Fiche Salarié</Button>
+          </Link>
+        }
       />
 
       <MissionsClientPage salarie={salarie} missions={missions} />
