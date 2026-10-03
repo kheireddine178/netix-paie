@@ -718,7 +718,7 @@ export default function SaisieFormulaireConsolide({
             <div className="h-6 w-px bg-[#E2E8F0]" />
             
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={!salarieActive} className="gap-1.5 h-8 text-xs font-medium">
+              <Button variant="secondary" size="sm" onClick={handleExportCSV} disabled={!salarieActive} className="gap-1.5 h-8 text-xs font-medium">
                 <Download className="w-3.5 h-3.5" /> Export
               </Button>
               <div className="relative">
@@ -728,7 +728,7 @@ export default function SaisieFormulaireConsolide({
                   onChange={handleImportCSV}
                   className="absolute inset-0 opacity-0 cursor-pointer w-full"
                 />
-                <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs font-medium" disabled={!salarieActive}>
+                <Button variant="secondary" size="sm" className="gap-1.5 h-8 text-xs font-medium" disabled={!salarieActive}>
                   <Upload className="w-3.5 h-3.5" /> Import
                 </Button>
               </div>
@@ -738,13 +738,13 @@ export default function SaisieFormulaireConsolide({
               <>
                 <div className="h-6 w-px bg-[#E2E8F0]" />
                 <div className="flex items-center gap-1">
-                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={!pagerInfo.prevId} onClick={handlePrevEmployee}>
+                  <Button variant="secondary" size="icon" className="h-8 w-8" disabled={!pagerInfo.prevId} onClick={handlePrevEmployee}>
                     <ArrowLeft className="w-4 h-4" />
                   </Button>
                   <span className="text-xs font-medium text-[#64748B] w-12 text-center">
                     {pagerInfo.current} / {pagerInfo.total}
                   </span>
-                  <Button variant="outline" size="icon" className="h-8 w-8" disabled={!pagerInfo.nextId} onClick={handleNextEmployee}>
+                  <Button variant="secondary" size="icon" className="h-8 w-8" disabled={!pagerInfo.nextId} onClick={handleNextEmployee}>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -844,7 +844,7 @@ export default function SaisieFormulaireConsolide({
                       </div>
                       <div className="flex justify-between items-center pb-2 border-b border-[#E2E8F0] mt-2 text-sm">
                         <span className="text-[#64748B]">Situation familiale</span>
-                        <Badge variant="outline" className="font-medium bg-[#F8FAFC]">
+                        <Badge variant="neutral" className="font-medium bg-[#F8FAFC]">
                           {salarieActive.situation_familiale} {salarieActive.nombre_enfants > 0 ? `(${salarieActive.nombre_enfants})` : ""}
                         </Badge>
                       </div>
@@ -964,7 +964,7 @@ export default function SaisieFormulaireConsolide({
                           </div>
                         </div>
                       ) : (
-                        <Button type="button" variant="outline" size="sm" onClick={() => setIsAddMenuOpen(true)} className="gap-2 h-8">
+                        <Button type="button" variant="secondary" size="sm" onClick={() => setIsAddMenuOpen(true)} className="gap-2 h-8">
                           <Plus className="w-4 h-4" /> Ajouter une rubrique
                         </Button>
                       )}

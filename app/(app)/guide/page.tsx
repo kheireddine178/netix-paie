@@ -416,8 +416,8 @@ export default function GuidePage() {
         subtitle="Référentiel complet des Ressources Humaines et du droit du travail en Algérie (Loi 90-11 & CIDTA)"
         secondaryActions={
           <div className="flex gap-2">
-            <Link href="/salaries"><Button variant="outline">Collaborateurs</Button></Link>
-            <Link href="/saisie"><Button variant="outline">Saisie de paie</Button></Link>
+            <Link href="/salaries"><Button variant="secondary">Collaborateurs</Button></Link>
+            <Link href="/saisie"><Button variant="secondary">Saisie de paie</Button></Link>
           </div>
         }
       />

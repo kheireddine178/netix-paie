@@ -230,7 +230,7 @@ export default function ClotureWizard({
                     <CardTitle className="text-sm">Bulletins de paie</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Button variant="outline" size="sm" className="w-full">
+                    <Button variant="secondary" size="sm" className="w-full">
                       <Printer className="w-4 h-4 mr-2" /> Tout imprimer
                     </Button>
                   </CardContent>
@@ -241,7 +241,7 @@ export default function ClotureWizard({
                   </CardHeader>
                   <CardContent>
                     <Link href={`/rapports`} passHref>
-                      <Button variant="outline" size="sm" className="w-full">
+                      <Button variant="secondary" size="sm" className="w-full">
                         <FileText className="w-4 h-4 mr-2" /> Aller aux déclarations
                       </Button>
                     </Link>

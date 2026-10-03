@@ -170,7 +170,7 @@ export default function GestionAvancesClient() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         <Badge 
-                          variant="outline" 
+                          variant="secondary" 
                           className={\`
                             \${a.statut === "Approuvée" ? "bg-teal-50 text-teal-700 border-teal-200" : ""}
                             \${a.statut === "Rejetée" ? "bg-red-50 text-red-700 border-red-200" : ""}
@@ -193,7 +193,7 @@ export default function GestionAvancesClient() {
                             </Button>
                             <Button
                               type="button"
-                              variant="outline"
+                              variant="secondary"
                               disabled={isPending}
                               onClick={() => handleChangerStatut(a.id, "Rejetée")}
                               className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 gap-1.5 text-xs"

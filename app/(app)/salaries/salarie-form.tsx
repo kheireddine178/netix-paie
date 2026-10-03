@@ -3,7 +3,7 @@
 import React, { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/Card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
+import { Tabs } from "@/components/ui/Tabs";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { User, Briefcase, CreditCard, AlertTriangle, Save, X } from "lucide-react";
@@ -34,6 +34,8 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
   const [salaireBase, setSalaireBase] = useState<number | string>(initialData?.salaire_base_theorique ?? 0);
   const [dateVisiteMedicale, setDateVisiteMedicale] = useState(initialData?.date_visite_medicale ?? "");
   const [ccpRib, setCcpRib] = useState(initialData?.ccp_rib ?? "");
+  
+  const [activeTab, setActiveTab] = useState("poste");
 
   // Format Nom & Prénom on blur (capitalize first letters)
   function handleNameBlur() {
@@ -127,84 +129,83 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
       </Card>
 
       {/* Detailed Tabs */}
-      <Tabs defaultValue="poste" className="w-full">
-        <TabsList className="bg-[#F8FAFC] border border-[#E2E8F0] p-1 w-full justify-start rounded-lg h-auto flex-wrap gap-1 mb-6">
-          <TabsTrigger value="poste" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-[#4F46E5] data-[state=active]:shadow-sm rounded-md py-2 px-4">
-            <Briefcase className="w-4 h-4" /> Contrat & Rémunération
-          </TabsTrigger>
-          <TabsTrigger value="banque" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-[#4F46E5] data-[state=active]:shadow-sm rounded-md py-2 px-4">
-            <CreditCard className="w-4 h-4" /> Banque & Paiement
-          </TabsTrigger>
-        </TabsList>
+      <Tabs 
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        tabs={[
+          { id: "poste", label: "Contrat & Rémunération", icon: <Briefcase className="w-4 h-4" /> },
+          { id: "banque", label: "Banque & Paiement", icon: <CreditCard className="w-4 h-4" /> }
+        ]}
+        className="mb-6"
+      />
 
-        <TabsContent value="poste" className="m-0 focus:outline-none">
-          <Card className="border-[#E2E8F0] shadow-sm">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label htmlFor="matricule" className="text-sm font-semibold text-[#0F172A]">Matricule employé</label>
-                  <Input
-                    id="matricule"
-                    name="matricule"
-                    value={matricule}
-                    onChange={(e) => setMatricule(e.target.value)}
-                    placeholder="Ex: M100"
-                    className="font-mono bg-[#F8FAFC]"
-                  />
-                  <p className="text-xs text-[#64748B]">Identifiant unique interne pour la paie</p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="salaire_base_theorique" className="text-sm font-semibold text-[#0F172A]">Salaire de base contractuel (DA)</label>
-                  <Input
-                    id="salaire_base_theorique"
-                    name="salaire_base_theorique"
-                    type="number"
-                    step="0.01"
-                    value={salaireBase}
-                    onChange={(e) => setSalaireBase(e.target.value)}
-                    placeholder="0.00"
-                    className="font-mono bg-[#F8FAFC]"
-                  />
-                  <p className="text-xs text-[#64748B]">Montant de base légal mensuel</p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label htmlFor="date_visite_medicale" className="text-sm font-semibold text-[#0F172A]">Dernière visite médicale</label>
-                  <Input
-                    id="date_visite_medicale"
-                    name="date_visite_medicale"
-                    type="date"
-                    value={dateVisiteMedicale}
-                    onChange={(e) => setDateVisiteMedicale(e.target.value)}
-                    className="bg-[#F8FAFC]"
-                  />
-                  <p className="text-xs text-[#64748B]">Suivi obligatoire médecine du travail</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="banque" className="m-0 focus:outline-none">
-          <Card className="border-[#E2E8F0] shadow-sm">
-            <CardContent className="p-6">
-              <div className="max-w-md space-y-1.5">
-                <label htmlFor="ccp_rib" className="text-sm font-semibold text-[#0F172A]">Coordonnées bancaires (RIB ou CCP 20 chiffres)</label>
+      {activeTab === "poste" && (
+        <Card className="border-[#E2E8F0] shadow-sm">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label htmlFor="matricule" className="text-sm font-semibold text-[#0F172A]">Matricule employé</label>
                 <Input
-                  id="ccp_rib"
-                  name="ccp_rib"
-                  value={ccpRib}
-                  onChange={(e) => setCcpRib(e.target.value)}
-                  placeholder="Ex: 00799999000000123456"
+                  id="matricule"
+                  name="matricule"
+                  value={matricule}
+                  onChange={(e) => setMatricule(e.target.value)}
+                  placeholder="Ex: M100"
                   className="font-mono bg-[#F8FAFC]"
                 />
-                <p className="text-xs text-[#64748B]">Utilisé pour les états de virement bancaire et chèques de paie</p>
+                <p className="text-xs text-[#64748B]">Identifiant unique interne pour la paie</p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+
+              <div className="space-y-1.5">
+                <label htmlFor="salaire_base_theorique" className="text-sm font-semibold text-[#0F172A]">Salaire de base contractuel (DA)</label>
+                <Input
+                  id="salaire_base_theorique"
+                  name="salaire_base_theorique"
+                  type="number"
+                  step="0.01"
+                  value={salaireBase}
+                  onChange={(e) => setSalaireBase(e.target.value)}
+                  placeholder="0.00"
+                  className="font-mono bg-[#F8FAFC]"
+                />
+                <p className="text-xs text-[#64748B]">Montant de base légal mensuel</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="date_visite_medicale" className="text-sm font-semibold text-[#0F172A]">Dernière visite médicale</label>
+                <Input
+                  id="date_visite_medicale"
+                  name="date_visite_medicale"
+                  type="date"
+                  value={dateVisiteMedicale}
+                  onChange={(e) => setDateVisiteMedicale(e.target.value)}
+                  className="bg-[#F8FAFC]"
+                />
+                <p className="text-xs text-[#64748B]">Suivi obligatoire médecine du travail</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === "banque" && (
+        <Card className="border-[#E2E8F0] shadow-sm">
+          <CardContent className="p-6">
+            <div className="max-w-md space-y-1.5">
+              <label htmlFor="ccp_rib" className="text-sm font-semibold text-[#0F172A]">Coordonnées bancaires (RIB ou CCP 20 chiffres)</label>
+              <Input
+                id="ccp_rib"
+                name="ccp_rib"
+                value={ccpRib}
+                onChange={(e) => setCcpRib(e.target.value)}
+                placeholder="Ex: 00799999000000123456"
+                className="font-mono bg-[#F8FAFC]"
+              />
+              <p className="text-xs text-[#64748B]">Utilisé pour les états de virement bancaire et chèques de paie</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-3 pt-6 border-t border-[#E2E8F0]">
@@ -217,7 +218,7 @@ export default function SalarieForm({ initialData, actionSubmit, buttonText }: S
         </Button>
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           onClick={() => router.back()}
           className="gap-2"
         >
