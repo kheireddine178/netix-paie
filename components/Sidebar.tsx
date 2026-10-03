@@ -1,218 +1,347 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import OdooMobileDrawer from "./odoo/OdooMobileDrawer";
-import OdooAppSwitcher, { IconWaffle } from "./odoo/OdooAppSwitcher";
+import {
+  LayoutDashboard,
+  Users,
+  Wallet,
+  CalendarDays,
+  TrendingUp,
+  BookOpen,
+  Settings,
+  ChevronDown,
+  ChevronRight,
+  LogOut,
+  Shield,
+  UserCheck,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useAuth, UserRole } from "@/lib/authContext";
+import { Badge } from "./ui/Badge";
 
-// Lucide-style inline SVG icons
-export const Icons = {
-  home: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-    </svg>
-  ),
-  users: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-    </svg>
-  ),
-  calculator: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="10" x2="16" y2="14"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/>
-    </svg>
-  ),
-  fileText: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-    </svg>
-  ),
-  calendar: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-    </svg>
-  ),
-  plane: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21 4 19 2c-2-2-4-2-5.5-.5L10 5 1.8 6.2c-.5.1-.9.5-.8 1l.5 2c.1.5.5.9 1 .8L7 9.5 5.4 14 4 15l1 1 1-1.4L9 11l5.5 1.5c.5.1.9.5 1 1l.5 2c.1.5.5.9 1 .8l2-1c.5-.1.9-.5.8-1z"/>
-    </svg>
-  ),
-  trendingUp: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
-    </svg>
-  ),
-  graduation: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
-    </svg>
-  ),
-  barChart: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>
-    </svg>
-  ),
-  list: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
-    </svg>
-  ),
-  clock: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-    </svg>
-  ),
-  book: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-    </svg>
-  ),
-  settings: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-    </svg>
-  ),
-  sun: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-    </svg>
-  ),
-  moon: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-    </svg>
-  ),
-};
+interface NavSubItem {
+  label: string;
+  href: string;
+  adminOnly?: boolean;
+}
 
-export const NAV_ITEMS = [
-  { href: "/dashboard",  label: "Accueil",              icon: Icons.home },
-  { href: "/salaries",   label: "Collaborateurs",        icon: Icons.users },
-  { href: "/saisie",     label: "Saisie mensuelle",      icon: Icons.calculator },
-  { href: "/contrats",   label: "Contrats & Docs",       icon: Icons.fileText },
-  { href: "/conges",     label: "Congés & Absences",     icon: Icons.calendar },
-  { href: "/missions",   label: "Missions & Ordres",     icon: Icons.plane },
-  { href: "/carriere",   label: "Carrière & Discipline", icon: Icons.trendingUp },
-  { href: "/formations", label: "Formations & Talent",   icon: Icons.graduation },
-  { href: "/rapports",   label: "États de Paie",         icon: Icons.barChart },
-  { href: "/rubriques",  label: "Rubriques",             icon: Icons.list },
-  { href: "/historique", label: "Historique",            icon: Icons.clock },
-  { href: "/guide",      label: "Guide RH",              icon: Icons.book },
-  { href: "/parametres", label: "Paramètres",            icon: Icons.settings },
-];
+interface NavGroup {
+  id: string;
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href?: string; // Si route directe (ex: Accueil)
+  items?: NavSubItem[];
+}
 
+/**
+ * Sidebar — Navigation unifiée à 6 entrées groupées Netix SIRH
+ * Règle §4.1 : Réduction de 13 entrées désordonnées à 6 entrées hiérarchiques.
+ * Règle §3.1 : Zéro emoji, icônes Lucide exclusives, sélection Indigo unique.
+ */
 export default function Sidebar() {
   const pathname = usePathname();
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const { user, setRole } = useAuth();
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    equipe: true,
+    paie: true,
+    temps: false,
+    talents: false,
+  });
 
-  useEffect(() => {
-    const current = document.documentElement.getAttribute("data-theme");
-    setTheme(current === "dark" ? "dark" : "light");
-  }, []);
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
 
-  // Global keyboard shortcut Ctrl+K to toggle App Switcher
+  // 6 entrées principales (§4.1)
+  const NAV_TREE: NavGroup[] = [
+    {
+      id: "accueil",
+      title: "Accueil",
+      icon: LayoutDashboard,
+      href: "/dashboard",
+    },
+    {
+      id: "equipe",
+      title: "Équipe",
+      icon: Users,
+      items: [
+        { label: "Collaborateurs", href: "/salaries" },
+        { label: "Contrats & Documents", href: "/contrats" },
+      ],
+    },
+    {
+      id: "paie",
+      title: "Paie",
+      icon: Wallet,
+      items: [
+        { label: "Saisie mensuelle", href: "/saisie" },
+        { label: "Saisie collective", href: "/saisie/collective" },
+        { label: "États & Déclarations", href: "/rapports" },
+        { label: "Rubriques (Admin)", href: "/rubriques", adminOnly: true },
+      ],
+    },
+    {
+      id: "temps",
+      title: "Temps",
+      icon: CalendarDays,
+      items: [
+        { label: "Congés & Absences", href: "/conges" },
+        { label: "Missions & Ordres", href: "/missions" },
+      ],
+    },
+    {
+      id: "talents",
+      title: "Talents",
+      icon: TrendingUp,
+      items: [
+        { label: "Carrière & Discipline", href: "/carriere" },
+        { label: "Formations & Évaluations", href: "/formations" },
+      ],
+    },
+  ];
+
+  // Ouvre automatiquement la section contenant la route courante
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setSwitcherOpen((prev) => !prev);
+    NAV_TREE.forEach((group) => {
+      if (group.items?.some((item) => pathname.startsWith(item.href))) {
+        setOpenGroups((prev) => ({ ...prev, [group.id]: true }));
       }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+    });
+  }, [pathname]);
 
-  function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    document.documentElement.setAttribute("data-theme", next);
-    window.localStorage.setItem("netix-theme", next);
-  }
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
 
   return (
-    <>
-      {/* Mobile Drawer (Only active on small viewports) */}
-      <OdooMobileDrawer
-        navItems={NAV_ITEMS}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-        onOpenSwitcher={() => setSwitcherOpen(true)}
-      />
-
-      {/* Desktop Sidebar (Hidden on mobile via CSS) */}
-      <aside className="sidebar odoo-desktop-sidebar">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px 0 0", borderBottom: "1px solid var(--border)" }}>
-          <Link href="/" className="brand" style={{ borderBottom: "none", flex: 1, padding: "16px 12px" }}>
-            <div className="brand-mark">
-              <Image src="/logo-icon.svg" alt="Netix" width={32} height={32} priority />
+    <aside className="w-64 h-screen shrink-0 bg-white border-r border-[#E2E8F0] flex flex-col justify-between select-none sticky top-0 hidden md:flex">
+      {/* 1. BRAND HEADER */}
+      <div className="flex flex-col">
+        <div className="p-4 border-b border-[#F1F5F9] flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#4F46E5] flex items-center justify-center text-white font-extrabold text-base shadow-xs">
+              N
             </div>
-            <div className="brand-text">
-              <strong>Netix SIRH</strong>
-              <span>Algérie</span>
+            <div className="flex flex-col">
+              <span className="font-extrabold text-sm tracking-tight text-[#0F172A] leading-tight">
+                NETIX SIRH
+              </span>
+              <span className="text-[10px] text-[#64748B] font-semibold tracking-wider uppercase">
+                Paie &amp; RH Algérie
+              </span>
             </div>
           </Link>
-
-          <button
-            type="button"
-            onClick={() => setSwitcherOpen(true)}
-            title="Applications Odoo (Ctrl+K)"
-            aria-label="Ouvrir la grille des applications Odoo"
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-all text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800"
-            style={{ cursor: "pointer", border: "1px solid transparent" }}
-          >
-            <IconWaffle size={18} />
-          </button>
         </div>
 
-        <nav style={{ padding: "12px 0", flex: 1 }}>
-          {NAV_ITEMS.map((item) => {
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname === item.href || pathname.startsWith(item.href + "/");
+        {/* 2. NAVIGATION ARBORESCENTE À 6 ENTRÉES */}
+        <nav className="p-3 flex flex-col gap-1 overflow-y-auto max-h-[calc(100vh-175px)]">
+          {NAV_TREE.map((group) => {
+            const Icon = group.icon;
+
+            // Entrée de premier niveau directe (Accueil)
+            if (group.href) {
+              const isActive = pathname === group.href;
+              return (
+                <Link
+                  key={group.id}
+                  href={group.href}
+                  className={cn(
+                    "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all",
+                    isActive
+                      ? "bg-[#EEF2FF] text-[#4F46E5]"
+                      : "text-[#334155] hover:bg-[#F8FAFC] hover:text-[#0F172A]"
+                  )}
+                >
+                  <Icon className={cn("w-4 h-4", isActive ? "text-[#4F46E5]" : "text-[#64748B]")} />
+                  <span>{group.title}</span>
+                </Link>
+              );
+            }
+
+            // Groupe avec sous-menu repliable
+            const isOpen = openGroups[group.id];
+            const hasActiveChild = group.items?.some((i) => pathname.startsWith(i.href));
+
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`nav-link${isActive ? " active" : ""}`}
-                aria-label={item.label}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </Link>
+              <div key={group.id} className="flex flex-col">
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.id)}
+                  className={cn(
+                    "flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer",
+                    hasActiveChild && !isOpen
+                      ? "text-[#4F46E5] bg-[#EEF2FF]/60"
+                      : "text-[#334155] hover:bg-[#F8FAFC] hover:text-[#0F172A]"
+                  )}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={cn("w-4 h-4", hasActiveChild ? "text-[#4F46E5]" : "text-[#64748B]")} />
+                    <span>{group.title}</span>
+                  </div>
+                  {isOpen ? (
+                    <ChevronDown className="w-3.5 h-3.5 text-[#94A3B8]" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8]" />
+                  )}
+                </button>
+
+                {isOpen && (
+                  <div className="pl-6 pr-1 pt-1 pb-1 flex flex-col gap-0.5">
+                    {group.items?.map((item) => {
+                      if (item.adminOnly && user.role !== "admin") return null;
+                      const isItemActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={cn(
+                            "flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors",
+                            isItemActive
+                              ? "bg-[#EEF2FF] text-[#4F46E5] font-semibold"
+                              : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]"
+                          )}
+                        >
+                          <span className="truncate">{item.label}</span>
+                          {item.adminOnly && (
+                            <span className="text-[9px] bg-[#F1F5F9] text-[#64748B] px-1 py-0.2 rounded font-bold uppercase">
+                              Admin
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
+      </div>
 
-        <button
-          type="button"
-          onClick={toggleTheme}
-          aria-label={theme === "dark" ? "Activer le thème clair" : "Activer le thème sombre"}
-          className="theme-toggle"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            margin: "0 12px 16px",
-            padding: "10px 12px",
-            borderRadius: "8px",
-            border: "1px solid var(--border)",
-            background: "var(--surface-2)",
-            color: "var(--text)",
-            fontSize: "13px",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
+      {/* 3. PIED DE MENU FIXE (§4.1) */}
+      <div className="p-3 border-t border-[#F1F5F9] flex flex-col gap-1 bg-white">
+        <Link
+          href="/guide"
+          className={cn(
+            "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+            pathname === "/guide"
+              ? "bg-[#EEF2FF] text-[#4F46E5] font-semibold"
+              : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]"
+          )}
         >
-          {theme === "dark" ? Icons.sun : Icons.moon}
-          <span className="theme-label">{theme === "dark" ? "Thème clair" : "Thème sombre"}</span>
-        </button>
-      </aside>
+          <BookOpen className="w-4 h-4 text-[#64748B]" />
+          <span>Guide RH (Loi 90-11)</span>
+        </Link>
 
-      {/* Odoo App Switcher Overlay (9-Dots Grid) */}
-      <OdooAppSwitcher isOpen={switcherOpen} onClose={() => setSwitcherOpen(false)} />
-    </>
+        <Link
+          href="/parametres"
+          className={cn(
+            "flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+            pathname === "/parametres"
+              ? "bg-[#EEF2FF] text-[#4F46E5] font-semibold"
+              : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]"
+          )}
+        >
+          <Settings className="w-4 h-4 text-[#64748B]" />
+          <span>Paramètres</span>
+        </Link>
+
+        {/* Profil de session & sélecteur de rôle (§6) */}
+        <div className="mt-2 pt-2 border-t border-[#F1F5F9] flex items-center justify-between">
+          <div
+            onClick={() => setRoleModalOpen(true)}
+            className="flex items-center gap-2 overflow-hidden cursor-pointer hover:opacity-85 p-1 rounded transition-opacity"
+            title="Cliquez pour changer de rôle métier"
+          >
+            <div className="w-7 h-7 rounded-full bg-[#EEF2FF] border border-[#E0E7FF] text-[#4F46E5] flex items-center justify-center font-bold text-xs shrink-0">
+              {user.nom.charAt(0)}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs font-semibold text-[#0F172A] truncate leading-tight">
+                {user.nom}
+              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-[#64748B] capitalize truncate">
+                  {user.role}
+                </span>
+                <span className="text-[9px] text-[#4F46E5] underline">changer</span>
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/"
+            title="Retour au portail"
+            className="text-[#94A3B8] hover:text-[#0F172A] p-1.5 rounded-md hover:bg-[#F1F5F9] transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+
+      {/* Modal Sélecteur de rôle (§6) */}
+      {roleModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+          onClick={() => setRoleModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-lg border border-[#E2E8F0] shadow-xl p-5 max-w-sm w-full text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Shield className="w-5 h-5 text-[#4F46E5]" />
+              <h3 className="text-sm font-bold text-[#0F172A]">
+                Sélection du Rôle Métier (§6)
+              </h3>
+            </div>
+            <p className="text-xs text-[#64748B] mb-4">
+              Testez l&apos;interface selon les profils d&apos;habilitation définis dans le cahier des charges :
+            </p>
+
+            <div className="flex flex-col gap-2">
+              {[
+                { r: "admin", label: "Administrateur", desc: "Accès intégral, rubriques, barèmes" },
+                { r: "rh", label: "Gestionnaire RH / Paie", desc: "Collaborateurs, paie, contrats, congés" },
+                { r: "manager", label: "Manager d'équipe", desc: "Validation congés/missions, consultation équipe" },
+                { r: "direction", label: "Direction Générale", desc: "Tableau de bord et masse salariale (lecture)" },
+                { r: "salarie", label: "Salarié", desc: "Portail collaborateur individuel" },
+              ].map((item) => (
+                <button
+                  key={item.r}
+                  type="button"
+                  onClick={() => {
+                    setRole(item.r as UserRole);
+                    setRoleModalOpen(false);
+                  }}
+                  className={cn(
+                    "flex flex-col p-2.5 rounded-lg border text-left transition-all cursor-pointer",
+                    user.role === item.r
+                      ? "border-[#4F46E5] bg-[#EEF2FF]"
+                      : "border-[#E2E8F0] hover:bg-[#F8FAFC]"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#0F172A]">{item.label}</span>
+                    {user.role === item.r && <Badge variant="brand" size="sm">Actif</Badge>}
+                  </div>
+                  <span className="text-[11px] text-[#64748B] mt-0.5">{item.desc}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setRoleModalOpen(false)}
+                className="text-xs text-[#64748B] hover:text-[#0F172A] font-semibold px-3 py-1.5"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </aside>
   );
 }

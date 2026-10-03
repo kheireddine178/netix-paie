@@ -12,32 +12,30 @@ import {
   ChevronRight,
   CheckCircle2,
   Sparkles,
+  ShieldCheck,
+  Layers,
 } from "lucide-react";
 
 const CORE_PILLARS = [
   {
     icon: Users,
-    title: "Gestion des Salariés",
+    title: "Gestion des Collaborateurs",
     desc: "Un annuaire unifié pour centraliser les coordonnées, fiches de poste, dossiers administratifs et coordonnées bancaires de vos équipes.",
-    color: "var(--odoo-purple, #714B67)",
   },
   {
     icon: CreditCard,
     title: "Calcul Automatique de la Paie",
-    desc: "Saisissez les primes et absences, le système calcule instantanément le Brut, les cotisations CNAS et l'IRG avec édition des bulletins PDF.",
-    color: "var(--odoo-teal, #017E84)",
+    desc: "Saisissez les primes et absences, le moteur certifié calcule instantanément le Brut, les cotisations CNAS (9%/26%) et l'IRG avec édition des bulletins PDF.",
   },
   {
     icon: Calendar,
     title: "Congés & Absences",
     desc: "Gérez les demandes de congés légaux (loi 90-11), validez en un clic et synchronisez automatiquement les déductions sur la paie du mois.",
-    color: "var(--amber, #D97706)",
   },
   {
     icon: FileText,
     title: "Contrats & Documents RH",
-    desc: "Suivez les contrats CDI/CDD, éditez les attestations d'emploi, procès-verbaux d'installation et ordres de mission officiels.",
-    color: "#2563EB",
+    desc: "Suivez les contrats CDI/CDD, éditez les attestations d'emploi, procès-verbaux d'installation et certificats de travail officiels.",
   },
 ];
 
@@ -53,7 +51,7 @@ const SIRH_MODULES = [
     desc: "Moteur de calcul en temps réel, gestion des rubriques et impression des fiches de paie." 
   },
   { 
-    title: "Contrats & Core RH", 
+    title: "Contrats & Documents", 
     icon: FileText, 
     desc: "Suivi des dates d'échéance, périodes d'essai, avenants et pièces jointes." 
   },
@@ -86,30 +84,46 @@ const SIRH_MODULES = [
 
 export default function LandingPage() {
   return (
-    <div className="landing min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
-      {/* 1. HERO SECTION ODOO ENTERPRISE */}
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC] text-[#0F172A]">
+      {/* 1. HERO SECTION NETIX SIRH */}
       <header
-        className="landing-hero relative overflow-hidden text-white"
+        className="relative overflow-hidden text-white bg-[#0F172A]"
         style={{
-          background: "linear-gradient(135deg, #2D1A27 0%, #462D3F 45%, #714B67 100%)",
-          padding: "3rem 1.5rem 5rem",
+          background: "radial-gradient(ellipse at top, #1E1B4B 0%, #0F172A 100%)",
+          padding: "2.5rem 1.5rem 5rem",
         }}
       >
         {/* Navigation supérieure */}
         <nav className="max-w-6xl mx-auto flex items-center justify-between gap-4 mb-16">
           <div className="flex items-center gap-3">
-            <Image src="/logo.svg" alt="Netix SIRH" width={140} height={38} priority />
+            <div className="w-9 h-9 rounded-lg bg-[#4F46E5] flex items-center justify-center text-white font-extrabold text-lg shadow-sm">
+              N
+            </div>
+            <div className="flex flex-col">
+              <span className="font-extrabold text-base tracking-tight text-white leading-tight">
+                NETIX SIRH
+              </span>
+              <span className="text-[10px] text-indigo-300 font-medium tracking-wider uppercase">
+                Système RH &amp; Paie Algérie
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <Link
+              href="/design"
+              className="text-xs font-semibold px-3 py-2 rounded-lg text-indigo-200 hover:text-white transition-colors"
+            >
+              Design System
+            </Link>
+            <Link
               href="/portail"
-              className="text-xs font-semibold px-3 py-2 rounded-lg text-purple-100 hover:text-white transition-colors"
+              className="text-xs font-semibold px-3 py-2 rounded-lg text-indigo-200 hover:text-white transition-colors"
             >
               Espace Salarié
             </Link>
             <Link
               href="/dashboard"
-              className="text-xs font-bold px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white backdrop-blur-xs transition-all border border-white/20"
+              className="text-xs font-bold px-4 py-2 rounded-lg bg-[#4F46E5] hover:bg-[#4338CA] text-white transition-all shadow-sm"
             >
               Accéder au SIRH →
             </Link>
@@ -119,69 +133,69 @@ export default function LandingPage() {
         {/* Contenu principal du Hero */}
         <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
           {/* Eyebrow badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/10 text-purple-100 border border-white/20 mb-6 backdrop-blur-xs">
-            <Sparkles size={14} className="text-amber-300" />
-            <span>Système d&apos;Information Ressources Humaines &amp; Paie Algérie</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/10 text-indigo-200 border border-white/15 mb-6 backdrop-blur-xs">
+            <Sparkles size={14} className="text-indigo-400" />
+            <span>Conformité Loi 90-11 • Barème IRG 2024 • CNAS 9% / 26%</span>
           </div>
 
-          {/* Titre simple et percutant */}
+          {/* Titre percutant */}
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-6">
-            Le SIRH moderne qui simplifie vos équipes et{" "}
-            <span style={{ color: "#2DD4BF" }}>automatise votre paie</span>.
+            Le SIRH moderne qui unifie vos équipes et{" "}
+            <span className="text-indigo-400">automatise votre paie</span>.
           </h1>
 
-          {/* Description claire et accessible */}
-          <p className="text-base sm:text-lg text-purple-100/90 max-w-2xl mx-auto leading-relaxed mb-10">
-            Netix regroupe toute l&apos;ergonomie d&apos;Odoo Enterprise pour piloter vos collaborateurs, éditer vos bulletins de salaire conformes à la loi 90-11 et centraliser vos déclarations.
+          {/* Description */}
+          <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed mb-10">
+            Netix centralise la gestion de vos collaborateurs, sécurise l&apos;émission de vos bulletins de paie algériens et simplifie toutes vos obligations déclaratives.
           </p>
 
           {/* Boutons d'appel à l'action */}
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl font-bold text-sm bg-white text-purple-950 shadow-xl hover:bg-purple-50 transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-lg font-bold text-sm bg-[#4F46E5] text-white shadow-lg hover:bg-[#4338CA] transition-all hover:-translate-y-0.5"
             >
-              <span>Ouvrir l&apos;application</span>
-              <ChevronRight size={16} className="text-purple-700" />
+              <span>Ouvrir le Tableau de Bord</span>
+              <ChevronRight size={16} />
             </Link>
 
             <Link
               href="/saisie"
-              className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-xs transition-all"
+              className="inline-flex items-center gap-2 px-5 py-3.5 rounded-lg font-semibold text-sm bg-white/10 hover:bg-white/15 text-white border border-white/20 backdrop-blur-xs transition-all"
             >
               <span>Calculer une fiche de paie</span>
             </Link>
           </div>
 
           {/* 3 Promesses clés */}
-          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 mt-12 pt-8 border-t border-white/15 text-xs font-medium text-purple-100">
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 mt-12 pt-8 border-t border-white/10 text-xs font-medium text-slate-300">
             <div className="flex items-center gap-2">
               <CheckCircle2 size={16} className="text-emerald-400" />
-              <span>Gestion complète des salariés</span>
+              <span>Dossier collaborateur unique &amp; complet</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 size={16} className="text-emerald-400" />
-              <span>Calcul de paie en temps réel (Loi 90-11)</span>
+              <span>Moteur de paie certifié (Loi 90-11 &amp; CIDTA)</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 size={16} className="text-emerald-400" />
-              <span>Bulletins &amp; Virements prêts à l&apos;emploi</span>
+              <span>Bordereaux CNAS &amp; Déclarations prêtes</span>
             </div>
           </div>
         </div>
       </header>
 
-      {/* 2. CE QUE FAIT NETIX : LES 4 PILIERS */}
+      {/* 2. LES 4 PILIERS DE NETIX */}
       <section className="max-w-6xl mx-auto px-4 py-16 w-full">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs font-bold uppercase tracking-wider block mb-2" style={{ color: "var(--accent)" }}>
-            Fonctionnalités Clés
+          <span className="text-xs font-bold uppercase tracking-wider text-[#4F46E5] block mb-2">
+            Fonctionnalités Majeures
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: "var(--text)" }}>
-            Tout ce dont vous avez besoin pour gérer vos ressources humaines
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A]">
+            Tout ce dont votre direction RH a besoin au quotidien
           </h2>
-          <p className="text-sm text-muted-foreground mt-3">
-            Fini les fichiers Excel dispersés et les calculs manuels fastidieux : Netix regroupe l&apos;essentiel au même endroit.
+          <p className="text-sm text-[#64748B] mt-3">
+            Fini les fichiers Excel dispersés et les risques d&apos;erreur de formule : Netix SIRH garantit l&apos;intégrité de vos données sociales.
           </p>
         </div>
 
@@ -191,25 +205,14 @@ export default function LandingPage() {
             return (
               <div
                 key={p.title}
-                className="p-6 rounded-2xl border transition-all duration-150 hover:shadow-lg hover:-translate-y-0.5 flex flex-col justify-between"
-                style={{
-                  background: "var(--surface)",
-                  borderColor: "var(--border)",
-                }}
+                className="p-6 rounded-lg border border-[#E2E8F0] bg-white shadow-[0_1px_2px_rgba(15,23,42,0.06)] transition-all duration-150 hover:border-[#CBD5E1] flex flex-col justify-between"
               >
                 <div>
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 text-white shadow-sm"
-                    style={{ background: p.color }}
-                  >
-                    <Icon size={24} />
+                  <div className="w-10 h-10 rounded-lg bg-[#EEF2FF] border border-[#E0E7FF] text-[#4F46E5] flex items-center justify-center mb-4">
+                    <Icon size={20} strokeWidth={1.75} />
                   </div>
-                  <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>
-                    {p.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    {p.desc}
-                  </p>
+                  <h3 className="text-base font-bold text-[#0F172A] mb-2">{p.title}</h3>
+                  <p className="text-xs text-[#64748B] leading-relaxed">{p.desc}</p>
                 </div>
               </div>
             );
@@ -217,16 +220,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 3. L'ENSEMBLE DES MODULES DISPONIBLES */}
-      <section className="py-14 border-t" style={{ background: "var(--surface-2)", borderColor: "var(--border)" }}>
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center max-w-xl mx-auto mb-10">
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: "var(--text)" }}>
-              Une suite RH modulaire et complète
+      {/* 3. TOUS LES MODULES DU SIRH */}
+      <section className="bg-white border-t border-b border-[#E2E8F0] py-16">
+        <div className="max-w-6xl mx-auto px-4 w-full">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#4F46E5] block mb-2">
+              Architecture Complète
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0F172A]">
+              Une plateforme unifiée, de l&apos;embauche au départ
             </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-2">
-              Chaque module s&apos;intègre automatiquement pour vous faire gagner du temps chaque jour.
-            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -235,24 +238,13 @@ export default function LandingPage() {
               return (
                 <div
                   key={m.title}
-                  className="p-4 rounded-xl border flex flex-col gap-2.5 transition-all hover:bg-white hover:shadow-md"
-                  style={{
-                    background: "var(--surface)",
-                    borderColor: "var(--border)",
-                  }}
+                  className="p-4 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] flex flex-col gap-2 hover:bg-white transition-colors"
                 >
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: "var(--accent-bg)", color: "var(--accent)" }}
-                  >
-                    <Icon size={18} />
+                  <div className="w-8 h-8 rounded-md bg-white border border-[#E2E8F0] text-[#4F46E5] flex items-center justify-center shrink-0">
+                    <Icon size={16} strokeWidth={1.75} />
                   </div>
-                  <h3 className="text-sm font-bold m-0" style={{ color: "var(--text)" }}>
-                    {m.title}
-                  </h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed m-0">
-                    {m.desc}
-                  </p>
+                  <h4 className="text-xs font-bold text-[#0F172A]">{m.title}</h4>
+                  <p className="text-[11px] text-[#64748B] leading-relaxed">{m.desc}</p>
                 </div>
               );
             })}
@@ -260,31 +252,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 4. APPEL À L'ACTION FINAL (CTA) */}
-      <section className="py-16 text-center max-w-3xl mx-auto px-4">
-        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-4" style={{ color: "var(--text)" }}>
-          Prêt à piloter votre entreprise avec Netix ?
-        </h2>
-        <p className="text-sm text-muted-foreground mb-8 max-w-lg mx-auto">
-          Accédez directement à votre espace de travail pour ajouter vos collaborateurs et éditer vos premières fiches de paie.
-        </p>
-        <Link
-          href="/dashboard"
-          className="btn btn-primary inline-flex items-center gap-2 text-sm font-bold px-6 py-3.5 rounded-xl shadow-lg hover:-translate-y-0.5 transition-transform"
-        >
-          <span>Accéder au Tableau de Bord</span>
-          <ChevronRight size={16} />
-        </Link>
-      </section>
-
-      {/* FOOTER ÉPURÉ */}
-      <footer
-        className="mt-auto py-6 border-t text-center text-xs text-muted-foreground"
-        style={{ borderColor: "var(--border)", background: "var(--surface)" }}
-      >
-        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span>Netix SIRH — Plateforme de gestion des Ressources Humaines &amp; Paie</span>
-          <span className="font-medium">Créé par Kharrouby Kheireddine</span>
+      {/* 4. FOOTER SOBRE */}
+      <footer className="py-8 text-center text-xs text-[#64748B]">
+        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[#0F172A]">NETIX SIRH</span>
+            <span>•</span>
+            <span>Version 1.0 (Conforme Loi 90-11)</span>
+          </div>
+          <div>Created by Kharrouby Kheireddine</div>
         </div>
       </footer>
     </div>
