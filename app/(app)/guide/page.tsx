@@ -411,13 +411,15 @@ export default function GuidePage() {
 
   return (
     <div className="rh-guide-root flex flex-col gap-4">
-      <OdooControlPanel
-        breadcrumbs={[{ label: "Guide RH & Réglementaire" }]}
+      <PageHeader
+        title="Guide RH & Réglementaire"
         subtitle="Référentiel complet des Ressources Humaines et du droit du travail en Algérie (Loi 90-11 & CIDTA)"
-        secondaryActions={[
-          { label: "Collaborateurs", href: "/salaries" },
-          { label: "Saisie de paie", href: "/saisie" },
-        ]}
+        secondaryActions={
+          <div className="flex gap-2">
+            <Link href="/salaries"><Button variant="outline">Collaborateurs</Button></Link>
+            <Link href="/saisie"><Button variant="outline">Saisie de paie</Button></Link>
+          </div>
+        }
       />
 
       <div className="stats">
