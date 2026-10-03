@@ -103,9 +103,11 @@ export default function JournalBulletinsClient({ bulletins, salaries }: Props) {
             href: "/salaries",
           },
         ]}
-        searchPlaceholder="Rechercher par salarié ou matricule…"
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
+        search={{
+          value: searchQuery,
+          onChange: setSearchQuery,
+          placeholder: "Rechercher par salarié ou matricule…",
+        }}
       />
 
       {/* 2. BARRE DE FILTRES ODOO & PERIODE */}

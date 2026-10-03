@@ -156,9 +156,11 @@ export default function FormationsViewClient({
             href: "/salaries",
           },
         ]}
-        searchPlaceholder="Rechercher par collaborateur, matricule, formation…"
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
+        search={{
+          value: searchQuery,
+          onChange: setSearchQuery,
+          placeholder: "Rechercher par collaborateur, matricule, formation…",
+        }}
       />
 
       {/* 2. KPI RIBBON ODOO */}
