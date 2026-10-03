@@ -1,59 +1,53 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Netix Paie — Design System (porté depuis l'app Python v8)
-   Marine × Teal Sauge × Ambre
+   NETIX SIRH — Design System Unifié (§3.2 NETIX_VISION_REFONTE)
+   Couleur de marque UNIQUE : Indigo (#4F46E5)
+   Zéro couleur par module • Typographie Geist / DM Sans • Tabular nums
    ============================================================ */
 
 :root {
-  /* ============================================================
-     Odoo 17/18 Enterprise Signature Design Tokens
-     Pourpre Odoo (#714B67) × Teal Odoo (#017E84) × Gris Feutré
-     ============================================================ */
-  --bg:          #F8F9FA; /* Fond de page gris feutré Odoo */
-  --surface:     #FFFFFF; /* Fond cartes et formulaires blanc pur */
-  --surface-2:   #F1F3F5; /* Surfaces secondaires et en-têtes de tableau */
-  --sidebar-bg:  #FFFFFF;
-  --border:      #E5E7EB; /* Bordures ultra-fines 1px */
-  --border-soft: #F1F3F5;
-  --text:        #212529; /* Noir adouci Odoo */
-  --text-2:      #374151;
-  --text-muted:  #6C757D; /* Gris typique Odoo */
+  /* Marque : UNE seule couleur (§3.2) */
+  --brand-50:  #EEF2FF;
+  --brand-100: #E0E7FF;
+  --brand-500: #6366F1;
+  --brand-600: #4F46E5;   /* Principale : boutons, liens, état actif */
+  --brand-700: #4338CA;   /* Hover */
 
-  --odoo-purple:       #714B67; /* Pourpre officiel Odoo Enterprise */
-  --odoo-purple-hover: #5A3B52;
-  --odoo-purple-light: #F5EDF2;
-  --odoo-purple-ink:   #462D3F;
+  /* Neutres : tout le reste de l'interface (§3.2) */
+  --bg:          #F8FAFC;  /* Fond de page gris feutré */
+  --surface:     #FFFFFF;  /* Cartes, formulaires, tableaux */
+  --surface-2:   #F1F5F9;  /* Surfaces secondaires, en-têtes */
+  --sidebar-bg:  #FFFFFF;  /* Sidebar épurée */
+  --border:      #E2E8F0;  /* Bordures ultra-fines 1px */
+  --border-soft: #F1F5F9;
+  --text:        #0F172A;  /* Texte principal contrasté */
+  --text-2:      #334155;
+  --text-muted:  #64748B;  /* Texte secondaire */
+  --text-light:  #94A3B8;
 
-  --odoo-teal:         #017E84; /* Vert d'action Odoo */
-  --odoo-teal-hover:   #006B70;
-  --odoo-teal-light:   #E6F4F4;
-  --odoo-teal-ink:     #005357;
+  /* Sémantiques : usage STRICT, uniquement pour un statut (§3.2) */
+  --success:        #16A34A;  /* Validé, payé, conforme */
+  --success-bg:     #F0FDF4;
+  --success-text:   #15803D;
+  --success-border: #BBF7D0;
 
-  --accent:       #714B67; /* Pourpre Odoo */
-  --accent-ink:   #462D3F;
-  --accent-bg:    #F5EDF2;
-  --accent-light: #FAF7F9;
+  --warning:        #D97706;  /* À surveiller, échéance proche */
+  --warning-bg:     #FFFBEB;
+  --warning-text:   #B45309;
+  --warning-border: #FDE68A;
 
-  --teal:     #017E84; /* Teal Odoo */
-  --teal-bg:  #E6F4F4;
-  --teal-ink: #005357;
+  --danger:         #DC2626;  /* Erreur, retard, suppression */
+  --danger-bg:      #FEF2F2;
+  --danger-text:    #B91C1C;
+  --danger-border:  #FECACA;
 
-  --amber:    #D97706; /* Ambre chaleureux Odoo */
-  --amber-bg: #FEF3C7;
+  --neutral-bg:     #F1F5F9;
+  --neutral-text:   #475569;
+  --neutral-border: #E2E8F0;
 
-  --red-700: #991B1B;
-  --red-600: #DC2626;
-  --red-200: #FECACA;
-  --red-100: #FEF2F2;
-
-  --green-700: #065F46;
-  --green-600: #017E84;
-  --green-200: #A7F3D0;
-  --green-100: #E6F4F4;
-
-  /* Typographie HRFlow */
-  --font: var(--font-dmsans), "Segoe UI", sans-serif;
+  /* Typographie & Chiffres (§3.3) */
+  --font: var(--font-dmsans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: var(--font-lexend), "DM Sans", sans-serif;
   --mono: var(--font-roboto-mono), monospace;
 
@@ -66,48 +60,56 @@
   --txl:  24px;
   --t2xl: 32px;
 
-  /* HRFlow Spacing */
+  /* Espacement base 4px (§3.4) */
   --s1: 4px;  --s2: 8px;  --s3: 12px;  --s4: 16px;
   --s5: 24px; --s6: 32px; --s8: 48px;  --s10: 64px;
 
-  /* HRFlow Border Radius */
-  --rsm: 4px;
-  --r:   8px;
-  --rlg: 12px;
-  --rxl: 16px;
-  --rfull: 9999px;
+  /* Rayons (§3.4) */
+  --rsm: 6px;       /* Badges */
+  --r:   8px;       /* Cartes, champs */
+  --rlg: 10px;
+  --rxl: 12px;
+  --rfull: 9999px;  /* Pastilles */
 
-  /* HRFlow Elevation */
-  --shxs: 0 1px 2px rgba(0,0,0,.05);
-  --shsm: 0 2px 8px rgba(0,0,0,.08);
-  --sh:   0 4px 16px rgba(0,0,0,.10);
-  --shmd: 0 8px 24px rgba(0,0,0,.12);
-  --shlg: 0 16px 32px rgba(0,0,0,.14);
+  /* Ombre unique (§3.4) : 0 1px 2px rgba(15,23,42,.06) */
+  --shxs: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shsm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --sh:   0 1px 2px rgba(15, 23, 42, 0.06);
+  --shmd: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shlg: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
 
   --sidebar-w: 260px;
   --hairline: 1px solid var(--border-soft);
 
   --background: var(--bg);
   --foreground: var(--text);
-}
 
-:root[data-theme="dark"] {
-  --bg:          #111827;
-  --surface:     #1F2937;
-  --surface-2:   #273344;
-  --sidebar-bg:  #1F2937;
-  --border:      #374151;
-  --border-soft: #252F3F;
-  --text:        #F9FAFB;
-  --text-2:      #E5E7EB;
-  --text-muted:  #9CA3AF;
+  /* Rétrocompatibilité unifiée : conversion de tous les anciens accents Odoo vers l'Indigo unifié */
+  --accent:            var(--brand-600);
+  --accent-ink:        var(--brand-700);
+  --accent-bg:         var(--brand-50);
+  --accent-light:      var(--brand-100);
 
-  --accent-bg:    #3B2233;
-  --accent-ink:   #F3E8EE;
-  --accent-light: #2D1A27;
+  --odoo-purple:       var(--brand-600);
+  --odoo-purple-hover: var(--brand-700);
+  --odoo-purple-light: var(--brand-50);
+  --odoo-purple-ink:   var(--brand-700);
 
-  --odoo-purple-light: #3B2233;
-  --odoo-teal-light:   #063D3F;
+  --odoo-teal:         var(--brand-600);
+  --odoo-teal-hover:   var(--brand-700);
+  --odoo-teal-light:   var(--brand-50);
+  --odoo-teal-ink:     var(--brand-700);
+
+  --teal:              var(--brand-600);
+  --teal-bg:           var(--brand-50);
+  --teal-ink:          var(--brand-700);
+  --teal-600:          var(--brand-600);
+  --teal-700:          var(--brand-700);
+  --teal-900:          var(--brand-700);
+
+  --marine-900:        var(--text);
+  --marine-500:        var(--brand-600);
+  --marine-100:        var(--brand-50);
 }
 
 
@@ -115,8 +117,41 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border-subtle: var(--border);
+  --color-text-main: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
   --font-sans: var(--font);
   --font-mono: var(--mono);
+}
+
+/* ============================================================
+   UTILITAIRES TYPOGRAPHIQUES & PAIE (§3.3)
+   ============================================================ */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.amount-da {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.max-content-width {
+  max-width: var(--content-max-w);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ============================================================
