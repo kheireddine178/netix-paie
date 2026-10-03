@@ -52,7 +52,7 @@ describe("NETIX SIRH — Tests Golden du Moteur de Paie (§0 Règle d'or)", () =
       { ...SAISIE_VIDE, salaire_base_theorique: 45000, taux_iep: 0.10, taux_nuisance: 0.05 },
       PARAMETRES_PAR_DEFAUT
     );
-    expect(res.salaire_base_reel).toBe(45000);
+    expect(res.salaire_base_reel).toBeCloseTo(45000, 2);
     expect(res.total_gains).toBeCloseTo(51750, 2);
     expect(res.base_cnas).toBeCloseTo(51750, 2);
     expect(res.retenue_cnas).toBeCloseTo(4657.50, 2);

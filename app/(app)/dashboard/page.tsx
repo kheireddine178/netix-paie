@@ -77,7 +77,7 @@ export default async function DashboardPage() {
           id: `no-contract-${s.id}`,
           type: "contrat",
           titre: "Collaborateur actif sans contrat enregistré",
-          salarieNom: `${s.nom} ${s.prenom || ""}`.trim(),
+          salarieNom: s.nom_prenom,
           salarieId: s.id,
           echeanceOuStatut: "Non conforme",
           urgence: "danger",
@@ -99,7 +99,7 @@ export default async function DashboardPage() {
           id: `cdd-${c.id}`,
           type: "cdd",
           titre: `Échéance de CDD (${joursRestants} jours restants)`,
-          salarieNom: c.salarie ? `${c.salarie.nom} ${c.salarie.prenom || ""}`.trim() : `Salarié #${c.salarie_id}`,
+          salarieNom: c.salarie ? c.salarie.nom_prenom : `Salarié #${c.salarie_id}`,
           salarieId: c.salarie_id,
           echeanceOuStatut: formatDateFR(c.date_fin),
           urgence,
@@ -110,14 +110,14 @@ export default async function DashboardPage() {
     }
   });
 
-  // 3. Dossiers incomplets (absence de numéro de sécurité sociale ou RIB)
+  // 3. Dossiers incomplets (absence de CCP / RIB)
   salaries.forEach((s) => {
-    if (s.actif && (!s.numero_securite_sociale || !s.rib)) {
+    if (s.actif && !s.ccp_rib) {
       alertes.push({
         id: `dossier-${s.id}`,
         type: "dossier",
-        titre: `Dossier incomplet (${!s.numero_securite_sociale ? "N° CNAS manquant" : "RIB manquant"})`,
-        salarieNom: `${s.nom} ${s.prenom || ""}`.trim(),
+        titre: `Dossier incomplet (CCP / RIB manquant)`,
+        salarieNom: s.nom_prenom,
         salarieId: s.id,
         echeanceOuStatut: "À compléter",
         urgence: "warning",

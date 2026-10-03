@@ -64,7 +64,7 @@ export default async function SaisieCollectivePage({ searchParams }: Props) {
 
         <PageHeader
           title="Grille de Saisie Collective"
-          subtitle={\`Période: \${MOIS[selectedMois - 1]} \${selectedAnnee} — \${activeSalaries.length} salariés actifs\`}
+          subtitle={`Période: ${MOIS[selectedMois - 1]} ${selectedAnnee} — ${activeSalaries.length} salariés actifs`}
         />
       </div>
 

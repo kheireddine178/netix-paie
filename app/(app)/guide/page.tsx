@@ -169,7 +169,7 @@ export default function GuidePage() {
     (window as any).copyChecklist = () => {
       const el = document.getElementById("checklist-retraite");
       if (!el) return;
-      const text = " CHECKLIST — DOCUMENTS DÉPART EN RETRAITE\n\n" + el.innerText.replace(//g, "").trim();
+      const text = "CHECKLIST — DOCUMENTS DÉPART EN RETRAITE\n\n" + el.innerText.trim();
       navigator.clipboard.writeText(text).then(() => {
         alert("Checklist copiée dans le presse-papiers !");
       });
@@ -179,7 +179,7 @@ export default function GuidePage() {
       const el = document.getElementById("checklist-data");
       if (!el) return;
       const items = el.querySelectorAll("div");
-      let text = " CHECKLIST CONFORMITÉ PROTECTION DES DONNÉES RH — LOI 18-07\n\n";
+      let text = "CHECKLIST CONFORMITÉ PROTECTION DES DONNÉES RH — LOI 18-07\n\n";
       items.forEach((item) => {
         text += (item as HTMLElement).innerText.trim() + "\n";
       });
@@ -192,7 +192,7 @@ export default function GuidePage() {
       const el = document.getElementById("checklist-etranger");
       if (!el) return;
       const items = el.querySelectorAll("div");
-      let text = " CHECKLIST — EMBAUCHE TRAVAILLEUR ÉTRANGER EN ALGÉRIE\n\n";
+      let text = "CHECKLIST — EMBAUCHE TRAVAILLEUR ÉTRANGER EN ALGÉRIE\n\n";
       items.forEach((item) => {
         const t = (item as HTMLElement).innerText.trim();
         if (t) text += t + "\n";

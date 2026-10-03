@@ -311,7 +311,7 @@ input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
     min-width: 600px;
     width: 100%;
   }
-
+}
 
 @media (max-width: 480px) {
   .content { padding: var(--s3); }
@@ -852,7 +852,7 @@ tr:last-child td { border-bottom: none; }
 .rh-guide-root .rh-sidebar-item {
   display: flex;
   align-items: center;
-  gap: var(--s2.5);
+  gap: 10px;
   width: 100%;
   padding: 8px 12px;
   background: transparent;

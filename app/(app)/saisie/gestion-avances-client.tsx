@@ -151,7 +151,7 @@ export default function GestionAvancesClient() {
                     <tr key={a.id} className="hover:bg-[#F8FAFC]/50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-semibold text-[#0F172A]">
-                          {a.salaries?.nom_prenom || \`Salarié #\${a.salarie_id}\`}
+                          {a.salaries?.nom_prenom || `Salarié #${a.salarie_id}`}
                         </div>
                       </td>
                       <td className="px-6 py-4 font-mono text-[#64748B]">
@@ -171,11 +171,11 @@ export default function GestionAvancesClient() {
                       <td className="px-6 py-4 text-center">
                         <Badge 
                           variant="secondary" 
-                          className={\`
-                            \${a.statut === "Approuvée" ? "bg-teal-50 text-teal-700 border-teal-200" : ""}
-                            \${a.statut === "Rejetée" ? "bg-red-50 text-red-700 border-red-200" : ""}
-                            \${a.statut === "En attente" ? "bg-amber-50 text-amber-700 border-amber-200" : ""}
-                          \`}
+                          className={`
+                            ${a.statut === "Approuvée" ? "bg-teal-50 text-teal-700 border-teal-200" : ""}
+                            ${a.statut === "Rejetée" ? "bg-red-50 text-red-700 border-red-200" : ""}
+                            ${a.statut === "En attente" ? "bg-amber-50 text-amber-700 border-amber-200" : ""}
+                          `}
                         >
                           {a.statut}
                         </Badge>

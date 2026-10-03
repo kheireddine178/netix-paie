@@ -8,7 +8,18 @@
  */
 
 const path = require("path");
-const jiti = require(path.resolve(__dirname, "../../sirh-app/node_modules/jiti"))(__filename);
+let jitiFactory;
+try {
+  jitiFactory = require("jiti");
+} catch {
+  try {
+    jitiFactory = require(path.resolve(__dirname, "../../sirh-app/node_modules/jiti"));
+  } catch {
+    console.error("Veuillez installer jiti : npm install -D jiti");
+    process.exit(1);
+  }
+}
+const jiti = jitiFactory(__filename);
 const { calculerPaie, PARAMETRES_PAR_DEFAUT, SAISIE_VIDE } = jiti(path.resolve(__dirname, "../lib/paieCalcul.ts"));
 
 const GOLDEN_PROFILES = [
