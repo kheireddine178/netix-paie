@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import OdooMobileDrawer from "./odoo/OdooMobileDrawer";
+import OdooAppSwitcher, { IconWaffle } from "./odoo/OdooAppSwitcher";
 
 // Lucide-style inline SVG icons
 export const Icons = {
@@ -104,10 +105,23 @@ export const NAV_ITEMS = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [switcherOpen, setSwitcherOpen] = useState(false);
 
   useEffect(() => {
     const current = document.documentElement.getAttribute("data-theme");
     setTheme(current === "dark" ? "dark" : "light");
+  }, []);
+
+  // Global keyboard shortcut Ctrl+K to toggle App Switcher
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSwitcherOpen((prev) => !prev);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   function toggleTheme() {
@@ -124,19 +138,33 @@ export default function Sidebar() {
         navItems={NAV_ITEMS}
         theme={theme}
         onToggleTheme={toggleTheme}
+        onOpenSwitcher={() => setSwitcherOpen(true)}
       />
 
       {/* Desktop Sidebar (Hidden on mobile via CSS) */}
       <aside className="sidebar odoo-desktop-sidebar">
-        <Link href="/" className="brand">
-          <div className="brand-mark">
-            <Image src="/logo-icon.svg" alt="Netix" width={32} height={32} priority />
-          </div>
-          <div className="brand-text">
-            <strong>Netix SIRH</strong>
-            <span>Algérie</span>
-          </div>
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px 0 0", borderBottom: "1px solid var(--border)" }}>
+          <Link href="/" className="brand" style={{ borderBottom: "none", flex: 1, padding: "16px 12px" }}>
+            <div className="brand-mark">
+              <Image src="/logo-icon.svg" alt="Netix" width={32} height={32} priority />
+            </div>
+            <div className="brand-text">
+              <strong>Netix SIRH</strong>
+              <span>Algérie</span>
+            </div>
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setSwitcherOpen(true)}
+            title="Applications Odoo (Ctrl+K)"
+            aria-label="Ouvrir la grille des applications Odoo"
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-all text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-800"
+            style={{ cursor: "pointer", border: "1px solid transparent" }}
+          >
+            <IconWaffle size={18} />
+          </button>
+        </div>
 
         <nav style={{ padding: "12px 0", flex: 1 }}>
           {NAV_ITEMS.map((item) => {
@@ -182,6 +210,9 @@ export default function Sidebar() {
           <span className="theme-label">{theme === "dark" ? "Thème clair" : "Thème sombre"}</span>
         </button>
       </aside>
+
+      {/* Odoo App Switcher Overlay (9-Dots Grid) */}
+      <OdooAppSwitcher isOpen={switcherOpen} onClose={() => setSwitcherOpen(false)} />
     </>
   );
 }
