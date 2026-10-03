@@ -2099,3 +2099,192 @@ export async function listerToutesSanctions(): Promise<SanctionGlobalRow[]> {
   }
   return data ?? [];
 }
+
+// ------------------------------------------------------------------
+// MODULE FORMATIONS & TALENT GLOBAL
+// ------------------------------------------------------------------
+
+export interface InscriptionGlobalRow extends InscriptionRow {
+  salaries?: {
+    id: number;
+    nom_prenom: string;
+    matricule: string | null;
+    fonction: string | null;
+  } | null;
+}
+
+export async function listerToutesInscriptionsGlobal(): Promise<InscriptionGlobalRow[]> {
+  const { data, error } = await supabase
+    .from("formations_inscriptions")
+    .select("*, formations(*), salaries(id, nom_prenom, matricule, fonction)")
+    .order("date_debut", { ascending: false });
+
+  if (error) {
+    console.error("Erreur listerToutesInscriptionsGlobal:", error.message);
+    return [];
+  }
+  return (data ?? []).map((d: any) => ({
+    id: d.id,
+    formation_id: d.formation_id,
+    salarie_id: d.salarie_id,
+    date_debut: d.date_debut,
+    statut: d.statut,
+    formations: Array.isArray(d.formations) ? d.formations[0] : d.formations,
+    salaries: Array.isArray(d.salaries) ? d.salaries[0] : d.salaries,
+  }));
+}
+
+export async function changerStatutInscriptionGlobal(inscriptionId: number, statut: string): Promise<void> {
+  const { error } = await supabase
+    .from("formations_inscriptions")
+    .update({ statut })
+    .eq("id", inscriptionId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/formations");
+}
+
+export async function supprimerInscriptionGlobal(inscriptionId: number): Promise<void> {
+  const { error } = await supabase
+    .from("formations_inscriptions")
+    .delete()
+    .eq("id", inscriptionId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/formations");
+}
+
+export async function creerInscriptionGenerale(formData: FormData): Promise<void> {
+  const salarie_id = parseInt(formData.get("salarie_id") as string, 10);
+  const formation_id = parseInt(formData.get("formation_id") as string, 10);
+  const date_debut = formData.get("date_debut") as string;
+  const statut = (formData.get("statut") as string) || "Prévue";
+
+  const { error } = await supabase
+    .from("formations_inscriptions")
+    .insert({
+      formation_id,
+      salarie_id,
+      date_debut,
+      statut,
+    });
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/formations");
+}
+
+// ------------------------------------------------------------------
+// MODULE JOURNAL GENERAL DES BULLETINS DE PAIE
+// ------------------------------------------------------------------
+
+export interface BulletinGlobalItem {
+  id: number;
+  annee: number;
+  mois: number;
+  salarie_id: number;
+  statut: string;
+  modifie_le: string | null;
+  salaire_base_theorique: number;
+  salaire_base_reel: number;
+  salaire_poste: number;
+  retenue_ss: number;
+  irg: number;
+  net_a_payer: number;
+  salaries?: {
+    id: number;
+    nom_prenom: string;
+    matricule: string | null;
+    fonction: string | null;
+  } | null;
+}
+
+export async function listerTousLesBulletinsGlobal(): Promise<BulletinGlobalItem[]> {
+  const params = await getParametres();
+
+  const { data: bulletins, error } = await supabase
+    .from("bulletins")
+    .select("*, salaries(id, nom_prenom, matricule, fonction)")
+    .order("annee", { ascending: false })
+    .order("mois", { ascending: false });
+
+  if (error) {
+    console.error("Erreur listerTousLesBulletinsGlobal:", error.message);
+    return [];
+  }
+  if (!bulletins || bulletins.length === 0) return [];
+
+  const bulletinIds = bulletins.map((b: any) => b.id);
+
+  const { data: toutesRubriques, error: rubError } = await supabase
+    .from("bulletin_rubriques")
+    .select(
+      "bulletin_id, rubrique_code, valeur_1, valeur_2, rubriques_catalogue(code, libelle, type_valeur, cotisable, imposable)",
+    )
+    .in("bulletin_id", bulletinIds);
+
+  const rubriquesParBulletin = new Map<number, any[]>();
+  for (const r of toutesRubriques ?? []) {
+    const liste = rubriquesParBulletin.get(r.bulletin_id) ?? [];
+    liste.push(r);
+    rubriquesParBulletin.set(r.bulletin_id, liste);
+  }
+
+  return bulletins.map((bulletin: any) => {
+    const champsAbsences = {
+      salaire_base_theorique: bulletin.salaire_base_theorique,
+      maladie_h: bulletin.maladie_h,
+      mise_a_pied_h: bulletin.mise_a_pied_h,
+      accident_travail_h: bulletin.accident_travail_h,
+      retard_h: bulletin.retard_h,
+      absence_irreguliere_h: bulletin.absence_irreguliere_h,
+    };
+    const { salaire_base_reel } = calculerBaseAvantRubriques(champsAbsences, params);
+
+    const rubriques_dynamiques: LigneRubriqueDynamique[] = [];
+    for (const br of rubriquesParBulletin.get(bulletin.id) ?? []) {
+      const cat = Array.isArray(br.rubriques_catalogue) ? br.rubriques_catalogue[0] : br.rubriques_catalogue;
+      if (!cat) continue;
+      const ligne = resoudreLigneRubrique(cat, br.valeur_1 ?? 0, br.valeur_2 ?? 0, salaire_base_reel);
+      if (ligne) rubriques_dynamiques.push(ligne);
+    }
+
+    const saisie: SaisieMensuelle = {
+      ...SAISIE_VIDE,
+      ...champsAbsences,
+      heures_sup_1: bulletin.heures_sup_1,
+      heures_sup_2: bulletin.heures_sup_2,
+      heures_sup_3: bulletin.heures_sup_3,
+      icr: bulletin.icr,
+      taux_iep: bulletin.taux_iep,
+      taux_nuisance: bulletin.taux_nuisance,
+      taux_responsabilite: bulletin.taux_responsabilite,
+      taux_disponibilite: bulletin.taux_disponibilite,
+      taux_pri: bulletin.taux_pri,
+      taux_prc: bulletin.taux_prc,
+      panier_jours: bulletin.panier_jours,
+      panier_forfait_jour: bulletin.panier_forfait_jour,
+      autre_prime_fixe: bulletin.autre_prime_fixe,
+      cotis_mutuelle: bulletin.cotis_mutuelle,
+      autres_retenues: bulletin.autres_retenues,
+      rubriques_dynamiques,
+    };
+
+    const resultat = calculerPaie(saisie, params);
+
+    return {
+      id: bulletin.id,
+      annee: bulletin.annee,
+      mois: bulletin.mois,
+      salarie_id: bulletin.salarie_id,
+      statut: bulletin.statut || "Calculé",
+      modifie_le: bulletin.modifie_le ?? null,
+      salaire_base_theorique: bulletin.salaire_base_theorique,
+      salaire_base_reel: resultat.salaire_base_reel,
+      salaire_poste: resultat.salaire_poste,
+      retenue_ss: resultat.retenue_ss,
+      irg: resultat.irg,
+      net_a_payer: resultat.net_a_payer,
+      salaries: Array.isArray(bulletin.salaries) ? bulletin.salaries[0] : bulletin.salaries,
+    };
+  });
+}
