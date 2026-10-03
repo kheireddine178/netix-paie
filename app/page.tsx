@@ -19,25 +19,25 @@ const CORE_PILLARS = [
     icon: Users,
     title: "Gestion des Salariés",
     desc: "Un annuaire unifié pour centraliser les coordonnées, fiches de poste, dossiers administratifs et coordonnées bancaires de vos équipes.",
-    color: "#4F46E5",
+    color: "var(--odoo-purple, #714B67)",
   },
   {
     icon: CreditCard,
     title: "Calcul Automatique de la Paie",
-    desc: "Saisissez les primes et absences, le système calcule instantanément le Brut, les cotisations et le Net à payer avec édition des bulletins PDF.",
-    color: "#059669",
+    desc: "Saisissez les primes et absences, le système calcule instantanément le Brut, les cotisations CNAS et l'IRG avec édition des bulletins PDF.",
+    color: "var(--odoo-teal, #017E84)",
   },
   {
     icon: Calendar,
     title: "Congés & Absences",
-    desc: "Gérez les demandes de congés annuels, validez en un clic et synchronisez automatiquement les déductions sur la paie du mois.",
-    color: "#F59E0B",
+    desc: "Gérez les demandes de congés légaux (loi 90-11), validez en un clic et synchronisez automatiquement les déductions sur la paie du mois.",
+    color: "var(--amber, #D97706)",
   },
   {
     icon: FileText,
     title: "Contrats & Documents RH",
     desc: "Suivez les contrats CDI/CDD, éditez les attestations d'emploi, procès-verbaux d'installation et ordres de mission officiels.",
-    color: "#0D9488",
+    color: "#2563EB",
   },
 ];
 
@@ -87,11 +87,11 @@ const SIRH_MODULES = [
 export default function LandingPage() {
   return (
     <div className="landing min-h-screen flex flex-col" style={{ background: "var(--bg)" }}>
-      {/* 1. HERO SECTION MODERNE */}
+      {/* 1. HERO SECTION ODOO ENTERPRISE */}
       <header
         className="landing-hero relative overflow-hidden text-white"
         style={{
-          background: "linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #4338CA 100%)",
+          background: "linear-gradient(135deg, #2D1A27 0%, #462D3F 45%, #714B67 100%)",
           padding: "3rem 1.5rem 5rem",
         }}
       >
@@ -103,13 +103,13 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/portail"
-              className="text-xs font-semibold px-3 py-2 rounded-lg text-indigo-100 hover:text-white transition-colors"
+              className="text-xs font-semibold px-3 py-2 rounded-lg text-purple-100 hover:text-white transition-colors"
             >
               Espace Salarié
             </Link>
             <Link
               href="/dashboard"
-              className="text-xs font-bold px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white backdrop-blur-xs transition-all border border-white/15"
+              className="text-xs font-bold px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white backdrop-blur-xs transition-all border border-white/20"
             >
               Accéder au SIRH →
             </Link>
@@ -119,48 +119,49 @@ export default function LandingPage() {
         {/* Contenu principal du Hero */}
         <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
           {/* Eyebrow badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 mb-6 backdrop-blur-xs">
-            <Sparkles size={14} className="text-amber-400" />
-            <span>Système d&apos;Information Ressources Humaines &amp; Paie</span>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white/10 text-purple-100 border border-white/20 mb-6 backdrop-blur-xs">
+            <Sparkles size={14} className="text-amber-300" />
+            <span>Système d&apos;Information Ressources Humaines &amp; Paie Algérie</span>
           </div>
 
           {/* Titre simple et percutant */}
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-6">
-            Le SIRH moderne qui simplifie vos équipes et <span style={{ color: "#34D399" }}>automatise votre paie</span>.
+            Le SIRH moderne qui simplifie vos équipes et{" "}
+            <span style={{ color: "#2DD4BF" }}>automatise votre paie</span>.
           </h1>
 
           {/* Description claire et accessible */}
-          <p className="text-base sm:text-lg text-indigo-100/90 max-w-2xl mx-auto leading-relaxed mb-10">
-            Netix est la plateforme tout-en-un pour piloter facilement vos collaborateurs, générer vos bulletins de salaire en un clic, et gérer les congés et contrats sans aucune complexité.
+          <p className="text-base sm:text-lg text-purple-100/90 max-w-2xl mx-auto leading-relaxed mb-10">
+            Netix regroupe toute l&apos;ergonomie d&apos;Odoo Enterprise pour piloter vos collaborateurs, éditer vos bulletins de salaire conformes à la loi 90-11 et centraliser vos déclarations.
           </p>
 
           {/* Boutons d'appel à l'action */}
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl font-bold text-sm bg-white text-indigo-950 shadow-xl hover:bg-indigo-50 transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl font-bold text-sm bg-white text-purple-950 shadow-xl hover:bg-purple-50 transition-all hover:-translate-y-0.5"
             >
               <span>Ouvrir l&apos;application</span>
-              <ChevronRight size={16} className="text-indigo-600" />
+              <ChevronRight size={16} className="text-purple-700" />
             </Link>
 
             <Link
               href="/saisie"
-              className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm bg-indigo-600/40 hover:bg-indigo-600/60 text-white border border-indigo-400/30 backdrop-blur-xs transition-all"
+              className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-xs transition-all"
             >
               <span>Calculer une fiche de paie</span>
             </Link>
           </div>
 
           {/* 3 Promesses clés */}
-          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 mt-12 pt-8 border-t border-indigo-400/20 text-xs font-medium text-indigo-200">
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 mt-12 pt-8 border-t border-white/15 text-xs font-medium text-purple-100">
             <div className="flex items-center gap-2">
               <CheckCircle2 size={16} className="text-emerald-400" />
               <span>Gestion complète des salariés</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 size={16} className="text-emerald-400" />
-              <span>Calcul de paie en temps réel</span>
+              <span>Calcul de paie en temps réel (Loi 90-11)</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle2 size={16} className="text-emerald-400" />
