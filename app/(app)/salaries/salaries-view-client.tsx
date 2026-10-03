@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Salarie } from "./actions";
 import OdooControlPanel from "@/components/odoo/OdooControlPanel";
-import OdooKanbanCard from "@/components/odoo/OdooKanbanCard";
+import SalarieOdooCard from "@/components/odoo/SalarieOdooCard";
 import SalarieRowActions from "./salarie-row-actions";
 
 export interface SalariesViewClientProps {
@@ -81,7 +81,7 @@ export default function SalariesViewClient({
       <OdooControlPanel
         breadcrumbs={[{ label: "Collaborateurs" }]}
         primaryAction={{
-          label: "Nouveau collaborateur",
+          label: "+ Nouveau",
           href: "/salaries/nouveau",
           icon: (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -144,46 +144,10 @@ export default function SalariesViewClient({
           </Link>
         </div>
       ) : viewMode === "kanban" ? (
-        /* VUE KANBAN (Cartes réactives idéales sur smartphone et tablette) */
+        /* VUE KANBAN ODOO AUTHENTIQUE */
         <div className="odoo-kanban-grid">
           {salaries.map((s) => (
-            <OdooKanbanCard
-              key={s.id}
-              title={s.nom_prenom}
-              subtitle={s.fonction || "Poste non renseigné"}
-              badge={{
-                text: s.actif ? "Actif" : "Inactif",
-                variant: s.actif ? "success" : "neutral",
-              }}
-              metrics={[
-                { label: "Matricule", value: s.matricule || "—" },
-                { label: "Salaire de base", value: formatDA(s.salaire_base_theorique) },
-              ]}
-              href={`/salaries/${s.id}`}
-              actions={
-                <div className="flex items-center gap-1.5 w-full justify-between">
-                  <Link
-                    href={`/saisie?salarieId=${s.id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="btn btn-secondary btn-sm text-[11px] font-semibold py-1 px-2.5"
-                    style={{ border: "1px solid var(--accent)", color: "var(--accent)" }}
-                  >
-                    💰 Fiche de paie
-                  </Link>
-
-                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                    <Link
-                      href={`/salaries/${s.id}/modifier`}
-                      className="p-1.5 rounded hover:bg-slate-100 text-xs font-semibold text-gray-600"
-                      title="Modifier"
-                    >
-                      ✏️
-                    </Link>
-                    <SalarieRowActions id={s.id} actif={s.actif} />
-                  </div>
-                </div>
-              }
-            />
+            <SalarieOdooCard key={s.id} salarie={s} />
           ))}
         </div>
       ) : (

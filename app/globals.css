@@ -6,38 +6,51 @@
    ============================================================ */
 
 :root {
-  /* Option 01 : Modern SaaS / Fintech Clean (PayFit style) */
-  --bg:          #F8FAFC;
-  --surface:     #FFFFFF;
-  --surface-2:   #F1F5F9;
+  /* ============================================================
+     Odoo 17/18 Enterprise Signature Design Tokens
+     Pourpre Odoo (#714B67) × Teal Odoo (#017E84) × Gris Feutré
+     ============================================================ */
+  --bg:          #F8F9FA; /* Fond de page gris feutré Odoo */
+  --surface:     #FFFFFF; /* Fond cartes et formulaires blanc pur */
+  --surface-2:   #F1F3F5; /* Surfaces secondaires et en-têtes de tableau */
   --sidebar-bg:  #FFFFFF;
-  --border:      #E2E8F0;
-  --border-soft: #F1F5F9;
-  --text:        #0F172A;
-  --text-2:      #334155;
-  --text-muted:  #64748B;
+  --border:      #E5E7EB; /* Bordures ultra-fines 1px */
+  --border-soft: #F1F3F5;
+  --text:        #212529; /* Noir adouci Odoo */
+  --text-2:      #374151;
+  --text-muted:  #6C757D; /* Gris typique Odoo */
 
-  --accent:       #4F46E5; /* Indigo Moderne */
-  --accent-ink:   #3730A3;
-  --accent-bg:    #EEF2FF;
-  --accent-light: #F5F7FF;
+  --odoo-purple:       #714B67; /* Pourpre officiel Odoo Enterprise */
+  --odoo-purple-hover: #5A3B52;
+  --odoo-purple-light: #F5EDF2;
+  --odoo-purple-ink:   #462D3F;
 
-  --teal:     #059669; /* Émeraude / Net & Gains */
-  --teal-bg:  #ECFDF5;
-  --teal-ink: #065F46;
+  --odoo-teal:         #017E84; /* Vert d'action Odoo */
+  --odoo-teal-hover:   #006B70;
+  --odoo-teal-light:   #E6F4F4;
+  --odoo-teal-ink:     #005357;
 
-  --amber:    #F59E0B; /* Ambre chaleureux */
+  --accent:       #714B67; /* Pourpre Odoo */
+  --accent-ink:   #462D3F;
+  --accent-bg:    #F5EDF2;
+  --accent-light: #FAF7F9;
+
+  --teal:     #017E84; /* Teal Odoo */
+  --teal-bg:  #E6F4F4;
+  --teal-ink: #005357;
+
+  --amber:    #D97706; /* Ambre chaleureux Odoo */
   --amber-bg: #FEF3C7;
 
-  --red-700: #B91C1C;
-  --red-600: #EF4444;
+  --red-700: #991B1B;
+  --red-600: #DC2626;
   --red-200: #FECACA;
   --red-100: #FEF2F2;
 
-  --green-700: #047857;
-  --green-600: #059669;
+  --green-700: #065F46;
+  --green-600: #017E84;
   --green-200: #A7F3D0;
-  --green-100: #ECFDF5;
+  --green-100: #E6F4F4;
 
   /* Typographie HRFlow */
   --font: var(--font-dmsans), "Segoe UI", sans-serif;
@@ -76,6 +89,25 @@
 
   --background: var(--bg);
   --foreground: var(--text);
+}
+
+:root[data-theme="dark"] {
+  --bg:          #111827;
+  --surface:     #1F2937;
+  --surface-2:   #273344;
+  --sidebar-bg:  #1F2937;
+  --border:      #374151;
+  --border-soft: #252F3F;
+  --text:        #F9FAFB;
+  --text-2:      #E5E7EB;
+  --text-muted:  #9CA3AF;
+
+  --accent-bg:    #3B2233;
+  --accent-ink:   #F3E8EE;
+  --accent-light: #2D1A27;
+
+  --odoo-purple-light: #3B2233;
+  --odoo-teal-light:   #063D3F;
 }
 
 
@@ -332,16 +364,42 @@ input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
   line-height: 1.2;
 }
 .btn:active { transform: translateY(1px); }
-.btn-primary { background: var(--accent); color: #fff; box-shadow: var(--shsm); }
-.btn-primary:hover { background: var(--accent-ink); }
-.btn-secondary { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
-.btn-secondary:hover { background: var(--accent-bg); }
+.btn-primary {
+  background: var(--accent);
+  color: #FFFFFF !important;
+  border-color: var(--accent);
+  box-shadow: 0 1px 2px rgba(113, 75, 103, 0.2);
+}
+.btn-primary:hover {
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
+  box-shadow: 0 2px 4px rgba(113, 75, 103, 0.3);
+}
+.btn-secondary {
+  background: var(--surface);
+  border-color: #D1D5DB;
+  color: var(--text-2) !important;
+}
+.btn-secondary:hover {
+  background: var(--surface-2);
+  border-color: #9CA3AF;
+  color: var(--text) !important;
+}
+.btn-teal, .btn-success {
+  background: var(--teal);
+  color: #FFFFFF !important;
+  border-color: var(--teal);
+}
+.btn-teal:hover, .btn-success:hover {
+  background: var(--teal-ink);
+  border-color: var(--teal-ink);
+}
 .btn-danger { background: var(--red-600); color: #fff; }
 .btn-danger:hover { background: var(--red-700); }
 .btn-ghost { background: transparent; color: var(--text-muted); }
 .btn-ghost:hover { background: var(--surface-2); }
-.btn-sm { padding: 6px 12px; font-size: var(--t2xs); height: 32px; }
-.btn-lg { padding: 10px 24px; font-size: var(--tmd); height: 48px; }
+.btn-sm { padding: 5px 12px; font-size: var(--t2xs); height: 30px; font-weight: 600; }
+.btn-lg { padding: 10px 24px; font-size: var(--tmd); height: 44px; }
 
 .card-title { font-size: var(--tmd); font-weight: 700; color: var(--text); margin-bottom: var(--s3); }
 
